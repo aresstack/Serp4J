@@ -20,6 +20,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -57,7 +60,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *   never reaches a third host.</li>
  *   <li>At most {@link AhcHttpTransportOptions#getMaxConnections()} requests are in flight, at most
  *   {@link AhcHttpTransportOptions#getMaxConnectionsPerHost()} per origin; further requests wait in order instead
- *   of failing (async-http-client alone would reject them). Waiting counts against the request timeout.</li>
+ *   of failing (async-http-client alone would reject them). Waiting counts against the request timeout,
+ *   which is enforced for the whole exchange by a timer of this transport.</li>
  *   <li>{@link #close()} fails running requests with {@link HttpTransportException.Kind#CANCELLED}; cancelling a
  *   returned future aborts the underlying request.</li>
  * </ul>
@@ -70,12 +74,20 @@ public final class AhcHttpTransport implements HttpTransport {
     private final AtomicBoolean closed = new AtomicBoolean();
     private final Set<Exchange> running = ConcurrentHashMap.newKeySet();
     private final ConnectionAdmission admission;
+    /** Enforces the whole-exchange deadline, including time spent waiting for admission. Owned by this transport. */
+    private final ScheduledThreadPoolExecutor deadlines;
 
     private AhcHttpTransport(AsyncHttpClient client, boolean ownsClient, AhcHttpTransportOptions options) {
         this.client = client;
         this.ownsClient = ownsClient;
         this.options = options;
         this.admission = new ConnectionAdmission(options.getMaxConnections(), options.getMaxConnectionsPerHost());
+        this.deadlines = new ScheduledThreadPoolExecutor(1, runnable -> {
+            Thread thread = new Thread(runnable, "serp4j-http-ahc-deadlines");
+            thread.setDaemon(true);
+            return thread;
+        });
+        this.deadlines.setRemoveOnCancelPolicy(true);
     }
 
     /** A transport with its own client and {@linkplain AhcHttpTransportOptions#defaults() default options}. */
@@ -134,9 +146,24 @@ public final class AhcHttpTransport implements HttpTransport {
                 toMillis(request.getTimeout().orElse(options.getRequestTimeout())));
         Exchange exchange = new Exchange(request, System.nanoTime() + timeoutNanos, timeoutNanos);
         running.add(exchange);
+        ScheduledFuture<?> deadline;
+        try {
+            deadline = deadlines.schedule(() -> {
+                if (exchange.fail(TransportFailures.timeout(request, timeoutNanos))) {
+                    exchange.abort();
+                }
+            }, timeoutNanos, TimeUnit.NANOSECONDS);
+        } catch (RejectedExecutionException e) {
+            deadline = null; // close() is running; the closed check below fails the exchange.
+        }
+        ScheduledFuture<?> scheduledDeadline = deadline;
         exchange.result.whenComplete((response, failure) -> {
             running.remove(exchange);
-            if (exchange.result.isCancelled()) {
+            if (scheduledDeadline != null) {
+                scheduledDeadline.cancel(false);
+            }
+            admission.withdraw(exchange.waiting);
+            if (exchange.result.isCompletedExceptionally()) {
                 exchange.abort();
             }
         });
@@ -161,7 +188,12 @@ public final class AhcHttpTransport implements HttpTransport {
             exchange.fail(TransportFailures.translate(e, request));
             return;
         }
-        admission.acquire(origin, () -> dispatch(exchange, request, redirects, origin));
+        exchange.waiting = admission.acquire(origin, () -> dispatch(exchange, request, redirects, origin));
+        if (exchange.result.isDone()) {
+            // Completed (deadline, close, cancel) while queueing; its completion handler may have run before the
+            // ticket was stored.
+            admission.withdraw(exchange.waiting);
+        }
     }
 
     /** Runs with an admission permit for {@code origin}, which is returned exactly once. */
@@ -336,6 +368,7 @@ public final class AhcHttpTransport implements HttpTransport {
                     + exchange.request.getMethod() + " " + exchange.request.getRedactedUrl() + ")"));
             exchange.abort();
         }
+        deadlines.shutdownNow();
         if (ownsClient) {
             try {
                 client.close();
@@ -369,6 +402,7 @@ public final class AhcHttpTransport implements HttpTransport {
         final long timeoutNanos;
         final CompletableFuture<HttpResponse> result = new CompletableFuture<HttpResponse>();
         volatile ListenableFuture<Response> current;
+        volatile ConnectionAdmission.Ticket waiting;
 
         Exchange(HttpRequest request, long deadlineNanos, long timeoutNanos) {
             this.request = request;
@@ -376,8 +410,8 @@ public final class AhcHttpTransport implements HttpTransport {
             this.timeoutNanos = timeoutNanos;
         }
 
-        void fail(HttpTransportException failure) {
-            result.completeExceptionally(failure);
+        boolean fail(HttpTransportException failure) {
+            return result.completeExceptionally(failure);
         }
 
         void abort() {

@@ -433,6 +433,28 @@ class AhcHttpTransportTest {
     }
 
     @Test
+    void requestTimeoutAlsoBoundsTheWaitForAConnection() throws Exception {
+        server.on("/slow", exchange -> {
+            server.release.await(20, TimeUnit.SECONDS);
+            LocalHttpServer.respond(exchange, 200, "text/plain", "late");
+        });
+        try (AhcHttpTransport single = AhcHttpTransport.create(AhcHttpTransportOptions.builder()
+                .maxConnections(1).maxConnectionsPerHost(1).build())) {
+            CompletableFuture<HttpResponse> blocking = single.execute(HttpRequest.get(server.url("/slow")).build());
+            awaitRequests(1);
+
+            long start = System.nanoTime();
+            HttpTransportException failure = failureOf(single.execute(HttpRequest.get(server.url("/slow"))
+                    .timeout(Duration.ofMillis(300)).build()));
+
+            assertThat(failure.getKind()).isEqualTo(Kind.TIMEOUT);
+            assertThat(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)).isLessThan(5_000);
+            assertThat(blocking).isNotDone();
+            assertThat(server.requests()).hasSize(1);
+        }
+    }
+
+    @Test
     void rejectsNullRequestSynchronously() {
         assertThatThrownBy(() -> transport.execute(null)).isInstanceOf(NullPointerException.class);
     }

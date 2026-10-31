@@ -43,4 +43,37 @@ class ConnectionAdmissionTest {
 
         assertThat(started).containsExactly("a1", "b1");
     }
+
+    @Test
+    void drainsManyImmediatelyReleasingWaitersWithoutRecursion() {
+        ConnectionAdmission admission = new ConnectionAdmission(1, 1);
+        int[] ran = new int[1];
+        admission.acquire("a", () -> { });
+        for (int i = 0; i < 100_000; i++) {
+            admission.acquire("a", () -> {
+                ran[0]++;
+                admission.release("a");
+            });
+        }
+
+        admission.release("a");
+
+        assertThat(ran[0]).isEqualTo(100_000);
+        assertThat(admission.waiting()).isZero();
+        assertThat(admission.inFlight()).isZero();
+    }
+
+    @Test
+    void withdrawnTicketsAreNeverGranted() {
+        ConnectionAdmission admission = new ConnectionAdmission(1, 1);
+        List<String> started = new ArrayList<String>();
+        assertThat(admission.acquire("a", () -> started.add("a1"))).isNull();
+        ConnectionAdmission.Ticket ticket = admission.acquire("a", () -> started.add("a2"));
+
+        admission.withdraw(ticket);
+        admission.release("a");
+
+        assertThat(started).containsExactly("a1");
+        assertThat(admission.inFlight()).isZero();
+    }
 }
