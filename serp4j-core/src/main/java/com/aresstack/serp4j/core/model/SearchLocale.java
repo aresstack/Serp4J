@@ -9,7 +9,8 @@ import java.util.regex.Pattern;
 
 /**
  * Country, language and location of a search. Appears on the {@link SearchRequest} (what the caller asked for)
- * and in {@code SearchMetadata} (what the provider actually used).
+ * and in {@link com.aresstack.serp4j.core.model.metadata.SearchMetadata#getLocale() SearchMetadata} (what the
+ * provider actually used: its echo, otherwise the request's locale).
  *
  * <p>Codes are normalised: country codes upper-case (ISO 3166-1 alpha-2), language codes lower-case
  * (ISO 639-1/639-2 or the language part of a BCP 47 tag), UI language as given (BCP 47, for example
