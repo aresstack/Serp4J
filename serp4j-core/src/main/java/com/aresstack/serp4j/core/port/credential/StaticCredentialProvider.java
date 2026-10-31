@@ -77,8 +77,13 @@ public final class StaticCredentialProvider implements CredentialProvider, AutoC
             return put(key, Preconditions.requireNonNull(secret, "secret").getChars());
         }
 
+        /** Builds a provider that owns copies of the secrets; closing it leaves the builder and other providers intact. */
         public StaticCredentialProvider build() {
-            return new StaticCredentialProvider(new LinkedHashMap<CredentialKey, char[]>(secrets));
+            Map<CredentialKey, char[]> copy = new LinkedHashMap<CredentialKey, char[]>();
+            for (Map.Entry<CredentialKey, char[]> entry : secrets.entrySet()) {
+                copy.put(entry.getKey(), entry.getValue().clone());
+            }
+            return new StaticCredentialProvider(copy);
         }
     }
 }

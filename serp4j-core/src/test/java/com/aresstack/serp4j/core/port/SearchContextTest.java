@@ -23,6 +23,7 @@ class SearchContextTest {
         assertThat(context.getBudget()).isEmpty();
         assertThat(context.getRemainingTime(Instant.now())).isEmpty();
         assertThat(SearchContext.builder().build().getCorrelationId()).isNotEqualTo(context.getCorrelationId());
+        assertThat(SearchContext.defaults().getCorrelationId()).isNotEqualTo(context.getCorrelationId());
     }
 
     @Test

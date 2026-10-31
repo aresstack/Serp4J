@@ -3,7 +3,6 @@ package com.aresstack.serp4j.http;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -56,27 +55,7 @@ public final class HttpResponse {
 
     /** Charset from the {@code Content-Type} header; UTF-8 when absent or unsupported. */
     public Charset getCharset() {
-        Optional<String> contentType = getContentType();
-        if (contentType.isPresent()) {
-            String lower = contentType.get().toLowerCase(Locale.ROOT);
-            int index = lower.indexOf("charset=");
-            if (index >= 0) {
-                String name = lower.substring(index + "charset=".length()).trim();
-                int end = name.indexOf(';');
-                if (end >= 0) {
-                    name = name.substring(0, end).trim();
-                }
-                if (name.startsWith("\"") && name.endsWith("\"") && name.length() >= 2) {
-                    name = name.substring(1, name.length() - 1);
-                }
-                try {
-                    return Charset.forName(name);
-                } catch (RuntimeException e) {
-                    return StandardCharsets.UTF_8;
-                }
-            }
-        }
-        return StandardCharsets.UTF_8;
+        return ContentTypes.charsetOrDefault(getContentType().orElse(null), StandardCharsets.UTF_8);
     }
 
     /** The body decoded with {@link #getCharset()}. */
@@ -138,7 +117,12 @@ public final class HttpResponse {
             return this;
         }
 
-        /** UTF-8 text body with the given content type. */
+        /**
+         * Text body encoded with the charset declared in {@code contentType}; when none is declared the text is
+         * encoded as UTF-8 and {@code ; charset=UTF-8} is appended to the content type.
+         *
+         * @throws IllegalArgumentException if the declared charset is unsupported
+         */
         public Builder textBody(String text, String contentType) {
             if (text == null) {
                 throw new NullPointerException("text must not be null");
@@ -147,11 +131,12 @@ public final class HttpResponse {
                 throw new IllegalArgumentException("contentType must not be blank");
             }
             String type = contentType.trim();
-            if (!type.toLowerCase(Locale.ROOT).contains("charset=")) {
+            Charset charset = ContentTypes.requireCharsetOrUtf8(type);
+            if (!ContentTypes.charsetName(type).isPresent()) {
                 type = type + "; charset=UTF-8";
             }
             headers.set("Content-Type", type);
-            this.body = text.getBytes(StandardCharsets.UTF_8);
+            this.body = text.getBytes(charset);
             return this;
         }
 

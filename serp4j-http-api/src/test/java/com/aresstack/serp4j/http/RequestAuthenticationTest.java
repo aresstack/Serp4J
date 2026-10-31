@@ -68,9 +68,15 @@ class RequestAuthenticationTest {
     }
 
     @Test
-    void queryParameterAppendsToExistingQueryString() {
+    void queryParameterAppendsToExistingQueryStringAndIsMaskedInLogs() {
         HttpRequest request = apply(RequestAuthentication.queryParameter("key", new TrackingSecret("a b&c")));
+        HttpRequest custom = apply(RequestAuthentication.queryParameter("zoneSecret", new TrackingSecret("s")));
+
         assertThat(request.getUrl()).isEqualTo("https://api.example/v1?x=1&key=a%20b%26c");
+        assertThat(request.getRedactedUrl()).isEqualTo("https://api.example/v1?x=1&key=****");
+        assertThat(request.toString()).doesNotContain("a%20b%26c");
+        assertThat(custom.getUrl()).isEqualTo("https://api.example/v1?x=1&zoneSecret=s");
+        assertThat(custom.getRedactedUrl()).isEqualTo("https://api.example/v1?x=1&zoneSecret=****");
     }
 
     @Test
@@ -100,5 +106,9 @@ class RequestAuthenticationTest {
         assertThat(UrlQueryBuilder.of("https://e.example/?a=1&").param("b", "2").build())
                 .isEqualTo("https://e.example/?a=1&b=2");
         assertThat(UrlQueryBuilder.of("https://e.example/").build()).isEqualTo("https://e.example/");
+        assertThat(UrlQueryBuilder.of("https://e.example/search#section").param("q", "test").build())
+                .isEqualTo("https://e.example/search?q=test#section");
+        assertThat(UrlQueryBuilder.of("https://e.example/s?a=1#f").param("b", "2").build())
+                .isEqualTo("https://e.example/s?a=1&b=2#f");
     }
 }

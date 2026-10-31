@@ -4,9 +4,11 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class HttpTypesTest {
 
@@ -65,6 +67,52 @@ class HttpTypesTest {
         assertThat(error.getCharset()).isEqualTo(StandardCharsets.UTF_8);
         assertThat(error.toString()).doesNotContain("busy");
         assertThatIllegalArgumentException().isThrownBy(() -> HttpResponse.builder(600));
+    }
+
+    @Test
+    void emptyHeadersAreAnImmutableSingleton() {
+        HttpHeaders empty = HttpHeaders.empty();
+
+        assertThatThrownBy(() -> empty.asMap().put("X-Injected", Collections.singletonList("1")))
+                .isInstanceOf(UnsupportedOperationException.class);
+        assertThat(HttpHeaders.builder().build()).isSameAs(empty);
+        assertThat(HttpRequest.get("https://e.example").build().getHeaders().isEmpty()).isTrue();
+    }
+
+    @Test
+    void redactedUrlMasksCredentialQueryParametersOnly() {
+        HttpRequest request = HttpRequest
+                .get("https://e.example/v1?q=serp4j&api_key=secret-1&Token=secret-2&brd_key=secret-3&page=2#top")
+                .sensitiveQueryParameter("BRD_KEY")
+                .build();
+
+        assertThat(request.getRedactedUrl())
+                .isEqualTo("https://e.example/v1?q=serp4j&api_key=****&Token=****&brd_key=****&page=2#top");
+        assertThat(request.toString()).contains("q=serp4j").doesNotContain("secret");
+        assertThat(request.getUrl()).contains("secret-1");
+        assertThat(request.getSensitiveQueryParameters()).containsExactly("brd_key");
+        assertThat(request.toBuilder().build()).isEqualTo(request);
+        assertThat(HttpRequest.get("https://e.example/plain").build().getRedactedUrl())
+                .isEqualTo("https://e.example/plain");
+        assertThat(HttpRequest.isSensitiveQueryParameter("API-KEY")).isTrue();
+        assertThat(HttpRequest.isSensitiveQueryParameter("q")).isFalse();
+    }
+
+    @Test
+    void textBodyHonoursTheDeclaredCharset() {
+        HttpResponse response = HttpResponse.builder(200)
+                .textBody("café", "text/plain; charset=ISO-8859-1").build();
+        HttpRequest request = HttpRequest.post("https://e.example")
+                .textBody("café", "text/plain; charset=ISO-8859-1").build();
+
+        assertThat(response.getBodyLength()).isEqualTo(4);
+        assertThat(response.getBodyAsText()).isEqualTo("café");
+        assertThat(request.getBody()).isEqualTo("café".getBytes(StandardCharsets.ISO_8859_1));
+        assertThat(request.getContentType()).contains("text/plain; charset=ISO-8859-1");
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> HttpResponse.builder(200).textBody("x", "text/plain; charset=no-such-charset"));
+        assertThat(HttpResponse.builder(200).header("Content-Type", "text/plain; charset=no-such-charset").build()
+                .getCharset()).isEqualTo(StandardCharsets.UTF_8);
     }
 
     @Test

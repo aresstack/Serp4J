@@ -15,8 +15,6 @@ import java.util.UUID;
  */
 public final class SearchContext {
 
-    private static final SearchContext DEFAULTS = builder().build();
-
     private final Instant deadline;
     private final CancellationSignal cancellation;
     private final String correlationId;
@@ -31,9 +29,9 @@ public final class SearchContext {
         this.attributes = Preconditions.immutableMap(builder.attributes, "attributes");
     }
 
-    /** No deadline, never cancelled, generated correlation id, no budget. */
+    /** No deadline, never cancelled, no budget, and a fresh correlation id for every call. */
     public static SearchContext defaults() {
-        return DEFAULTS;
+        return builder().build();
     }
 
     public static Builder builder() {

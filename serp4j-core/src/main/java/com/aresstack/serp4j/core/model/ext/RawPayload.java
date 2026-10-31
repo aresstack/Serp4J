@@ -51,7 +51,11 @@ public final class RawPayload {
         this.body = builder.body;
         this.charset = builder.charset;
         this.httpStatus = builder.httpStatus;
-        this.headers = Collections.unmodifiableMap(builder.headers);
+        Map<String, List<String>> copy = new TreeMap<String, List<String>>(String.CASE_INSENSITIVE_ORDER);
+        for (Map.Entry<String, List<String>> entry : builder.headers.entrySet()) {
+            copy.put(entry.getKey(), Collections.unmodifiableList(new ArrayList<String>(entry.getValue())));
+        }
+        this.headers = Collections.unmodifiableMap(copy);
     }
 
     /** Starts a payload; {@code body} is copied. */
@@ -191,10 +195,8 @@ public final class RawPayload {
             return this;
         }
 
+        /** Builds a payload with its own copy of the headers; the builder stays usable. */
         public RawPayload build() {
-            for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
-                entry.setValue(Collections.unmodifiableList(new ArrayList<String>(entry.getValue())));
-            }
             return new RawPayload(this);
         }
     }

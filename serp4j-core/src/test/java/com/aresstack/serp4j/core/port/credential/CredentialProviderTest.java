@@ -48,6 +48,19 @@ class CredentialProviderTest {
     }
 
     @Test
+    void providersBuiltFromTheSameBuilderOwnTheirSecrets() {
+        StaticCredentialProvider.Builder builder = StaticCredentialProvider.builder().put(BRAVE_KEY, "abc");
+        StaticCredentialProvider first = builder.build();
+        StaticCredentialProvider second = builder.build();
+
+        first.close();
+
+        assertThat(first.resolve(BRAVE_KEY)).isEmpty();
+        assertThat(second.resolve(BRAVE_KEY).get().<String>use(String::new)).isEqualTo("abc");
+        assertThat(builder.build().resolve(BRAVE_KEY).get().<String>use(String::new)).isEqualTo("abc");
+    }
+
+    @Test
     void environmentProviderMapsKeysToVariableNames() {
         Map<String, String> env = new HashMap<String, String>();
         env.put("SERP4J_BRAVE_API_KEY", "from-env");

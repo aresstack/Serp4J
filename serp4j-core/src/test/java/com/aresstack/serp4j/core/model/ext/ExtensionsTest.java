@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ExtensionsTest {
 
@@ -82,5 +83,21 @@ class ExtensionsTest {
         assertThat(RawPayload.isSensitiveHeader("COOKIE")).isTrue();
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> RawPayload.builder("text/plain", new byte[0]).httpStatus(99));
+    }
+
+    @Test
+    void rawPayloadBuilderStaysUsableAndBuiltPayloadsDoNotChange() {
+        RawPayload.Builder builder = RawPayload.builder("text/plain", new byte[0]).header("X-Trace", "1");
+        RawPayload first = builder.build();
+
+        RawPayload second = builder.header("X-Trace", "2").header("X-Other", "3").build();
+
+        assertThat(first.getHeaders()).containsOnlyKeys("X-Trace");
+        assertThat(first.getHeaders().get("x-trace")).containsExactly("1");
+        assertThat(second.getHeaders().get("X-Trace")).containsExactly("1", "2");
+        assertThat(second.getHeader("X-Other")).contains("3");
+        assertThat(first).isNotEqualTo(second);
+        assertThatThrownBy(() -> first.getHeaders().get("X-Trace").add("x"))
+                .isInstanceOf(UnsupportedOperationException.class);
     }
 }

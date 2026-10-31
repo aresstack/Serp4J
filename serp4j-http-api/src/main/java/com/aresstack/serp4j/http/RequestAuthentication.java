@@ -82,7 +82,11 @@ public interface RequestAuthentication {
         };
     }
 
-    /** Appends {@code <name>=<secret>} to the URL's query string (for APIs that only accept keys in the URL). */
+    /**
+     * Appends {@code <name>=<secret>} to the URL's query string (for APIs that only accept keys in the URL) and
+     * registers the parameter as sensitive, so {@link HttpRequest#getRedactedUrl()} and
+     * {@link HttpRequest#toString()} mask it.
+     */
     static RequestAuthentication queryParameter(String name, Supplier<char[]> secret) {
         requireText(name, "name");
         requireNonNull(secret, "secret");
@@ -90,6 +94,7 @@ public interface RequestAuthentication {
             requireNonNull(request, "request");
             char[] chars = requireNonNull(secret.get(), "secret value");
             try {
+                request.sensitiveQueryParameter(name);
                 request.url(UrlQueryBuilder.of(request.getUrl()).param(name, new String(chars)).build());
             } finally {
                 Arrays.fill(chars, '\0');

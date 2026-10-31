@@ -22,7 +22,8 @@ public final class HttpHeaders {
             "authorization", "proxy-authorization", "cookie", "set-cookie", "x-api-key", "api-key",
             "x-auth-token", "x-access-token", "x-subscription-token", "x-amz-security-token", "x-goog-api-key")));
 
-    private static final HttpHeaders EMPTY = new HttpHeaders(new TreeMap<String, List<String>>(String.CASE_INSENSITIVE_ORDER));
+    private static final HttpHeaders EMPTY = new HttpHeaders(
+            Collections.unmodifiableMap(new TreeMap<String, List<String>>(String.CASE_INSENSITIVE_ORDER)));
 
     private final Map<String, List<String>> values;
 
@@ -68,6 +69,7 @@ public final class HttpHeaders {
         return values.keySet();
     }
 
+    /** Unmodifiable view, keyed case-insensitively; values are unmodifiable lists. */
     public Map<String, List<String>> asMap() {
         return values;
     }

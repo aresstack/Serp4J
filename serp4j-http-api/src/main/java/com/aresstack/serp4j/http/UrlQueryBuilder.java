@@ -8,7 +8,7 @@ import java.util.Optional;
 /**
  * Builds a URL with a query string, percent-encoding names and values per RFC 3986 (UTF-8; unreserved characters
  * {@code A-Z a-z 0-9 - _ . ~} stay as they are, spaces become {@code %20}). Parameters already present in the base
- * URL are kept.
+ * URL are kept; new parameters are inserted before a fragment.
  */
 public final class UrlQueryBuilder {
 
@@ -71,12 +71,16 @@ public final class UrlQueryBuilder {
         return this;
     }
 
+    /** The URL with all parameters appended to the query; a fragment ({@code #...}) in the base URL stays last. */
     public String build() {
-        StringBuilder url = new StringBuilder(baseUrl);
+        int fragmentStart = baseUrl.indexOf('#');
+        String base = fragmentStart < 0 ? baseUrl : baseUrl.substring(0, fragmentStart);
+        String fragment = fragmentStart < 0 ? "" : baseUrl.substring(fragmentStart);
+        StringBuilder url = new StringBuilder(base);
         String separator;
-        if (baseUrl.indexOf('?') < 0) {
+        if (base.indexOf('?') < 0) {
             separator = "?";
-        } else if (baseUrl.endsWith("?") || baseUrl.endsWith("&")) {
+        } else if (base.endsWith("?") || base.endsWith("&")) {
             separator = "";
         } else {
             separator = "&";
@@ -85,7 +89,7 @@ public final class UrlQueryBuilder {
             url.append(separator).append(encode(param[0])).append('=').append(encode(param[1]));
             separator = "&";
         }
-        return url.toString();
+        return url.append(fragment).toString();
     }
 
     /** Percent-encodes a query component. */
