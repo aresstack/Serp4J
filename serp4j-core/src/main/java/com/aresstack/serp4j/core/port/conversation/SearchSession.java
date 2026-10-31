@@ -58,7 +58,9 @@ public interface SearchSession extends AutoCloseable {
      * Releases the session's resources and completes a running turn with {@code CANCELLED}. Idempotent. Closes only
      * what the session owns (ADR-017): never the provider or shared infrastructure.
      *
-     * <p>Thread-safe: may be called from any thread, concurrently with running calls and with a second {@code close()}; the first call wins, concurrent calls return after the resources are released or at once. (ADR-017 rule 8).</p>
+     * <p>Thread-safe: may be called from any thread, concurrently with running calls and with a second
+     * {@code close()}; the first call wins, concurrent calls return after the resources are released or at once
+     * (ADR-017 rule 8).</p>
      */
     @Override
     void close();
