@@ -25,4 +25,10 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
   ArchUnit-Regeln für die Modulgrenzen; Contract-Tests für `SearchMetadata` (Review-Punkt B) und die
   Ownership-Regel (Review-Punkt C) mit der Vorlage `SearchProviderContract`.
 - CI: Build mit JDK 21, Tests auf JDK 21 und JDK 8, Javadoc ohne Fehler, Central-Portal-Bündel; Release-Workflow
-  für Tags `vX.Y.Z` (siehe `PUBLISHING.md`).
+  für Tags `vX.Y.Z`, der nur Commits aus `main` veröffentlicht (siehe `PUBLISHING.md`).
+- Secret-Schutz: `HttpHeaders.Builder.sensitive(name)` und `HttpRequest.Builder.setSensitiveHeader` maskieren
+  Credential-Header beliebigen Namens in `toString()`; `RequestAuthentication` nutzt das für Bearer, Basic und
+  benutzerdefinierte Header. `RawPayload.Builder.sensitiveHeader(name)` filtert providerspezifische
+  Credential-Header aus Rohantworten.
+- `SearchCapabilities.check` prüft per `require()` verlangte Features auch dann, wenn der Request keine zugehörige
+  Option setzt.

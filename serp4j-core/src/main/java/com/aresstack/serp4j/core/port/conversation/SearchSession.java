@@ -38,6 +38,8 @@ public interface SearchSession extends AutoCloseable {
      * A new session is never opened silently.</li>
      * <li>When the turn limit is reached: {@code TURN_LIMIT_REACHED}; the session stays readable but accepts no
      * further turns.</li>
+     * <li>After {@link #close()}: {@code SESSION_CLOSED}. When the provider lost the session's state (e.g. after a
+     * restart) and it cannot be resumed: {@code SESSION_LOST}.</li>
      * <li>Honours deadline and cancellation of the context.</li>
      * </ul>
      */

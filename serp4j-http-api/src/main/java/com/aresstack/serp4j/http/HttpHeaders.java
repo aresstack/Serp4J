@@ -11,10 +11,13 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
- * Immutable, case-insensitive, multi-valued HTTP headers. {@link #toString()} masks the values of
- * {@link #isSensitive(String) sensitive} headers so requests can be logged safely.
+ * Immutable, case-insensitive, multi-valued HTTP headers. {@link #toString()} masks the values of sensitive
+ * headers so requests can be logged safely: the well-known credential headers ({@link #isSensitive(String)}) and
+ * every header marked with {@link Builder#sensitive(String)}, which {@link RequestAuthentication} does for the
+ * header it sets, whatever its name.
  */
 public final class HttpHeaders {
 
@@ -23,12 +26,15 @@ public final class HttpHeaders {
             "x-auth-token", "x-access-token", "x-subscription-token", "x-amz-security-token", "x-goog-api-key")));
 
     private static final HttpHeaders EMPTY = new HttpHeaders(
-            Collections.unmodifiableMap(new TreeMap<String, List<String>>(String.CASE_INSENSITIVE_ORDER)));
+            Collections.unmodifiableMap(new TreeMap<String, List<String>>(String.CASE_INSENSITIVE_ORDER)),
+            Collections.<String>emptySet());
 
     private final Map<String, List<String>> values;
+    private final Set<String> sensitiveNames;
 
-    private HttpHeaders(Map<String, List<String>> values) {
+    private HttpHeaders(Map<String, List<String>> values, Set<String> sensitiveNames) {
         this.values = values;
+        this.sensitiveNames = sensitiveNames;
     }
 
     public static HttpHeaders empty() {
@@ -43,9 +49,9 @@ public final class HttpHeaders {
         return builder().add(name, value).build();
     }
 
-    /** Whether a header's value is a credential and must never be logged or stored. */
+    /** Whether a header of this name is a well-known credential header that must never be logged or stored. */
     public static boolean isSensitive(String name) {
-        return name != null && SENSITIVE.contains(name.toLowerCase(Locale.ROOT));
+        return name != null && SENSITIVE.contains(name.trim().toLowerCase(Locale.ROOT));
     }
 
     /** First value of the header, case-insensitive. */
@@ -78,11 +84,25 @@ public final class HttpHeaders {
         return values.isEmpty();
     }
 
+    /**
+     * Whether the header's value is masked in {@link #toString()}: a well-known credential header or one marked
+     * with {@link Builder#sensitive(String)}.
+     */
+    public boolean isSensitiveHeader(String name) {
+        return isSensitive(name) || sensitiveNames.contains(requireName(name).toLowerCase(Locale.ROOT));
+    }
+
+    /** Lower-cased names marked sensitive for this instance, in addition to the well-known ones. */
+    public Set<String> getSensitiveNames() {
+        return sensitiveNames;
+    }
+
     public Builder toBuilder() {
         Builder builder = new Builder();
         for (Map.Entry<String, List<String>> entry : values.entrySet()) {
             builder.values.put(entry.getKey(), new ArrayList<String>(entry.getValue()));
         }
+        builder.sensitiveNames.addAll(sensitiveNames);
         return builder;
     }
 
@@ -102,7 +122,7 @@ public final class HttpHeaders {
             return false;
         }
         HttpHeaders that = (HttpHeaders) o;
-        if (values.size() != that.values.size()) {
+        if (values.size() != that.values.size() || !sensitiveNames.equals(that.sensitiveNames)) {
             return false;
         }
         for (Map.Entry<String, List<String>> entry : values.entrySet()) {
@@ -115,7 +135,7 @@ public final class HttpHeaders {
 
     @Override
     public int hashCode() {
-        int hash = 0;
+        int hash = sensitiveNames.hashCode();
         for (Map.Entry<String, List<String>> entry : values.entrySet()) {
             hash += Objects.hash(entry.getKey().toLowerCase(Locale.ROOT), entry.getValue());
         }
@@ -131,7 +151,7 @@ public final class HttpHeaders {
                 text.append(", ");
             }
             text.append(entry.getKey()).append('=');
-            text.append(isSensitive(entry.getKey()) ? "[****]" : entry.getValue().toString());
+            text.append(isSensitiveHeader(entry.getKey()) ? "[****]" : entry.getValue().toString());
         }
         return text.append('}').toString();
     }
@@ -139,6 +159,7 @@ public final class HttpHeaders {
     /** Builder for {@link HttpHeaders}; names are matched case-insensitively, the first spelling is kept. */
     public static final class Builder {
         private final Map<String, List<String>> values = new TreeMap<String, List<String>>(String.CASE_INSENSITIVE_ORDER);
+        private final Set<String> sensitiveNames = new TreeSet<String>();
 
         private Builder() {
         }
@@ -164,11 +185,22 @@ public final class HttpHeaders {
             return add(name, value);
         }
 
+        /** Removes the header; a sensitivity marking for the name stays. */
         public Builder remove(String name) {
             values.remove(requireName(name));
             return this;
         }
 
+        /**
+         * Marks the header (whatever its name) as carrying a credential, so its value is masked in
+         * {@link HttpHeaders#toString()}. The marking survives {@link #build()} and {@link HttpHeaders#toBuilder()}.
+         */
+        public Builder sensitive(String name) {
+            sensitiveNames.add(requireName(name).toLowerCase(Locale.ROOT));
+            return this;
+        }
+
+        /** Adds all values and sensitivity markings of {@code headers}. */
         public Builder addAll(HttpHeaders headers) {
             if (headers == null) {
                 throw new IllegalArgumentException("headers must not be null");
@@ -178,18 +210,20 @@ public final class HttpHeaders {
                     add(entry.getKey(), value);
                 }
             }
+            sensitiveNames.addAll(headers.sensitiveNames);
             return this;
         }
 
         public HttpHeaders build() {
-            if (values.isEmpty()) {
+            if (values.isEmpty() && sensitiveNames.isEmpty()) {
                 return EMPTY;
             }
             Map<String, List<String>> copy = new TreeMap<String, List<String>>(String.CASE_INSENSITIVE_ORDER);
             for (Map.Entry<String, List<String>> entry : values.entrySet()) {
                 copy.put(entry.getKey(), Collections.unmodifiableList(new ArrayList<String>(entry.getValue())));
             }
-            return new HttpHeaders(Collections.unmodifiableMap(copy));
+            return new HttpHeaders(Collections.unmodifiableMap(copy),
+                    Collections.unmodifiableSet(new TreeSet<String>(sensitiveNames)));
         }
     }
 }

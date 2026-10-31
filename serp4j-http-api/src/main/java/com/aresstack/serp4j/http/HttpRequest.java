@@ -240,6 +240,16 @@ public final class HttpRequest {
             return this;
         }
 
+        /**
+         * Sets a header that carries a credential: replaces its values and marks the name as sensitive, so
+         * {@link HttpHeaders#toString()} and {@link HttpRequest#toString()} mask it whatever the name is.
+         */
+        public Builder setSensitiveHeader(String name, String value) {
+            headers.sensitive(name);
+            headers.set(name, value);
+            return this;
+        }
+
         public Builder removeHeader(String name) {
             headers.remove(name);
             return this;

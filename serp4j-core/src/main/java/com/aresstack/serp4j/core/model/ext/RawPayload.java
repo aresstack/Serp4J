@@ -142,13 +142,17 @@ public final class RawPayload {
                 + ", headers=" + headers.keySet() + '}';
     }
 
-    /** Builder; sensitive headers are dropped silently. */
+    /**
+     * Builder; sensitive headers are dropped silently: the well-known names in {@link #SENSITIVE_HEADERS} and every
+     * name registered with {@link #sensitiveHeader(String)} (for provider-specific credential headers).
+     */
     public static final class Builder {
         private final String contentType;
         private final byte[] body;
         private Charset charset;
         private Integer httpStatus;
         private final Map<String, List<String>> headers = new TreeMap<String, List<String>>(String.CASE_INSENSITIVE_ORDER);
+        private final Set<String> sensitiveHeaders = new java.util.TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 
         private Builder(String contentType, byte[] body) {
             this.contentType = Preconditions.requireText(contentType, "contentType").toLowerCase(Locale.ROOT);
@@ -169,11 +173,22 @@ public final class RawPayload {
             return this;
         }
 
+        /**
+         * Registers an additional header name (case-insensitive) that must never be stored, e.g. a provider's
+         * custom credential header; values already added under that name are removed.
+         */
+        public Builder sensitiveHeader(String name) {
+            String trimmed = Preconditions.requireText(name, "header name").trim();
+            sensitiveHeaders.add(trimmed);
+            headers.remove(trimmed);
+            return this;
+        }
+
         /** Adds a header value unless the header is sensitive. */
         public Builder header(String name, String value) {
             Preconditions.requireText(name, "header name");
             Preconditions.requireNonNull(value, "header value");
-            if (isSensitiveHeader(name)) {
+            if (isSensitiveHeader(name) || sensitiveHeaders.contains(name.trim())) {
                 return this;
             }
             List<String> values = headers.get(name);

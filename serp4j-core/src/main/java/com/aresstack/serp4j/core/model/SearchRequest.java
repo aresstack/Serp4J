@@ -301,7 +301,10 @@ public final class SearchRequest {
             return this;
         }
 
-        /** Marks features the provider must honour (otherwise {@code UNSUPPORTED}). */
+        /**
+         * Marks features the provider must honour (otherwise {@code UNSUPPORTED}). A required feature is checked
+         * against the provider's capabilities even when the request sets no corresponding option.
+         */
         public Builder require(SearchFeature... features) {
             for (SearchFeature feature : Preconditions.requireNonNull(features, "features")) {
                 requiredFeatures.add(Preconditions.requireNonNull(feature, "feature"));

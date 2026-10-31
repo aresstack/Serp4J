@@ -111,4 +111,30 @@ class RequestAuthenticationTest {
         assertThat(UrlQueryBuilder.of("https://e.example/s?a=1#f").param("b", "2").build())
                 .isEqualTo("https://e.example/s?a=1&b=2#f");
     }
+
+    @Test
+    void customAuthenticationHeaderIsMaskedWhateverItsName() {
+        String secret = "s3cr3t-7f1e9a2b-unique";
+        HttpRequest request = apply(RequestAuthentication.header("X-Zone-Credential", "", new TrackingSecret(secret)));
+
+        assertThat(request.getHeaders().getFirst("x-zone-credential")).contains(secret);
+        assertThat(request.getHeaders().isSensitiveHeader("X-ZONE-CREDENTIAL")).isTrue();
+        assertThat(request.getHeaders().toString()).doesNotContain(secret).contains("X-Zone-Credential=[****]");
+        assertThat(request.toString()).doesNotContain(secret);
+
+        HttpRequest copy = request.toBuilder().header("X-Trace", "1").build();
+        assertThat(copy.toString()).doesNotContain(secret).contains("X-Trace=[1]");
+        HttpHeaders merged = HttpHeaders.builder().addAll(request.getHeaders()).build();
+        assertThat(merged.toString()).doesNotContain(secret);
+        assertThat(copy.getHeaders()).isNotEqualTo(HttpHeaders.builder()
+                .add("X-Zone-Credential", secret).add("X-Trace", "1").build());
+    }
+
+    @Test
+    void basicAndBearerAreMaskedToo() {
+        String secret = "t0ken-3c4d5e6f-unique";
+        assertThat(apply(RequestAuthentication.bearer(new TrackingSecret(secret))).toString()).doesNotContain(secret);
+        String encoded = Base64.getEncoder().encodeToString(("u:" + secret).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        assertThat(apply(RequestAuthentication.basic("u", new TrackingSecret(secret))).toString()).doesNotContain(encoded);
+    }
 }

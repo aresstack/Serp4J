@@ -31,7 +31,8 @@ public interface RequestAuthentication {
 
     /**
      * Sets {@code <name>: <prefix><secret>}, e.g. {@code X-Subscription-Token: <key>} with an empty prefix or
-     * {@code Authorization: Token <key>}.
+     * {@code Authorization: Token <key>}. The header is marked sensitive whatever its name, so
+     * {@link HttpRequest#toString()} masks it.
      */
     static RequestAuthentication header(String name, String prefix, Supplier<char[]> secret) {
         requireText(name, "name");
@@ -43,7 +44,7 @@ public interface RequestAuthentication {
             requireNonNull(request, "request");
             char[] chars = requireNonNull(secret.get(), "secret value");
             try {
-                request.setHeader(name, prefix + new String(chars));
+                request.setSensitiveHeader(name, prefix + new String(chars));
             } finally {
                 Arrays.fill(chars, '\0');
             }
@@ -71,7 +72,7 @@ public interface RequestAuthentication {
                 ByteBuffer encoded = StandardCharsets.UTF_8.encode(CharBuffer.wrap(joined));
                 bytes = new byte[encoded.remaining()];
                 encoded.get(bytes);
-                request.setHeader("Authorization", "Basic " + Base64.getEncoder().encodeToString(bytes));
+                request.setSensitiveHeader("Authorization", "Basic " + Base64.getEncoder().encodeToString(bytes));
             } finally {
                 Arrays.fill(secret, '\0');
                 Arrays.fill(joined, '\0');

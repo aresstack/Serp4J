@@ -103,7 +103,9 @@ public final class SearchCapabilities {
 
     /**
      * Checks a request against these capabilities and lists every unsupported aspect: the target (always
-     * required), each used feature with the request's requirement level, and paging beyond the limits.
+     * required), each feature the request uses or explicitly requires with the request's requirement level, and
+     * paging beyond the limits. A feature marked with {@link SearchRequest.Builder#require} is checked even when
+     * the request sets no corresponding option, so {@code require} never passes silently.
      */
     public CapabilityCheck check(SearchRequest request) {
         Preconditions.requireNonNull(request, "request");
@@ -118,7 +120,9 @@ public final class SearchCapabilities {
             violations.add(CapabilityViolation.ofVertical(request.getVertical(),
                     "vertical " + request.getVertical() + " is not served; supported: " + targets));
         }
-        for (SearchFeature feature : request.getUsedFeatures()) {
+        EnumSet<SearchFeature> checked = EnumSet.copyOf(request.getUsedFeatures());
+        checked.addAll(request.getRequiredFeatures());
+        for (SearchFeature feature : checked) {
             if (!features.contains(feature)) {
                 violations.add(CapabilityViolation.ofFeature(feature, request.getRequirementLevel(feature),
                         "feature " + feature + " is not supported"));

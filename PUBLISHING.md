@@ -63,8 +63,9 @@ Konsumenten binden dafür `https://central.sonatype.com/repository/maven-snapsho
 1. `CHANGELOG.md`: den Abschnitt `## [Unreleased]` in `## [X.Y.Z] - JJJJ-MM-TT` umbenennen (und einen neuen leeren
    `[Unreleased]`-Abschnitt darüber anlegen). Der Release-Workflow bricht ab, wenn der Abschnitt zur Version fehlt.
 2. Änderungen auf `main` mergen; der CI-Workflow muss grün sein.
-3. Tag setzen und pushen. Die Version kommt **aus dem Tag** (`-Pversion=X.Y.Z`); `gradle.properties` bleibt
-   auf `-SNAPSHOT`:
+3. Tag auf dem gemergten `main`-Commit setzen und pushen. Der Workflow bricht ab, wenn der Tag-Commit nicht in
+   `origin/main` enthalten ist (Publishing-Gate). Die Version kommt **aus dem Tag** (`-Pversion=X.Y.Z`);
+   `gradle.properties` bleibt auf `-SNAPSHOT`:
 
    ```bash
    git tag -a v0.1.0 -m "Serp4J 0.1.0"

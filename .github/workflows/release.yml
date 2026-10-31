@@ -1,6 +1,7 @@
 # Serp4J Release (ADR-015, WP4 §9): Tag vX.Y.Z auf main → Build und Tests (JDK 21 + JDK 8), signiertes
 # Bündel an das Central Publisher Portal (Freigabe dort von Hand, publishingType USER_MANAGED), GitHub Release
-# mit dem Abschnitt aus CHANGELOG.md. Ablauf und Secrets: PUBLISHING.md.
+# mit dem Abschnitt aus CHANGELOG.md. Ein Tag, dessen Commit nicht in main enthalten ist, wird abgewiesen.
+# Ablauf und Secrets: PUBLISHING.md.
 name: Release
 
 on:
@@ -23,6 +24,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Tag muss auf main liegen
+        run: |
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::Der Tag $GITHUB_REF_NAME zeigt auf $GITHUB_SHA, das nicht in origin/main enthalten ist. Nur Commits auf main werden veröffentlicht."
+            exit 1
+          fi
 
       - name: Version aus dem Tag ableiten und Changelog prüfen
         id: version

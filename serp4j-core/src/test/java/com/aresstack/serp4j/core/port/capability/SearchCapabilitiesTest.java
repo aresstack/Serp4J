@@ -101,4 +101,18 @@ class SearchCapabilitiesTest {
         assertThat(withSessions).isNotEqualTo(capabilities);
         assertThat(capabilities.toBuilder().build()).isEqualTo(capabilities);
     }
+
+    @Test
+    void requiredFeaturesAreCheckedEvenWithoutACorrespondingOption() {
+        SearchRequest request = SearchRequest.builder("q").require(SearchFeature.FRESHNESS).build();
+        assertThat(request.getUsedFeatures()).doesNotContain(SearchFeature.FRESHNESS);
+
+        CapabilityCheck check = capabilities.check(request);
+        assertThat(check.isSupported()).isFalse();
+        assertThat(check.getRequiredViolations()).singleElement()
+                .satisfies(v -> assertThat(v.getFeature()).contains(SearchFeature.FRESHNESS));
+
+        SearchRequest supported = SearchRequest.builder("q").require(SearchFeature.COUNTRY).build();
+        assertThat(capabilities.check(supported).isSupported()).isTrue();
+    }
 }

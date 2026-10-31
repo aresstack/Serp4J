@@ -100,4 +100,19 @@ class ExtensionsTest {
         assertThatThrownBy(() -> first.getHeaders().get("X-Trace").add("x"))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
+
+    @Test
+    void rawPayloadDropsCustomSensitiveHeaders() {
+        String secret = "zone-9a8b7c6d-unique";
+        RawPayload payload = RawPayload.builder("text/plain", new byte[0])
+                .header("X-Zone-Credential", secret)
+                .header("X-Trace", "1")
+                .sensitiveHeader("x-zone-credential")
+                .header("X-ZONE-CREDENTIAL", secret)
+                .header("Authorization", "Bearer " + secret)
+                .build();
+
+        assertThat(payload.getHeaders()).containsOnlyKeys("X-Trace");
+        assertThat(payload.toString()).doesNotContain(secret);
+    }
 }
