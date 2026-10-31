@@ -18,6 +18,20 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
   Prüfbausteine `MappingDefinitionVerifier` und `MappingSnapshot` für Fixture-Tests. Formatreferenz:
   `docs/mapping/mapping-definition-format.md`.
 - `serp4j-json` (Teil J1): `JsonTrees` (JSON-Text ↔ `StructuredValue`, exakte Zahlen, strikt), einzige Stelle mit Gson.
+- Paket F, Browser (ADR-010, ADR-011, ADR-017, WP3):
+  - `serp4j-browser-api` (Java 8, keine Abhängigkeiten, kennt den Core nicht): `BrowserRuntime` mit `getInfo()`,
+    `probe()` und `openSession(...)`; `BrowserSession` mit `navigate`, `await` (`WaitCondition`), `evaluate`
+    (`PageScript`, Ergebnis als `BrowserValue`), `click`/`type`/`press`, `snapshot` und `network()`
+    (`NetworkCapture`, ohne Cookie- und Authorization-Header); `UrlPolicy` als Host-Allowlist vor und nach jeder
+    Navigation; Fehlertypen unter `BrowserException`.
+  - `serp4j-browser-testkit`: `FakeBrowserRuntime` für Provider-Tests ohne Browser und die TCK
+    `BrowserRuntimeContractTest` (27 Fälle: Isolation, Kapazität, Timeouts, Absturz, Prozessaufräumen, Policy).
+  - `serp4j-browser-playwright` (Java 8): `PlaywrightBrowserRuntime` mit einem Owner-Thread je Browser,
+    Kontext je Session, harter Kapazitätsgrenze, Lebensdauer-/Leerlauf-/Navigationsbudget, `RemotePlaywrightRuntime`
+    für einen Playwright-Server und der Prüfung „genau ein Treiber“ über `PlaywrightDriverModule`.
+  - Treiber `serp4j-browser-playwright-driver-node` (Java 8) und `-driver-graal` (Java 21, playwright4j).
+  - Build: Plugin `serp4j.browser-tests` (Source-Set `browserTest`, nur mit `-Pserp4j.browserTests=true`);
+    CI-Job `browser-tck` mit Chromium und beiden Treibern.
 - Gradle-Multi-Project: Wrapper 8.14.3, Convention-Plugins in `build-logic` (`serp4j.java-library`, `serp4j.java8`,
   `serp4j.java21`, `serp4j.published`, `serp4j.provider`), Version Catalog, `serp4j-bom`, Publishing über
   `com.gradleup.nmcp` mit signierten Sources- und Javadoc-JARs (ADR-015).
