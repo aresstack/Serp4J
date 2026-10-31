@@ -36,5 +36,5 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
   `create(...)` besitzt seinen Client, `wrap(client, ...)` leiht ihn nur (ADR-017). Jede Serverantwort ist eine
   `HttpResponse`; Transportfehler werden nach `HttpTransportException.Kind` klassifiziert, ohne Bodies, Header-Werte
   oder unmaskierte URLs in Meldungen und Ursachen. Default-User-Agent `Serp4J/<version>`. Redirects übernimmt der
-  Transport selbst und entfernt beim Wechsel des Origins alle sensitiven Header. Requests über dem
+  Transport selbst und entfernt beim Wechsel des Origins alle sensitiven Header und Credential-Query-Parameter. Requests über dem
   Verbindungslimit warten, statt wie bei AHC mit `TooManyConnectionsException` zu scheitern.

@@ -14,6 +14,8 @@ import org.asynchttpclient.RequestBuilder;
 import org.asynchttpclient.Response;
 import org.asynchttpclient.uri.Uri;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -56,8 +58,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *   {@code POST}, continue as {@code GET} without body; {@code 307}/{@code 308} repeat method and body. When a
  *   redirect leaves the origin (scheme, host or port changes), every
  *   {@linkplain HttpHeaders#isSensitiveHeader(String) sensitive header} – the well-known credential headers and
- *   every header a {@link com.aresstack.serp4j.http.RequestAuthentication} marked – is dropped, so a credential
- *   never reaches a third host.</li>
+ *   every header a {@link com.aresstack.serp4j.http.RequestAuthentication} marked – is dropped, and so is every
+ *   credential query parameter in the target URL (well-known names and those registered for the request), so a
+ *   credential never reaches a third host.</li>
  *   <li>At most {@link AhcHttpTransportOptions#getMaxConnections()} requests are in flight, at most
  *   {@link AhcHttpTransportOptions#getMaxConnectionsPerHost()} per origin; further requests wait in order instead
  *   of failing (async-http-client alone would reject them). Waiting counts against the request timeout,
@@ -324,14 +327,16 @@ public final class AhcHttpTransport implements HttpTransport {
         if (switchToGet) {
             headers.remove("Content-Type").remove("Content-Length").remove("Content-Encoding");
         }
+        String targetUrl = target.toUrl();
         if (!sameOrigin(current, target)) {
             for (String name : request.getHeaders().getNames()) {
                 if (request.getHeaders().isSensitiveHeader(name)) {
                     headers.remove(name);
                 }
             }
+            targetUrl = withoutSensitiveQueryParameters(targetUrl, request.getSensitiveQueryParameters());
         }
-        HttpRequest.Builder next = HttpRequest.builder(method, target.toUrl()).headers(headers.build());
+        HttpRequest.Builder next = HttpRequest.builder(method, targetUrl).headers(headers.build());
         for (String parameter : request.getSensitiveQueryParameters()) {
             next.sensitiveQueryParameter(parameter);
         }
@@ -339,6 +344,43 @@ public final class AhcHttpTransport implements HttpTransport {
             next.body(request.getBody(), request.getContentType().orElse("application/octet-stream"));
         }
         return next.build();
+    }
+
+    /**
+     * Removes every query parameter that is a credential – a {@linkplain HttpRequest#isSensitiveQueryParameter
+     * well-known name} or one registered for the request – from a redirect target on another origin, so a server
+     * cannot forward a credential (e.g. {@code Location: https://other.example/?custom_token=...}) to a third host.
+     */
+    static String withoutSensitiveQueryParameters(String url, Set<String> registered) {
+        int fragmentStart = url.indexOf('#');
+        String fragment = fragmentStart < 0 ? "" : url.substring(fragmentStart);
+        String withoutFragment = fragmentStart < 0 ? url : url.substring(0, fragmentStart);
+        int queryStart = withoutFragment.indexOf('?');
+        if (queryStart < 0) {
+            return url;
+        }
+        StringBuilder kept = new StringBuilder();
+        for (String pair : withoutFragment.substring(queryStart + 1).split("&", -1)) {
+            int equals = pair.indexOf('=');
+            String name = decode(equals < 0 ? pair : pair.substring(0, equals)).trim().toLowerCase(Locale.ROOT);
+            if (HttpRequest.isSensitiveQueryParameter(name) || registered.contains(name)) {
+                continue;
+            }
+            if (kept.length() > 0) {
+                kept.append('&');
+            }
+            kept.append(pair);
+        }
+        String base = withoutFragment.substring(0, queryStart);
+        return (kept.length() == 0 ? base : base + "?" + kept) + fragment;
+    }
+
+    private static String decode(String encoded) {
+        try {
+            return URLDecoder.decode(encoded, "UTF-8");
+        } catch (UnsupportedEncodingException | IllegalArgumentException e) {
+            return encoded;
+        }
     }
 
     private static boolean isRedirect(int status) {

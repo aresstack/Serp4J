@@ -259,6 +259,47 @@ class AhcHttpTransportTest {
     }
 
     @Test
+    void crossOriginRedirectDropsCredentialQueryParametersFromTheTarget() throws Exception {
+        try (LocalHttpServer other = new LocalHttpServer()) {
+            other.on("/collect", exchange -> LocalHttpServer.respond(exchange, 200, "text/plain", "collected"));
+            server.on("/start", exchange -> LocalHttpServer.redirect(exchange, 302, other.url(
+                    "/collect?q=java&custom_token=" + SECRET + "&api_key=" + SECRET + "&page=2#frag")));
+
+            HttpRequest.Builder builder = HttpRequest.get(server.url("/start?q=java"));
+            RequestAuthentication.queryParameter("custom_token", () -> SECRET.toCharArray()).apply(builder);
+
+            HttpResponse response = transport.execute(builder.build()).get(10, TimeUnit.SECONDS);
+
+            assertThat(response.getBodyAsText()).isEqualTo("collected");
+            assertThat(server.lastRequest().uri).contains("custom_token=" + SECRET);
+            assertThat(other.lastRequest().uri).isEqualTo("/collect?q=java&page=2").doesNotContain(SECRET);
+        }
+    }
+
+    @Test
+    void sameOriginRedirectKeepsQueryParameters() throws Exception {
+        server.on("/start", exchange -> LocalHttpServer.redirect(exchange, 302, "/next?custom_token=" + SECRET));
+        server.on("/next", exchange -> LocalHttpServer.respond(exchange, 200, "text/plain", "ok"));
+
+        HttpRequest.Builder builder = HttpRequest.get(server.url("/start"));
+        RequestAuthentication.queryParameter("custom_token", () -> SECRET.toCharArray()).apply(builder);
+        transport.execute(builder.build()).get(10, TimeUnit.SECONDS);
+
+        assertThat(server.lastRequest().uri).isEqualTo("/next?custom_token=" + SECRET);
+    }
+
+    @Test
+    void credentialQueryStrippingHandlesEncodingCaseAndEmptyQueries() {
+        java.util.Set<String> registered = java.util.Collections.singleton("custom_token");
+        assertThat(AhcHttpTransport.withoutSensitiveQueryParameters(
+                "https://o.example/p?Custom%5FToken=x&KEY=y&q=1", registered)).isEqualTo("https://o.example/p?q=1");
+        assertThat(AhcHttpTransport.withoutSensitiveQueryParameters(
+                "https://o.example/p?token=x#f", registered)).isEqualTo("https://o.example/p#f");
+        assertThat(AhcHttpTransport.withoutSensitiveQueryParameters(
+                "https://o.example/p", registered)).isEqualTo("https://o.example/p");
+    }
+
+    @Test
     void seeOtherAndFoundAfterPostContinueAsGetWithoutBody() throws Exception {
         server.on("/303", exchange -> LocalHttpServer.redirect(exchange, 303, "/result"));
         server.on("/302", exchange -> LocalHttpServer.redirect(exchange, 302, "/result"));
