@@ -1,0 +1,97 @@
+# Serp4J Release (ADR-015, WP4 §9): Tag vX.Y.Z auf main → Build und Tests (JDK 21 + JDK 8), signiertes
+# Bündel an das Central Publisher Portal (Freigabe dort von Hand, publishingType USER_MANAGED), GitHub Release
+# mit dem Abschnitt aus CHANGELOG.md. Ein Tag, dessen Commit nicht in main enthalten ist, wird abgewiesen.
+# Ablauf und Secrets: PUBLISHING.md.
+name: Release
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Release ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+      ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+      ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_IN_MEMORY_KEY }}
+      ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_IN_MEMORY_KEY_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Tag muss auf main liegen
+        run: |
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::Der Tag $GITHUB_REF_NAME zeigt auf $GITHUB_SHA, das nicht in origin/main enthalten ist. Nur Commits auf main werden veröffentlicht."
+            exit 1
+          fi
+
+      - name: Version aus dem Tag ableiten und Changelog prüfen
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if ! grep -q "^## \[$VERSION\]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md hat keinen Abschnitt '## [$VERSION]'."
+            exit 1
+          fi
+          for secret in ORG_GRADLE_PROJECT_mavenCentralUsername ORG_GRADLE_PROJECT_mavenCentralPassword ORG_GRADLE_PROJECT_signingInMemoryKey; do
+            if [ -z "${!secret}" ]; then
+              echo "::error::Secret für $secret fehlt (siehe PUBLISHING.md)."
+              exit 1
+            fi
+          done
+          # Release-Notizen: der Abschnitt dieser Version aus CHANGELOG.md.
+          awk -v v="$VERSION" '
+            /^## \[/ { inside = index($0, "## [" v "]") == 1 }
+            inside { print }
+          ' CHANGELOG.md > release-notes.md
+
+      - name: JDK 8 (Test-Laufzeit)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+
+      - name: JDK 21 (Build-Toolchain)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
+
+      - name: Build, Tests (JDK 21 und JDK 8), Javadoc
+        run: ./gradlew build -Pversion=${{ steps.version.outputs.version }} --stacktrace
+
+      - name: Signiertes Bündel an das Central Portal übertragen
+        run: ./gradlew publishAggregationToCentralPortal -Pversion=${{ steps.version.outputs.version }} --stacktrace
+
+      - name: Bündel als Workflow-Artefakt sichern
+        uses: actions/upload-artifact@v4
+        with:
+          name: central-bundle-${{ steps.version.outputs.version }}
+          path: build/nmcp/zip/aggregation.zip
+          retention-days: 30
+
+      - name: GitHub Release anlegen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "Serp4J ${{ steps.version.outputs.version }}" \
+            --notes-file release-notes.md \
+            --verify-tag \
+            build/nmcp/zip/aggregation.zip
