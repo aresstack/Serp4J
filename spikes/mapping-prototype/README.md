@@ -54,6 +54,9 @@ Antwortquelle), Ableitungen (`area` aus `position`), Flags → Extensions mit Be
 2. Eine polymorphe Liste braucht **eine** Sektion (`kind: elements`, Diskriminator entscheidet `item:`/`feature:`).
    Zwei Sektionen auf demselben Pfad erzeugten Dubletten als generische Features.
 3. Gemeinsame `fields` plus `fieldsByType`, sonst landen Item-Felder in Features und umgekehrt in `unmapped`.
+4. (Angelos Review) Die Demo nutzte zunächst **eine** `CustomMappers`-Instanz für alle drei Definitionen. ADR-019
+   verlangt eine Registry je Definition; die Demo hält deshalb jetzt je Definition eine eigene Instanz, und Paket MP
+   bekommt einen Regressionstest für zwei Definitionen mit gleichen Sektions- und Typ-IDs.
 
 **Bewusst nicht gelöst:** Bedingungen oder Ausdrücke in der Definition. Die Grenze bleibt: Was ein Pfad plus Konverter
 nicht ausdrückt, ist Java.

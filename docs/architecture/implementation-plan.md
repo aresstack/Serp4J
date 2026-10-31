@@ -14,7 +14,7 @@ notwendig erkannt wurden: **0** (Charakterisierung in AskAI), **S** (Browser-Spi
 |---|---|---|---|---|---|
 | **0** | Charakterisierung in AskAI: Fixtures, Golden-Tests | (AskAI, nur Tests) | E-1 | S | hoch |
 | **A** | Build-Gerüst, Core Domain & Ports, Port-Module | `build-logic`, `serp4j-bom`, `serp4j-core`, `serp4j-http-api` | Freigabe | L | kritisch |
-| **MP** | Mapping-Infrastruktur: `serp4j-mapping` und J1 (`JsonTrees` in `serp4j-json`) | `serp4j-mapping`, `serp4j-json` (Teil 1), `serp4j-testkit` (Contract-Test) | A; Abnahme von ADR-019 | M | kritisch |
+| **MP** | Mapping-Infrastruktur: `serp4j-mapping` und J1 (`JsonTrees` in `serp4j-json`) | `serp4j-mapping`, `serp4j-json` (Teil 1), `serp4j-testkit` (Contract-Test) | A (ADR-019 angenommen) | M | kritisch |
 | **B** | Brave-Adapter | `serp4j-provider-brave` | A, MP, (E für Contract-Tests), E-1: echte Fixture vor der Mapping-Definition | M | hoch |
 | **C** | Bright-Data-Adapter | `serp4j-provider-brightdata` | A, MP, (E), E-1; `brd_json`-Default erst nach echter Prüfung (E-2) | M | hoch |
 | **D** | DataForSEO-Adapter (Web) | `serp4j-provider-dataforseo` | A, MP, (E); Fixtures vorhanden (E-1) | L | hoch |
@@ -141,7 +141,10 @@ Zusätzlich:
 - `serp4j-mapping` (Java 8, nur `core`): `TreePath` (Namen, Index, `[*]`, zitierte Namen), `MappingDefinitions.from(StructuredValue)`
   mit Validierung, `MappingEngine` (Metadaten, Sektionen `items`/`features`/`elements`, Diskriminator, `fieldsByType`,
   Positionsmodi, Pflichtfelder, Unmapped-Erhalt, Warnungen), `ValueConverters` (Standardkonverter, registrierbar),
-  `CustomMapperRegistry` je Definition (`ItemMapper`, `FeatureMapper` je Sektion und Typ, `MetadataMapper`).
+  `CustomMapperRegistry` **je Definition**, nie geteilt (`ItemMapper`, `FeatureMapper` je Sektion und Typ, `MetadataMapper`).
+- **Verbindlich (Angelo, 2026-10-31):** Regressionstest, in dem zwei Definitionen dieselben Sektions-IDs und
+  Feature-Typ-IDs verwenden; die Custom Mapper der einen dürfen die andere nachweislich nicht beeinflussen. Der
+  Prototyp teilte zunächst eine `CustomMappers`-Instanz über alle Definitionen; das ist in MP ausgeschlossen.
 - J1 in `serp4j-json`: `JsonTrees.read/write` (JSON-Text ↔ `StructuredValue`), einzige Gson-Stelle.
 - `serp4j-testkit`: `MappingDefinitionContractTest` (Definition lädt, jeder Pfad trifft in mindestens einer Fixture,
   Golden-Output, „unbekannter Typ überlebt").
@@ -236,7 +239,7 @@ wird nicht publiziert.
 | alle | Angelos endgültige Abnahme und ausdrückliche Startfreigabe |
 | A – Core und Build | Korrektur der beiden Core-Vertragsfragen (Review-Punkte B und C, oben eingearbeitet); E-1/E-2 **nicht** nötig |
 | 0 | vorhandene DataForSEO-Fixtures (E-1); für Brave/Bright Data ein Recording-Lauf mit Angelos Keys |
-| MP – Mapping-Infrastruktur | A, Abnahme von ADR-019 durch Angelo |
+| MP – Mapping-Infrastruktur | A; ADR-019 angenommen (2026-10-31); Regressionstest „getrennte Registries je Definition" ist Teil der Fertigstellung |
 | B – Brave | A, MP, E-1: echte Fixture |
 | C – Bright Data | A, MP, E-1 und E-2 (Default erst nach echter Prüfung) |
 | D – DataForSEO | A, MP, vorhandene Fixtures (E-1) |

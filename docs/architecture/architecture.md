@@ -467,7 +467,8 @@ Regeln:
    `serp4j-json` eine Abhängigkeit.
 2. Die deklarative Pfadsprache bleibt klein (Namen, Index, `[*]`), ohne Filter oder Ausdrücke. Was sie nicht ausdrückt,
    ist Java. Diese Grenze wird nicht durch Konfigurationsfeatures verschoben.
-3. Custom Mapper sind an eine Definition gebunden, nie global je Typ-Code.
+3. Custom Mapper sind an eine Definition gebunden, nie global je Typ-Code und nie zwischen Definitionen geteilt
+   (Regressionstest in Paket MP: zwei Definitionen mit gleichen Sektions- und Feature-Typ-IDs beeinflussen sich nicht).
 4. Nicht konsumierte Felder eines Elements landen als `StructuredValue` in `Extensions.unmapped(<namespace>)`, unbekannte
    Typen als `GenericSerpFeature` mit Warnung; die Engine wirft nur bei ungültiger Definition.
 5. Jede Definition wird im Testkit gegen echte Fixtures geprüft (`MappingDefinitionContractTest`): Laden, jeder Pfad
@@ -758,5 +759,5 @@ Weitere offene **technische** Fragen sind per Spike zu klären und gehören nich
 | Migration aus AskAI nachvollziehbar geplant | §11, WP5, ADR-014 |
 | Java-8-Kompatibilität des Core gewährleistet | §1, §12, ADR-002 |
 | wesentliche Entscheidungen begründet und dokumentiert | ADR-001 bis ADR-019 |
-| **konfigurierbare Mapping-Infrastruktur** (zwei Ebenen, sieben Prinzipien, eigenes Modul, Unmapped-Erhalt, Fixture-Tests, für Nutzer offen) | §5.6, [ADR-019](adr/ADR-019-response-mapping.md), Prototyp `spikes/mapping-prototype`; Abnahme durch Angelo offen |
+| **konfigurierbare Mapping-Infrastruktur** (zwei Ebenen, sieben Prinzipien, eigenes Modul, Unmapped-Erhalt, Fixture-Tests, für Nutzer offen) | §5.6, [ADR-019](adr/ADR-019-response-mapping.md), Prototyp `spikes/mapping-prototype`; von Angelo angenommen (2026-10-31) |
 | priorisierter, parallelisierbarer Implementierungsplan | [implementation-plan.md](implementation-plan.md) |

@@ -31,7 +31,12 @@ public final class Demo {
         // Serp4J-Nutzer eigene Konverter und Mapper beisteuern, ohne die Engine anzufassen.
         converters.register("serpArea", v -> v == null ? null : "right".equals(v) ? "SIDEBAR" : "MAIN");
 
-        Mapping.CustomMappers custom = new Mapping.CustomMappers()
+        // Registry je Definition (ADR-019): Provider A und B haben keine Custom Mapper, C hat drei. Eine über alle
+        // Definitionen geteilte Instanz ist ausgeschlossen, auch wenn sie dieselben Sektions-/Typ-IDs verwenden.
+        Map<String, Mapping.CustomMappers> customByDefinition = new LinkedHashMap<>();
+        customByDefinition.put("provider-a", new Mapping.CustomMappers());
+        customByDefinition.put("provider-b", new Mapping.CustomMappers());
+        customByDefinition.put("provider-c", new Mapping.CustomMappers()
                 // C: Rangsemantik + Spalte sind mehr als Feldnamen → Custom Item Mapper ergänzt den deklarativen Teil.
                 .itemsOf("serp", (element, item, ctx, consumed) -> {
                     Object pos = element.get("position");
@@ -75,13 +80,12 @@ public final class Demo {
                     f.fields.put("questions", qas);
                     consumed.add("items"); consumed.add("type");
                     return f;
-                });
-
-        Mapping.Engine engine = new Mapping.Engine(converters, custom);
+                }));
 
         for (String p : new String[] {"provider-a", "provider-b", "provider-c"}) {
             Object input = Json.parse(read(base + "/inputs/" + p + ".json"));
             Mapping.Definition def = Mapping.Definition.from(Json.parse(read(base + "/definitions/" + p + ".json")));
+            Mapping.Engine engine = new Mapping.Engine(converters, customByDefinition.get(p));
             Model.Result r = engine.map(input, def, p);
             System.out.println("=== " + def.id + " (v" + def.version + ") ===");
             System.out.print(r);

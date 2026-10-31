@@ -1,6 +1,6 @@
 # ADR-019 – Response-Mapping in zwei Ebenen: deklarative Definitionen plus Custom Mapper
 
-**Status:** Vorgeschlagen (Angelos Vorschlag vom 2026-10-31, Prototyp geprüft; Abnahme als eigenes Kriterium offen) ·
+**Status:** Angenommen (Angelo, 2026-10-31, nach Prüfung von Commit e6f7ab7) ·
 **Quellen:** Angelos Mapping-Vorschlag (Vorbild WD4J: Gson `@JsonAdapter`, polymorphe Adapter, `GsonMapperFactory`);
 WP1 §5 (Elementtypen je Provider), ADR-006 (Extensions, `StructuredValue`, `GenericSerpFeature`), E-1 (echte Fixtures);
 Prototyp [`spikes/mapping-prototype`](../../../spikes/mapping-prototype/README.md)
@@ -78,9 +78,11 @@ Builder-Methoden abbildet; die Definition importiert keine Klasse.
 - `FeatureMapper` je **(Sektion, Feature-Typ)**: ersetzt den deklarativen Teil für verschachtelte Strukturen
   (Knowledge Graph mit Fakten, PAA mit Fragen und Antwortquellen, KI-Antwort mit `SourceReference`s).
 - `MetadataMapper` für Metadaten, die nicht als Feldpfad ausdrückbar sind (z. B. `cost` + `time` → `ProviderUsage`).
-- Registrierung in einer `CustomMapperRegistry`, die **zu genau einer Definition** gehört, nie global je Typ-Code. Ein
-  Mapper für DataForSEOs `knowledge_graph` darf nie an Braves `info_box` laufen, auch wenn beide auf `knowledge_panel`
-  abbilden (Erkenntnis aus dem Prototyp).
+- Registrierung in einer `CustomMapperRegistry`, die **zu genau einer Definition** gehört, nie global je Typ-Code und
+  nie zwischen Definitionen geteilt. Ein Mapper für DataForSEOs `knowledge_graph` darf nie an Braves `info_box` laufen,
+  auch wenn beide auf `knowledge_panel` abbilden (Erkenntnis aus dem Prototyp). **Verbindliche Implementierungsvorgabe
+  (Angelo):** Paket MP enthält einen Regressionstest, in dem zwei Definitionen dieselben Sektions-IDs und Feature-Typ-IDs
+  verwenden und ihre Custom Mapper sich nachweislich nicht gegenseitig beeinflussen.
 - Custom Mapper erhalten einen `MappingContext` (Namensraum des Providers, Konverter, Warnungen, konsumierte Schlüssel).
 
 ### 4. Unbekannte Daten (Prinzip 5, ADR-006)
