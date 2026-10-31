@@ -45,6 +45,8 @@ public final class RawPayload {
     private final Charset charset;
     private final Integer httpStatus;
     private final Map<String, List<String>> headers;
+    /** Additional sensitive names registered on the builder; kept so that {@link #toBuilder()} filters alike. */
+    private final Set<String> sensitiveHeaders;
 
     private RawPayload(Builder builder) {
         this.contentType = builder.contentType;
@@ -56,6 +58,9 @@ public final class RawPayload {
             copy.put(entry.getKey(), Collections.unmodifiableList(new ArrayList<String>(entry.getValue())));
         }
         this.headers = Collections.unmodifiableMap(copy);
+        Set<String> sensitive = new java.util.TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+        sensitive.addAll(builder.sensitiveHeaders);
+        this.sensitiveHeaders = Collections.unmodifiableSet(sensitive);
     }
 
     /** Starts a payload; {@code body} is copied. */
@@ -70,9 +75,24 @@ public final class RawPayload {
                 .build();
     }
 
-    /** Returns whether {@code headerName} is filtered out of raw payloads. */
+    /**
+     * Returns a builder pre-filled with this payload (body and headers are copied, registered sensitive header
+     * names are carried over).
+     */
+    public Builder toBuilder() {
+        Builder builder = new Builder(contentType, body);
+        builder.charset = charset;
+        builder.httpStatus = httpStatus;
+        for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
+            builder.headers.put(entry.getKey(), new ArrayList<String>(entry.getValue()));
+        }
+        builder.sensitiveHeaders.addAll(sensitiveHeaders);
+        return builder;
+    }
+
+    /** Returns whether {@code headerName} (trimmed, case-insensitive) is filtered out of raw payloads. */
     public static boolean isSensitiveHeader(String headerName) {
-        return headerName != null && SENSITIVE_HEADERS.contains(headerName);
+        return headerName != null && SENSITIVE_HEADERS.contains(headerName.trim());
     }
 
     /** Media type such as {@code application/json}, {@code text/html} or {@code image/png}. */
@@ -129,9 +149,14 @@ public final class RawPayload {
                 && headers.equals(that.headers);
     }
 
+    /** Consistent with {@link #equals(Object)}: header names are hashed case-insensitively. */
     @Override
     public int hashCode() {
-        return Objects.hash(contentType, Arrays.hashCode(body), charset, httpStatus, headers);
+        int hash = Objects.hash(contentType, Arrays.hashCode(body), charset, httpStatus);
+        for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
+            hash += Objects.hash(entry.getKey().toLowerCase(Locale.ROOT), entry.getValue());
+        }
+        return hash;
     }
 
     /** Never includes the body. */
@@ -184,17 +209,17 @@ public final class RawPayload {
             return this;
         }
 
-        /** Adds a header value unless the header is sensitive. */
+        /** Adds a header value unless the header is sensitive; the name is trimmed before it is checked and stored. */
         public Builder header(String name, String value) {
-            Preconditions.requireText(name, "header name");
+            String trimmed = Preconditions.requireText(name, "header name").trim();
             Preconditions.requireNonNull(value, "header value");
-            if (isSensitiveHeader(name) || sensitiveHeaders.contains(name.trim())) {
+            if (isSensitiveHeader(trimmed) || sensitiveHeaders.contains(trimmed)) {
                 return this;
             }
-            List<String> values = headers.get(name);
+            List<String> values = headers.get(trimmed);
             if (values == null) {
                 values = new ArrayList<String>(1);
-                headers.put(name, values);
+                headers.put(trimmed, values);
             }
             values.add(value);
             return this;

@@ -23,6 +23,15 @@ public final class ProviderUsage {
         return new Builder();
     }
 
+    /** Returns a builder pre-filled with this instance's values. */
+    public Builder toBuilder() {
+        Builder builder = new Builder();
+        builder.cost = cost;
+        builder.creditsUsed = creditsUsed;
+        builder.rateLimit = rateLimit;
+        return builder;
+    }
+
     public Optional<MonetaryAmount> getCost() {
         return Optional.ofNullable(cost);
     }

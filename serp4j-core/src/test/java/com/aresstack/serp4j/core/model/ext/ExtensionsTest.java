@@ -115,4 +115,59 @@ class ExtensionsTest {
         assertThat(payload.getHeaders()).containsOnlyKeys("X-Trace");
         assertThat(payload.toString()).doesNotContain(secret);
     }
+
+    /** #8: equals compares header names case-insensitively, so hashCode must as well. */
+    @Test
+    void rawPayloadHashCodeIsConsistentWithCaseInsensitiveHeaderEquality() {
+        RawPayload upper = RawPayload.builder("text/plain", new byte[0]).header("X-Trace", "1").build();
+        RawPayload lower = RawPayload.builder("text/plain", new byte[0]).header("x-trace", "1").build();
+
+        assertThat(upper).isEqualTo(lower);
+        assertThat(upper.hashCode()).isEqualTo(lower.hashCode());
+        assertThat(upper).isNotEqualTo(RawPayload.builder("text/plain", new byte[0]).header("x-trace", "2").build());
+    }
+
+    /** #9: a header name with surrounding whitespace must not bypass the sensitive-header filter. */
+    @Test
+    void rawPayloadFiltersSensitiveHeadersWithSurroundingWhitespace() {
+        String secret = "token-5e4d3c2b-unique";
+        RawPayload payload = RawPayload.builder("text/plain", new byte[0])
+                .sensitiveHeader("x-zone-credential")
+                .header(" Authorization", "Bearer " + secret)
+                .header("Set-Cookie ", "session=" + secret)
+                .header(" x-zone-credential", secret)
+                .header(" X-Trace ", "1")
+                .build();
+
+        assertThat(payload.getHeaders()).containsOnlyKeys("X-Trace");
+        assertThat(payload.getHeader("X-Trace")).contains("1");
+        assertThat(payload.toString()).doesNotContain(secret);
+        assertThat(RawPayload.isSensitiveHeader(" Authorization ")).isTrue();
+    }
+
+    /** #10: toBuilder() round-trips body, charset, status, headers and the registered sensitive names. */
+    @Test
+    void rawPayloadToBuilderRoundTripsAndKeepsSensitiveNames() {
+        String secret = "zone-1f2e3d4c-unique";
+        RawPayload original = RawPayload.builder("application/json", "{}".getBytes(StandardCharsets.UTF_8))
+                .charset(StandardCharsets.UTF_8)
+                .httpStatus(201)
+                .header("X-Trace", "1")
+                .header("X-Trace", "2")
+                .sensitiveHeader("x-zone-credential")
+                .build();
+
+        RawPayload copy = original.toBuilder().build();
+        RawPayload changed = original.toBuilder().httpStatus(500).build();
+        RawPayload refilled = original.toBuilder().header("X-Zone-Credential", secret).build();
+
+        assertThat(copy).isEqualTo(original);
+        assertThat(copy.hashCode()).isEqualTo(original.hashCode());
+        assertThat(copy.getHeaders().get("x-trace")).containsExactly("1", "2");
+        assertThat(copy.getCharset()).contains(StandardCharsets.UTF_8);
+        assertThat(changed).isNotEqualTo(original);
+        assertThat(changed.getHttpStatus()).hasValue(500);
+        assertThat(refilled.getHeaders()).containsOnlyKeys("X-Trace");
+        assertThat(refilled.toString()).doesNotContain(secret);
+    }
 }

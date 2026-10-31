@@ -29,6 +29,13 @@ public final class Topic {
         return builder(label, weight).build();
     }
 
+    /** Returns a builder pre-filled with this instance's values. */
+    public Builder toBuilder() {
+        Builder builder = new Builder(label, weight);
+        builder.elements.addAll(elements);
+        return builder;
+    }
+
     public String getLabel() {
         return label;
     }

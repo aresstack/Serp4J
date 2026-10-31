@@ -31,6 +31,15 @@ public final class ResultProvenance {
         return new Builder(provider);
     }
 
+    /** Returns a builder pre-filled with this instance's values. */
+    public Builder toBuilder() {
+        Builder builder = new Builder(provider);
+        builder.engine = engine;
+        builder.originalId = originalId;
+        builder.originalPosition = originalPosition;
+        return builder;
+    }
+
     public ProviderId getProvider() {
         return provider;
     }

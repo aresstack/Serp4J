@@ -26,6 +26,13 @@ public final class Fact {
         return builder(key).value(value).build();
     }
 
+    /** Returns a builder pre-filled with this instance's values. */
+    public Builder toBuilder() {
+        Builder builder = new Builder(key);
+        builder.values.addAll(values);
+        return builder;
+    }
+
     public String getKey() {
         return key;
     }

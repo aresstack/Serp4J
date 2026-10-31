@@ -29,6 +29,15 @@ public final class EntityMention {
         return new Builder(name);
     }
 
+    /** Returns a builder pre-filled with this instance's values. */
+    public Builder toBuilder() {
+        Builder builder = new Builder(name);
+        builder.type = type;
+        builder.confidence = confidence;
+        builder.elements.addAll(elements);
+        return builder;
+    }
+
     public String getName() {
         return name;
     }
