@@ -155,6 +155,36 @@ class MappingEngineTest {
     }
 
     @Test
+    void declarative_fields_a_feature_mapper_does_not_read_stay_in_the_unmapped_rest() {
+        MappingDefinition d = MappingDefinitions.from(JsonTrees.read("{\"id\":\"t\",\"version\":1,\"namespace\":\"t\","
+                + "\"sections\":[{\"id\":\"s\",\"kind\":\"features\",\"path\":\"$.f[*]\",\"discriminator\":\"k\","
+                + "\"discriminatorMap\":{\"kg\":\"knowledge_panel\",\"kg2\":\"knowledge_panel\"},"
+                + "\"fields\":{\"title\":\"t\",\"description\":\"d\",\"rankInGroup\":\"r\",\"t:x\":\"x\"}}]}"));
+        MappingEngine engine = MappingEngine.builder(d)
+                .customMappers(CustomMapperRegistry.builder(d)
+                        .featureMapper("s", SerpFeatureType.KNOWLEDGE_PANEL, (e, seed, ctx) ->
+                                "kg2".equals(e.text("k").orElse(null)) ? null
+                                        : seed.applyTo(KnowledgePanelFeature.builder(seed.getId(),
+                                        e.text("t").orElse("?"))).build())
+                        .build())
+                .build();
+        MappingResult r = engine.map(JsonTrees.read("{\"f\":[{\"k\":\"kg\",\"t\":\"A\",\"d\":\"desc\",\"r\":3,\"x\":\"y\"},"
+                + "{\"k\":\"kg2\",\"t\":\"B\",\"d\":\"desc2\",\"r\":4,\"x\":\"z\"}]}"));
+
+        java.util.List<KnowledgePanelFeature> panels = r.getData().getFeatures(KnowledgePanelFeature.class);
+        // mapper result: the description it ignored is neither in the feature nor lost
+        assertThat(panels.get(0).getTitle()).isEqualTo("A");
+        assertThat(panels.get(0).getDescription()).isEmpty();
+        assertThat(panels.get(0).getExtensions().getUnmapped("t")).hasValue(JsonTrees.read("{\"d\":\"desc\"}"));
+        assertThat(panels.get(0).getPosition().get().getRankInGroup()).hasValue(3);
+        assertThat(panels.get(0).getExtensions().get(ExtensionKey.of("t", "x", String.class))).hasValue("y");
+        // mapper declined: the declarative fields count as consumed again
+        assertThat(panels.get(1).getDescription()).hasValue("desc2");
+        assertThat(panels.get(1).getExtensions().getUnmapped("t")).isEmpty();
+        assertThat(r.getWarnings()).isEmpty();
+    }
+
+    @Test
     void metadata_mapper_and_transfer_to_search_metadata() {
         MappingDefinition d = MappingDefinitions.from(JsonTrees.read("{\"id\":\"t\",\"version\":1,\"namespace\":\"t\","
                 + "\"metadata\":{\"originalQuery\":\"q\",\"providerRequestId\":\"id\",\"creditsUsed\":\"credits\"}}"));

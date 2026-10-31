@@ -288,13 +288,28 @@ public final class MappingEngine {
             Map<String, Object> values = new LinkedHashMap<String, Object>();
             Extensions.Builder extensions = Extensions.builder();
             List<String> missing = new ArrayList<String>();
-            for (FieldMapping f : section.fieldsFor(type)) {
+            // With a feature mapper, the declarative values of ordinary feature fields are discarded (only position
+            // and extensions reach the seed). Their sources must therefore not count as consumed unless the
+            // declarative path is taken, or they would vanish from both the feature and its unmapped rest.
+            boolean defer = !type.isItem()
+                    && mappers.getFeatureMapper(section.getId(), type.getFeatureType().get()).isPresent();
+            Set<PathLocation> deferred = new HashSet<PathLocation>();
+            for (FieldMapping f : fieldOrder(section.fieldsFor(type), defer)) {
                 Targets.Kind kind = type.isItem() ? Targets.forItem(f.getTarget())
                         : Targets.forFeature(type.getCode(), f.getTarget());
                 if (kind == null) {
                     continue; // common field that this type does not support; the source stays unmapped
                 }
+                boolean ordinary = defer && isOrdinary(f, kind);
+                Set<PathLocation> before = ordinary ? new HashSet<PathLocation>(consumed) : null;
                 Object value = resolve(element, f, kind, "section '" + section.getId() + "'");
+                if (ordinary) {
+                    for (PathLocation l : consumed) {
+                        if (!before.contains(l)) {
+                            deferred.add(l);
+                        }
+                    }
+                }
                 if (value == null) {
                     if (f.isRequired()) {
                         missing.add(f.getTarget());
@@ -321,8 +336,30 @@ public final class MappingEngine {
                 mapItem(section, type.getResultType().get(), id, values, position, extensions.build(), element, consumed);
             } else {
                 mapFeature(section, type.getFeatureType().get(), id, values, position, extensions.build(), element,
-                        consumed);
+                        consumed, deferred);
             }
+        }
+
+        /** Seed-relevant fields (position, extensions) first, so a location shared with them is never deferred. */
+        private List<FieldMapping> fieldOrder(List<FieldMapping> fields, boolean defer) {
+            if (!defer) {
+                return fields;
+            }
+            List<FieldMapping> seed = new ArrayList<FieldMapping>();
+            List<FieldMapping> ordinary = new ArrayList<FieldMapping>();
+            for (FieldMapping f : fields) {
+                if (Targets.isPosition(f.getTarget()) || Targets.isExtension(f.getTarget())) {
+                    seed.add(f);
+                } else {
+                    ordinary.add(f);
+                }
+            }
+            seed.addAll(ordinary);
+            return seed;
+        }
+
+        private boolean isOrdinary(FieldMapping f, Targets.Kind kind) {
+            return kind != Targets.Kind.EXTENSION && !Targets.isPosition(f.getTarget());
         }
 
         // ---------------------------------------------------------- items
@@ -408,10 +445,11 @@ public final class MappingEngine {
 
         private void mapFeature(SectionDefinition section, SerpFeatureType type, ElementId id, Map<String, Object> v,
                                 SerpPosition position, Extensions declared, SourceElement element,
-                                Set<PathLocation> consumed) {
+                                Set<PathLocation> consumed, Set<PathLocation> deferred) {
             SerpFeature feature = null;
             Optional<FeatureMapper> mapper = mappers.getFeatureMapper(section.getId(), type);
             if (mapper.isPresent()) {
+                consumed.removeAll(deferred);
                 Set<PathLocation> snapshot = new HashSet<PathLocation>(consumed);
                 try {
                     feature = mapper.get().map(element, new FeatureSeed(id, type, section.getId(), position, declared),
@@ -425,6 +463,7 @@ public final class MappingEngine {
                 }
                 if (feature == null) {
                     consumed.retainAll(snapshot);
+                    consumed.addAll(deferred); // declarative path: its fields are consumed after all
                 }
             }
             if (feature != null) {

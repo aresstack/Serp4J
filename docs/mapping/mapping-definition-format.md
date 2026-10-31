@@ -149,7 +149,9 @@ sich nicht überschreiben.
 | `MetadataMapper` | nach den deklarativen Metadaten | schreibt in `MappedMetadata.Builder` |
 
 Mapper lesen über `SourceElement` (`get`, `text`, `select`, `elements`, `consume`), damit Gelesenes als konsumiert
-gilt; `elements(path)` liefert verschachtelte Elemente, deren nicht gelesene Felder im Rest bleiben. Wirft ein Mapper,
+gilt; `elements(path)` liefert verschachtelte Elemente, deren nicht gelesene Felder im Rest bleiben. Bei einem
+`FeatureMapper` zählen die gewöhnlichen deklarativen Felder des Features erst als konsumiert, wenn der Mapper `null`
+liefert; was er selbst nicht liest, bleibt also im Rest. Wirft ein Mapper,
 bleibt das deklarative Ergebnis samt Rest erhalten und es gibt eine Warnung.
 
 ## Prüfen gegen Fixtures (Prinzip 6)
