@@ -24,6 +24,13 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
 - Tests: Unit-Tests für Validierung, Unveränderlichkeit, `equals`/`hashCode`, Builder und `toBuilder()`;
   ArchUnit-Regeln für die Modulgrenzen; Contract-Tests für `SearchMetadata` (Review-Punkt B) und die
   Ownership-Regel (Review-Punkt C) mit der Vorlage `SearchProviderContract`.
+- `serp4j-testkit` (Java 8, Test-Scope, Paket E): `MockSearchProvider`, `ScriptedSearchProvider` und
+  `ScriptedConversationalProvider` mit Fehlerinjektion je Kategorie, Latenz, Deadline und Abbruch;
+  `FakeHttpTransport` mit Stubs, Fixtures, Aufzeichnung, Verzögerung, Timeout und Sequenzen (pending → ready);
+  Fixture-Ablage `fixtures/<provider>/` mit Pflicht-Sidecar (`recorded`/`synthetic`, E-1) und Secret-Scan;
+  abstrakte Contract-Tests `SearchProviderContractTest`, `ConversationalSearchProviderContractTest`,
+  `FixtureContractTest` (ADR-008, ADR-009, ADR-017). Die Contract-Vorlage aus `serp4j-core/src/test` ist dorthin
+  umgezogen.
 - CI: Build mit JDK 21, Tests auf JDK 21 und JDK 8, Javadoc ohne Fehler, Central-Portal-Bündel; Release-Workflow
   für Tags `vX.Y.Z`, der nur Commits aus `main` veröffentlicht (siehe `PUBLISHING.md`).
 - Secret-Schutz: `HttpHeaders.Builder.sensitive(name)` und `HttpRequest.Builder.setSensitiveHeader` maskieren
