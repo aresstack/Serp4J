@@ -443,13 +443,24 @@ public final class FakeBrowserSession implements BrowserSession {
                 return Collections.emptyList();
             }
             long now = System.nanoTime();
-            List<ObservedExchange> result = new ArrayList<ObservedExchange>();
+            List<Scheduled> completed = new ArrayList<Scheduled>();
             for (Scheduled scheduled : timeline) {
                 if (scheduled.visibleAt >= startedAt && scheduled.visibleAt <= now) {
-                    ObservedExchange exchange = toObserved(scheduled);
-                    if (filter.matches(exchange)) {
-                        result.add(exchange);
-                    }
+                    completed.add(scheduled);
+                }
+            }
+            // completion order, like the real runtime, not registration order
+            Collections.sort(completed, new java.util.Comparator<Scheduled>() {
+                @Override
+                public int compare(Scheduled a, Scheduled b) {
+                    return Long.compare(a.visibleAt, b.visibleAt);
+                }
+            });
+            List<ObservedExchange> result = new ArrayList<ObservedExchange>();
+            for (Scheduled scheduled : completed) {
+                ObservedExchange exchange = toObserved(scheduled);
+                if (filter.matches(exchange)) {
+                    result.add(exchange);
                 }
             }
             return Collections.unmodifiableList(result);
@@ -496,7 +507,8 @@ public final class FakeBrowserSession implements BrowserSession {
                 checkUsable();
                 long last = startedAt;
                 for (Scheduled scheduled : timeline) {
-                    if (scheduled.visibleAt >= startedAt) {
+                    // only exchanges this capture matches count, finished or still in flight
+                    if (scheduled.visibleAt >= startedAt && filter.matches(toObserved(scheduled))) {
                         last = Math.max(last, scheduled.visibleAt);
                     }
                 }

@@ -9,7 +9,9 @@ import java.util.Map;
 
 /**
  * Evaluates CSS-only {@link WaitCondition}s in the page. The condition is passed as data to a fixed interpreter
- * function, never spliced into JavaScript source, so selectors and patterns cannot inject code.
+ * function, never spliced into JavaScript source, so selectors and patterns cannot inject code. URL conditions are
+ * evaluated in Java with the caller's {@link java.util.regex.Pattern} (Java regex semantics) against the current page
+ * URL and passed in as a result.
  */
 final class WaitScript {
 
@@ -24,7 +26,7 @@ final class WaitScript {
             + "      case 'visible': return Array.from(document.querySelectorAll(c.css)).some(visible);\n"
             + "      case 'absent': return document.querySelector(c.css) === null;\n"
             + "      case 'count': return document.querySelectorAll(c.css).length >= c.count;\n"
-            + "      case 'url': return new RegExp(c.pattern).test(window.location.href);\n"
+            + "      case 'url': return c.matches === true;\n"
             + "      case 'quiet': {\n"
             + "        const key = c.css || ':document';\n"
             + "        const target = c.css ? document.querySelector(c.css) : document.documentElement;\n"
@@ -47,8 +49,25 @@ final class WaitScript {
     private WaitScript() {
     }
 
-    /** Converts a CSS-only condition into the argument of {@link #PREDICATE}. */
-    static Map<String, Object> spec(WaitCondition condition) {
+    /** Whether the condition tree contains a URL condition, which must be re-evaluated in Java on every poll. */
+    static boolean hasUrlCondition(WaitCondition condition) {
+        if (condition.getKind() == WaitCondition.Kind.URL_MATCHES) {
+            return true;
+        }
+        for (WaitCondition child : condition.getChildren()) {
+            if (hasUrlCondition(child)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Converts a CSS-only condition into the argument of {@link #PREDICATE}.
+     *
+     * @param currentUrl the page URL that URL conditions are matched against
+     */
+    static Map<String, Object> spec(WaitCondition condition, String currentUrl) {
         Map<String, Object> spec = new LinkedHashMap<String, Object>();
         switch (condition.getKind()) {
             case SELECTOR_PRESENT:
@@ -66,7 +85,7 @@ final class WaitScript {
                 break;
             case URL_MATCHES:
                 spec.put("kind", "url");
-                spec.put("pattern", condition.getUrlPattern().get().pattern());
+                spec.put("matches", condition.getUrlPattern().get().matcher(currentUrl).find());
                 break;
             case DOM_QUIET:
                 spec.put("kind", "quiet");
@@ -76,7 +95,7 @@ final class WaitScript {
                 spec.put("kind", "all");
                 List<Object> children = new ArrayList<Object>();
                 for (WaitCondition child : condition.getChildren()) {
-                    children.add(spec(child));
+                    children.add(spec(child, currentUrl));
                 }
                 spec.put("children", children);
                 break;

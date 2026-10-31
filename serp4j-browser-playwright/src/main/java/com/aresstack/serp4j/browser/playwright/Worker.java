@@ -14,6 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -81,7 +82,12 @@ final class Worker {
                     started.completeExceptionally(e);
                     return;
                 }
-                started.complete(null);
+                if (!started.complete(null)) {
+                    // the caller gave up (timeout, interrupt) while the browser was starting: nobody owns it
+                    worker.running.set(false);
+                    worker.closePlaywrightQuietly();
+                    return;
+                }
                 worker.loop();
             }
         }, name);
@@ -93,11 +99,11 @@ final class Worker {
             return worker;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            abandon(worker, started);
             throw new BrowserUnavailableException(BrowserReadiness.of(BrowserReadiness.Status.BROWSER_START_FAILED,
                     "interrupted while starting the browser"), e);
         } catch (TimeoutException e) {
-            worker.running.set(false);
-            thread.interrupt();
+            abandon(worker, started);
             throw new BrowserUnavailableException(BrowserReadiness.of(BrowserReadiness.Status.BROWSER_START_FAILED,
                     "browser did not start within " + config.startTimeout), e);
         } catch (ExecutionException e) {
@@ -106,6 +112,18 @@ final class Worker {
                 throw (BrowserUnavailableException) cause;
             }
             throw new BrowserUnavailableException(Errors.startFailure(cause), cause);
+        }
+    }
+
+    /**
+     * The caller stops waiting for the start. If the owner thread has not finished starting yet, it cleans up itself
+     * once it has; if it has just finished, the running worker is shut down here, so no browser is left without owner.
+     */
+    private static void abandon(Worker worker, CompletableFuture<Void> started) {
+        if (!started.completeExceptionally(new CancellationException("start abandoned"))) {
+            if (!started.isCompletedExceptionally()) {
+                worker.shutdown(worker.config.closeTimeout.toMillis());
+            }
         }
     }
 

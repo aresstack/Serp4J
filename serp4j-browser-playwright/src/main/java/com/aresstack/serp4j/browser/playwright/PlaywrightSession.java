@@ -61,6 +61,7 @@ import java.util.function.Predicate;
 final class PlaywrightSession implements BrowserSession {
 
     private static final String ABOUT_BLANK = "about:blank";
+    private static final long URL_POLL_MILLIS = 50L;
     private static final String TEXT_SCRIPT = "() => document.body ? document.body.innerText : ''";
 
     private final Worker worker;
@@ -263,6 +264,7 @@ final class PlaywrightSession implements BrowserSession {
         if (blockedNavigation != null) {
             String blocked = blockedNavigation;
             blockedNavigation = null;
+            blank();
             throw new UrlPolicyViolationException(blocked, action + " started a navigation that is not allowed by "
                     + options.getUrlPolicy());
         }
@@ -360,7 +362,10 @@ final class PlaywrightSession implements BrowserSession {
                 if (!condition.isCssOnly()) {
                     return awaitLocator(condition, timeout);
                 }
-                Object spec = WaitScript.spec(condition);
+                if (WaitScript.hasUrlCondition(condition)) {
+                    return pollWithUrl(condition, deadline);
+                }
+                Object spec = WaitScript.spec(condition, page.url());
                 while (true) {
                     long remaining = deadline - System.nanoTime();
                     if (remaining <= 0) {
@@ -381,6 +386,28 @@ final class PlaywrightSession implements BrowserSession {
                 }
             }
         });
+    }
+
+    /** Polls conditions containing URL parts: the URL is matched in Java (Java regex), the rest in the page. */
+    private WaitOutcome pollWithUrl(WaitCondition condition, long deadline) {
+        while (true) {
+            try {
+                Object result = page.evaluate(WaitScript.PREDICATE, WaitScript.spec(condition, page.url()));
+                if (Boolean.TRUE.equals(result)) {
+                    return WaitOutcome.SATISFIED;
+                }
+            } catch (PlaywrightException e) {
+                if (!isContextDestroyed(e)) {
+                    throw e;
+                }
+                // the page navigated while evaluating; evaluate again in the new document
+            }
+            long remaining = deadline - System.nanoTime();
+            if (remaining <= 0) {
+                return WaitOutcome.TIMED_OUT;
+            }
+            page.waitForTimeout(Math.min(URL_POLL_MILLIS, Math.max(1L, remaining / 1_000_000L)));
+        }
     }
 
     private WaitOutcome awaitLocator(WaitCondition condition, Duration timeout) {
