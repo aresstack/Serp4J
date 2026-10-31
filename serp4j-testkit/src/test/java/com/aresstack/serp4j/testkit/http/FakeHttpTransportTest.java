@@ -195,7 +195,42 @@ class FakeHttpTransportTest {
         assertThatThrownBy(() -> future.get(5, TimeUnit.SECONDS))
                 .hasCauseInstanceOf(UnexpectedHttpRequestError.class)
                 .satisfies(e -> assertThat(e.getCause().getMessage())
-                        .contains("q=x").contains("api_key=****")
+                        .contains("q=****").contains("api_key=****")
                         .doesNotContain("stub-secret-value").doesNotContain("other-secret"));
+    }
+
+    @Test
+    void matcherDescriptionsRedactFragmentsCustomNamesUserInfoAndBodies() {
+        RequestMatcher fragment = RequestMatcher.urlContains("api_key=fragment-secret");
+        RequestMatcher custom = RequestMatcher.urlStartsWith(BASE + "/search?custom_token=custom-secret&x=1");
+        RequestMatcher userInfo = RequestMatcher.urlStartsWith("https://user:userinfo-secret@api.example.invalid/");
+        RequestMatcher body = RequestMatcher.bodyContains("\"password\":\"body-secret\"");
+
+        assertThat(fragment.toString()).isEqualTo("url contains api_key=****");
+        assertThat(custom.toString()).contains("custom_token=****").contains("x=****").doesNotContain("custom-secret");
+        assertThat(userInfo.toString()).contains("https://****@api.example.invalid/")
+                .doesNotContain("userinfo-secret");
+        assertThat(body.toString()).doesNotContain("body-secret");
+
+        FakeHttpTransport http = FakeHttpTransport.create()
+                .on(fragment).reply(FakeHttpStep.status(200))
+                .on(custom).reply(FakeHttpStep.status(200))
+                .on(userInfo).reply(FakeHttpStep.status(200))
+                .on(body).reply(FakeHttpStep.status(200));
+        CompletableFuture<HttpResponse> future = http.execute(HttpRequest.get(BASE + "/elsewhere").build());
+
+        assertThatThrownBy(() -> future.get(5, TimeUnit.SECONDS))
+                .hasCauseInstanceOf(UnexpectedHttpRequestError.class)
+                .satisfies(e -> assertThat(e.getCause().getMessage())
+                        .doesNotContain("fragment-secret").doesNotContain("custom-secret")
+                        .doesNotContain("userinfo-secret").doesNotContain("body-secret"));
+    }
+
+    @Test
+    void redactedDescriptionsStillMatchTheOriginalUrl() {
+        assertThat(RequestMatcher.urlContains("api_key=fragment-secret")
+                .matches(HttpRequest.get(BASE + "/s?api_key=fragment-secret").build())).isTrue();
+        assertThat(RequestMatcher.urlContains("api_key=fragment-secret")
+                .matches(HttpRequest.get(BASE + "/s?api_key=other").build())).isFalse();
     }
 }

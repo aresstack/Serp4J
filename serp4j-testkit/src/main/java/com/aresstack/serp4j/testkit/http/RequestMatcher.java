@@ -10,10 +10,17 @@ import java.util.regex.Pattern;
 /**
  * Selects the requests a {@link FakeHttpTransport} stub answers. Immutable; carries a description for failure
  * messages. URL comparisons use {@link HttpRequest#getUrl()}, i.e. including credential query parameters.
+ *
+ * <p>Descriptions are safe by default: query values, URL user info, header values and body fragments are never
+ * shown, because the descriptions end up in {@link UnexpectedHttpRequestError} and CI logs. Only descriptions passed
+ * to {@link #of(Predicate, String)} are used verbatim.</p>
  */
 public final class RequestMatcher {
 
-    private static final Pattern QUERY_PARAMETER = Pattern.compile("([?&])([^=&#?]+)=([^&#]*)");
+    /** Any {@code name=value} pair at the start of the text or after {@code ?}, {@code &} or {@code ;}. */
+    private static final Pattern QUERY_PARAMETER = Pattern.compile("(^|[?&;])([^=&#?;/\\s]+)=([^&#;]*)");
+    /** User info in a URL ({@code scheme://user:password@host}). */
+    private static final Pattern USER_INFO = Pattern.compile("(://)[^/@\\s]+@");
 
     private final Predicate<HttpRequest> predicate;
     private final String description;
@@ -86,11 +93,11 @@ public final class RequestMatcher {
         return of(request -> request.getHeaders().getAll(name).contains(value), "header " + name + " = ****");
     }
 
-    /** UTF-8 body contains {@code part}. */
+    /** UTF-8 body contains {@code part}; the description never shows {@code part}, it may hold credentials. */
     public static RequestMatcher bodyContains(final String part) {
         requireText(part, "part");
         return of(request -> request.hasBody() && new String(request.getBody(),
-                java.nio.charset.StandardCharsets.UTF_8).contains(part), "body contains " + part);
+                java.nio.charset.StandardCharsets.UTF_8).contains(part), "body contains <" + part.length() + " characters, not shown>");
     }
 
     public RequestMatcher and(final RequestMatcher other) {
@@ -111,15 +118,19 @@ public final class RequestMatcher {
     }
 
     /**
-     * Masks the values of credential query parameters ({@link HttpRequest#isSensitiveQueryParameter}) so that matcher
-     * descriptions in failure messages never expose a key that is part of a matched URL.
+     * Makes a URL or URL fragment safe for failure messages: masks the value of <em>every</em> {@code name=value}
+     * pair – whatever the parameter is called, also in fragments without a leading {@code ?} or {@code &} such as
+     * {@code urlContains("api_key=...")} – and URL user info. Request-specific credential names (e.g. from
+     * {@code RequestAuthentication.queryParameter("custom_token", ...)}) are therefore covered without a list of
+     * names. Parameter names and the rest of the URL stay readable; matching always uses the original text.
      */
     static String redact(String url) {
-        Matcher matcher = QUERY_PARAMETER.matcher(url);
+        String withoutUserInfo = USER_INFO.matcher(url).replaceAll("$1****@");
+        Matcher matcher = QUERY_PARAMETER.matcher(withoutUserInfo);
         StringBuffer result = new StringBuffer();
         while (matcher.find()) {
-            String replacement = HttpRequest.isSensitiveQueryParameter(matcher.group(2))
-                    ? matcher.group(1) + matcher.group(2) + "=****" : matcher.group();
+            String replacement = matcher.group(3).isEmpty() ? matcher.group()
+                    : matcher.group(1) + matcher.group(2) + "=****";
             matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
         }
         matcher.appendTail(result);
