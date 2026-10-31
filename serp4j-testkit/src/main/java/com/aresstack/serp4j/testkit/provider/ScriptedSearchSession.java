@@ -54,6 +54,11 @@ public final class ScriptedSearchSession implements SearchSession {
         this.state = turns.isEmpty() ? SessionState.OPEN : SessionState.ACTIVE;
     }
 
+    /** Effective turn limit (provider capability and session options), {@code null} if unlimited. */
+    Integer getTurnLimit() {
+        return maxTurns;
+    }
+
     @Override
     public SearchSessionId getId() {
         return id;

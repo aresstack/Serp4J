@@ -152,4 +152,19 @@ class ScriptedConversationalProviderTest {
 
         assertSessionFailure(session.send(QUESTION, SearchContext.defaults()), SearchErrorCategory.TURN_LIMIT_REACHED);
     }
+
+    @Test
+    void resumedSessionKeepsTheTurnLimitOfItsOptions() {
+        ScriptedConversationalProvider provider = ScriptedConversationalProvider.builder(ID)
+                .capabilities(ConversationalCapabilities.builder().resumable(true).build()).build();
+        SearchSession session = assertCompletes(provider.openSession(
+                SearchSessionOptions.builder(AI_MODE).maxTurns(1).build(), SearchContext.defaults()));
+        assertCompletes(session.send(QUESTION, SearchContext.defaults()));
+        SessionHandle handle = session.getHandle().get();
+        session.close();
+
+        SearchSession resumed = assertCompletes(provider.resumeSession(handle, SearchContext.defaults()));
+
+        assertSessionFailure(resumed.send(QUESTION, SearchContext.defaults()), SearchErrorCategory.TURN_LIMIT_REACHED);
+    }
 }

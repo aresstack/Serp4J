@@ -65,6 +65,8 @@ public final class ScriptedConversationalProvider implements ConversationalSearc
     private final AtomicInteger openedSessions = new AtomicInteger();
     private final Map<SearchSessionId, ScriptedSearchSession> openSessions =
             new ConcurrentHashMap<SearchSessionId, ScriptedSearchSession>();
+    /** Effective turn limit per known conversation; {@code 0} means unlimited. */
+    private final Map<SearchSessionId, Integer> turnLimits = new ConcurrentHashMap<SearchSessionId, Integer>();
     private final Map<SearchSessionId, List<ConversationTurn>> knownConversations =
             new ConcurrentHashMap<SearchSessionId, List<ConversationTurn>>();
 
@@ -143,6 +145,7 @@ public final class ScriptedConversationalProvider implements ConversationalSearc
                     "handle belongs to provider " + handle.getProviderId()));
         }
         List<ConversationTurn> turns = knownConversations.get(handle.getSessionId());
+        Integer storedLimit = turnLimits.get(handle.getSessionId());
         if (turns == null || !handle.getOpaqueToken().equals(tokenFor(handle.getSessionId()))) {
             return failed(new com.aresstack.serp4j.core.error.SearchSessionException(handle.getSessionId(),
                     descriptor.getId(), SearchErrorCategory.SESSION_LOST,
@@ -152,8 +155,9 @@ public final class ScriptedConversationalProvider implements ConversationalSearc
         if (previous != null) {
             previous.close(); // one live session object per conversation
         }
+        Integer limit = storedLimit == null || storedLimit == 0 ? null : storedLimit;
         ScriptedSearchSession session = register(new ScriptedSearchSession(this, handle.getSessionId(), turns,
-                conversational.getMaxTurns().isPresent() ? conversational.getMaxTurns().getAsInt() : null));
+                limit));
         if (session == null) {
             return failed(failure(SearchErrorCategory.RATE_LIMITED, "concurrent-session limit of "
                     + conversational.getMaxConcurrentSessions() + " reached"));
@@ -186,6 +190,7 @@ public final class ScriptedConversationalProvider implements ConversationalSearc
         }
         openSessions.put(session.getId(), session);
         knownConversations.put(session.getId(), session.snapshot().getTurns());
+        turnLimits.put(session.getId(), session.getTurnLimit() == null ? 0 : session.getTurnLimit());
         return session;
     }
 
@@ -244,6 +249,7 @@ public final class ScriptedConversationalProvider implements ConversationalSearc
     /** Simulates a provider restart: all conversations are forgotten, so resuming fails with {@code SESSION_LOST}. */
     public void forgetSessions() {
         knownConversations.clear();
+        turnLimits.clear();
     }
 
     /** Sessions opened or resumed and not yet closed. */

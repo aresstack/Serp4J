@@ -183,4 +183,19 @@ class FakeHttpTransportTest {
         assertThat(matcher.matches(HttpRequest.get(BASE + "/search?q=1").build())).isTrue();
         assertThat(matcher.matches(HttpRequest.get(BASE + "/search/more").build())).isFalse();
     }
+
+    @Test
+    void matcherDescriptionsRedactCredentialQueryParameters() {
+        FakeHttpTransport http = FakeHttpTransport.create()
+                .on(RequestMatcher.urlEquals(BASE + "/search?q=x&api_key=stub-secret-value&key=other-secret"))
+                .reply(FakeHttpStep.status(200));
+
+        CompletableFuture<HttpResponse> future = http.execute(HttpRequest.get(BASE + "/elsewhere").build());
+
+        assertThatThrownBy(() -> future.get(5, TimeUnit.SECONDS))
+                .hasCauseInstanceOf(UnexpectedHttpRequestError.class)
+                .satisfies(e -> assertThat(e.getCause().getMessage())
+                        .contains("q=x").contains("api_key=****")
+                        .doesNotContain("stub-secret-value").doesNotContain("other-secret"));
+    }
 }

@@ -4,12 +4,16 @@ import com.aresstack.serp4j.http.HttpMethod;
 import com.aresstack.serp4j.http.HttpRequest;
 
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Selects the requests a {@link FakeHttpTransport} stub answers. Immutable; carries a description for failure
  * messages. URL comparisons use {@link HttpRequest#getUrl()}, i.e. including credential query parameters.
  */
 public final class RequestMatcher {
+
+    private static final Pattern QUERY_PARAMETER = Pattern.compile("([?&])([^=&#?]+)=([^&#]*)");
 
     private final Predicate<HttpRequest> predicate;
     private final String description;
@@ -45,22 +49,22 @@ public final class RequestMatcher {
     /** URL without query string equals {@code url} (query parameters are ignored). */
     public static RequestMatcher path(final String url) {
         requireText(url, "url");
-        return of(request -> withoutQuery(request.getUrl()).equals(withoutQuery(url)), "url path " + url);
+        return of(request -> withoutQuery(request.getUrl()).equals(withoutQuery(url)), "url path " + redact(url));
     }
 
     public static RequestMatcher urlEquals(final String url) {
         requireText(url, "url");
-        return of(request -> request.getUrl().equals(url), "url = " + url);
+        return of(request -> request.getUrl().equals(url), "url = " + redact(url));
     }
 
     public static RequestMatcher urlStartsWith(final String prefix) {
         requireText(prefix, "prefix");
-        return of(request -> request.getUrl().startsWith(prefix), "url starts with " + prefix);
+        return of(request -> request.getUrl().startsWith(prefix), "url starts with " + redact(prefix));
     }
 
     public static RequestMatcher urlContains(final String part) {
         requireText(part, "part");
-        return of(request -> request.getUrl().contains(part), "url contains " + part);
+        return of(request -> request.getUrl().contains(part), "url contains " + redact(part));
     }
 
     /** GET request whose URL starts with {@code urlPrefix}. */
@@ -104,6 +108,22 @@ public final class RequestMatcher {
     @Override
     public String toString() {
         return description;
+    }
+
+    /**
+     * Masks the values of credential query parameters ({@link HttpRequest#isSensitiveQueryParameter}) so that matcher
+     * descriptions in failure messages never expose a key that is part of a matched URL.
+     */
+    static String redact(String url) {
+        Matcher matcher = QUERY_PARAMETER.matcher(url);
+        StringBuffer result = new StringBuffer();
+        while (matcher.find()) {
+            String replacement = HttpRequest.isSensitiveQueryParameter(matcher.group(2))
+                    ? matcher.group(1) + matcher.group(2) + "=****" : matcher.group();
+            matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
+        }
+        matcher.appendTail(result);
+        return result.toString();
     }
 
     private static String withoutQuery(String url) {

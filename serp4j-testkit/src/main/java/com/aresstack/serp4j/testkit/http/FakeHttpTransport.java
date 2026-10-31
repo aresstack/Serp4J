@@ -91,6 +91,12 @@ public final class FakeHttpTransport implements HttpTransport, SharedInfrastruct
         FakeHttpStep step = stub.next();
         running.add(future);
         future.whenComplete((response, error) -> running.remove(future));
+        if (isClosed()) {
+            // close() ran between the check above and the registration: it could not see this request
+            future.completeExceptionally(new HttpTransportException(HttpTransportException.Kind.CANCELLED,
+                    "transport closed"));
+            return future;
+        }
 
         final Duration timeout = request.getTimeout().orElse(null);
         boolean timesOut = timeout != null && (step.isHang() || step.getDelay().compareTo(timeout) > 0);
