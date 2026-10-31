@@ -234,7 +234,7 @@ final class PlaywrightSession implements BrowserSession {
     }
 
     private BrowserException translate(PlaywrightException e, String action) {
-        if (crashed || worker.isDisconnected() || !worker.browser().isConnected()) {
+        if (crashed || worker.checkBrowserProcessGone() || !worker.browser().isConnected()) {
             markLost();
             return new BrowserSessionLostException(action + " failed: the browser crashed or disconnected", e);
         }
@@ -470,7 +470,7 @@ final class PlaywrightSession implements BrowserSession {
                 try {
                     result = page.evaluate(script.getSource(), script.getArgument().toJava());
                 } catch (PlaywrightException e) {
-                    if (crashed || worker.isDisconnected() || !worker.browser().isConnected() || Errors.isGone(e)) {
+                    if (crashed || worker.checkBrowserProcessGone() || !worker.browser().isConnected() || Errors.isGone(e)) {
                         throw e;
                     }
                     throw new ScriptEvaluationException(script.getId(), "script " + script.getId() + " failed: "

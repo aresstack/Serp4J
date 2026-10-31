@@ -10,9 +10,11 @@ import com.microsoft.playwright.Playwright;
 import com.microsoft.playwright.PlaywrightException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -52,6 +54,8 @@ final class Worker {
     private final List<Runnable> deferred = new ArrayList<Runnable>();
     private volatile Thread owner;
     private volatile boolean disconnected;
+    /** Locally launched browser processes; empty for a remote browser or on Java 8. */
+    private Set<Long> browserPids = Collections.<Long>emptySet();
     private volatile String browserVersion;
     private Playwright playwright;
     private Browser browser;
@@ -160,7 +164,9 @@ final class Worker {
             if (config.executablePath != null) {
                 options.setExecutablePath(config.executablePath);
             }
+            Map<Long, String> before = BrowserProcesses.descendants();
             browser = type.launch(options);
+            browserPids = BrowserProcesses.startedSince(before);
         }
         browser.onDisconnected(new Consumer<Browser>() {
             @Override
@@ -169,6 +175,17 @@ final class Worker {
             }
         });
         browserVersion = browser.version();
+    }
+
+    /**
+     * Owner thread: whether the locally launched browser processes are all gone although the driver has not reported
+     * a disconnect yet. Marks the worker as disconnected; the owner loop then fails all sessions as lost.
+     */
+    boolean checkBrowserProcessGone() {
+        if (!disconnected && !BrowserProcesses.anyAlive(browserPids)) {
+            disconnected = true;
+        }
+        return disconnected;
     }
 
     String getName() {
@@ -232,7 +249,7 @@ final class Worker {
         return call(new Task<PlaywrightSession>() {
             @Override
             public PlaywrightSession run() {
-                if (disconnected || !browser.isConnected()) {
+                if (checkBrowserProcessGone() || !browser.isConnected()) {
                     disconnected = true;
                     handleDisconnect();
                     throw new WorkerStoppedException("browser of worker " + name + " is disconnected");
@@ -288,6 +305,12 @@ final class Worker {
             long now = System.nanoTime();
             if (now >= nextReap) {
                 nextReap = now + REAP_INTERVAL_NANOS;
+                if (checkBrowserProcessGone()) {
+                    if (running.get()) {
+                        handleDisconnect();
+                    }
+                    continue;
+                }
                 for (PlaywrightSession session : new ArrayList<PlaywrightSession>(sessions)) {
                     session.reap(now);
                 }
