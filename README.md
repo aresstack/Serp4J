@@ -15,6 +15,8 @@ Entscheidungen in den [ADRs](docs/architecture/adr), die Reihenfolge der Arbeits
 |---|---|---|---|
 | `serp4j-core` | 8 | Domänenmodell (`SearchRequest`, `SearchResponse` = `SearchData` + `SearchMetadata` + `SearchAnalysis`, `SerpFeature`-Hierarchie mit Visitor, `Extensions`, `RawPayload`), Ports (`SearchProvider`, `ConversationalSearchProvider`, `SearchAnalyzer`, `CredentialProvider`, `SearchProviderFactory`), Capabilities, Fehlermodell | keine |
 | `serp4j-http-api` | 8 | `HttpTransport`-Port, `HttpRequest`/`HttpResponse`/`HttpHeaders`, `RequestAuthentication`, `UrlQueryBuilder` | keine |
+| `serp4j-mapping` | 8 | Response-Mapping: deklarative Mapping-Definitionen, `MappingEngine`, Custom Mapper je Definition, Prüfbausteine für Fixture-Tests ([Format](docs/mapping/mapping-definition-format.md)) | `serp4j-core` |
+| `serp4j-json` | 8 | `JsonTrees`: JSON-Text ↔ `StructuredValue` (einzige Stelle mit Gson) | `serp4j-core`, Gson |
 | `serp4j-bom` | – | Bill of Materials über alle publizierten Module (Lockstep-Version) | – |
 
 Die weiteren Module (`serp4j-orchestration`, `serp4j-json`, `serp4j-mapping`, `serp4j-http-*`, `serp4j-provider-*`,

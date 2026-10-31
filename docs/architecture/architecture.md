@@ -132,10 +132,11 @@ com.aresstack.serp4j.orchestration.merge       ResultMerger, UrlDeduplicatingMer
 com.aresstack.serp4j.orchestration.registry    SearchProviderRegistry, SearchProviderRegistries, SwappableSearchProviderRegistry
 
 com.aresstack.serp4j.json                      Serp4jJson (Lesen/Schreiben, formatVersion), JsonTrees (JSON ↔ StructuredValue)
-com.aresstack.serp4j.mapping                   MappingEngine, MappingDefinition, MappingDefinitions, SectionDefinition, FieldMapping, MappingResult, MappingContext
+com.aresstack.serp4j.mapping                   MappingEngine, MappingDefinition, MappingDefinitions, SectionDefinition, FieldMapping, ElementType, MappingResult, MappedMetadata, MappingContext, SourceElement
 com.aresstack.serp4j.mapping.convert           ValueConverter, ValueConverters
-com.aresstack.serp4j.mapping.custom            ItemMapper, FeatureMapper, MetadataMapper, CustomMapperRegistry
-com.aresstack.serp4j.mapping.path              TreePath
+com.aresstack.serp4j.mapping.custom            ItemMapper, FeatureMapper, MetadataMapper, FeatureSeed, CustomMapperRegistry
+com.aresstack.serp4j.mapping.path              TreePath, PathLocation
+com.aresstack.serp4j.mapping.verify            MappingDefinitionVerifier, MappingSnapshot (Prüfbausteine für MappingDefinitionContractTest)
 com.aresstack.serp4j.http                      HttpTransport, HttpRequest, HttpResponse, RequestAuthentication, HttpTransportException
 com.aresstack.serp4j.http.ahc                  AhcHttpTransport, AhcHttpTransportOptions
 com.aresstack.serp4j.provider.brave            BraveSearchProvider, BraveSearchOptions, BraveRequestOptions, BraveExtensions, internal.* (Response-Mapper, Custom Mapper; Definitionen unter resources …/brave/mapping/)
@@ -449,7 +450,7 @@ Provider-Antwort (JSON-Text)
    │  serp4j-json: JsonTrees.read            (einzige Stelle mit Gson)
    ▼
 StructuredValue (serp4j-core, ADR-006)
-   │  serp4j-mapping: MappingEngine.map(tree, definition, registry)
+   │  serp4j-mapping: MappingEngine.builder(definition).customMappers(registry).build().map(tree)
    │     Ebene 1  MappingDefinition    – JSON-Ressource im Provider-Modul, versioniert
    │     Ebene 2  CustomMapperRegistry – Java, gehört zu genau dieser Definition
    ▼
@@ -477,10 +478,10 @@ Regeln:
 6. Die Engine, der Definitionsleser, die Registries und die Mapper-Interfaces sind öffentliche API für Nutzer mit
    eigenen Providern.
 
-Ein Prototyp mit drei Antwortstrukturen (zwei nach Angelos Beispiel, eine DataForSEO-artig polymorph) liegt unter
-[`spikes/mapping-prototype`](../../spikes/mapping-prototype/README.md). Er ist kein Produktivcode; seine Befunde
+Der frühere Prototyp `spikes/mapping-prototype` (drei Antwortstrukturen) ist mit Paket MP entfernt; seine Befunde
 (Mapper je Sektion statt global, eine polymorphe Sektion statt zwei auf demselben Pfad, `fieldsByType`) sind in ADR-019
-eingeflossen.
+eingeflossen, seine Strukturen sind synthetische Testszenarien in `serp4j-mapping`. Das Dateiformat beschreibt
+[`docs/mapping/mapping-definition-format.md`](../mapping/mapping-definition-format.md).
 
 ---
 
@@ -759,5 +760,5 @@ Weitere offene **technische** Fragen sind per Spike zu klären und gehören nich
 | Migration aus AskAI nachvollziehbar geplant | §11, WP5, ADR-014 |
 | Java-8-Kompatibilität des Core gewährleistet | §1, §12, ADR-002 |
 | wesentliche Entscheidungen begründet und dokumentiert | ADR-001 bis ADR-019 |
-| **konfigurierbare Mapping-Infrastruktur** (zwei Ebenen, sieben Prinzipien, eigenes Modul, Unmapped-Erhalt, Fixture-Tests, für Nutzer offen) | §5.6, [ADR-019](adr/ADR-019-response-mapping.md), Prototyp `spikes/mapping-prototype`; von Angelo angenommen (2026-10-31) |
+| **konfigurierbare Mapping-Infrastruktur** (zwei Ebenen, sieben Prinzipien, eigenes Modul, Unmapped-Erhalt, Fixture-Tests, für Nutzer offen) | §5.6, [ADR-019](adr/ADR-019-response-mapping.md), von Angelo angenommen (2026-10-31); umgesetzt in Paket MP (`serp4j-mapping`, `serp4j-json` J1) |
 | priorisierter, parallelisierbarer Implementierungsplan | [implementation-plan.md](implementation-plan.md) |
