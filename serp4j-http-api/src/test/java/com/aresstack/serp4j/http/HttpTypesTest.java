@@ -30,6 +30,77 @@ class HttpTypesTest {
         assertThat(HttpHeaders.isSensitive("Accept")).isFalse();
     }
 
+    /** Finding #10 (header injection): CR, LF and NUL in a value are rejected; the message never shows the value. */
+    @Test
+    void headerValuesWithLineBreaksOrNulAreRejectedWithoutLeakingTheValue() {
+        String injected = "ok\r\nX-Injected: evil";
+
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> HttpHeaders.builder().add("X-Trace", injected))
+                .withMessageContaining("X-Trace")
+                .withMessageNotContaining("ok")
+                .withMessageNotContaining("evil")
+                .withMessageNotContaining(injected);
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> HttpHeaders.builder().set("X-Trace", "s3cr3t-9b1d\n"))
+                .withMessageNotContaining("s3cr3t-9b1d");
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> HttpHeaders.builder().add("X-Trace", "a\rb"))
+                .withMessageNotContaining("a\rb");
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> HttpHeaders.builder().add("X-Trace", "nul\0"))
+                .withMessageNotContaining("nul");
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> HttpRequest.get("https://e.example").header("X-Trace", "x\ny"))
+                .withMessageNotContaining("x\ny");
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> HttpResponse.builder(200).header("X-Trace", "x\ny"))
+                .withMessageNotContaining("x\ny");
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> HttpHeaders.builder().add("X-Trace", null))
+                .withMessageContaining("X-Trace");
+    }
+
+    /** Finding #10 (header injection): names must be RFC 7230 tokens. */
+    @Test
+    void headerNamesMustBeRfc7230Tokens() {
+        String[] invalid = {"X:Y", "X Y", "X\nY", "X\rY", "X(Y)", "X<Y>", "X@Y", "X,Y", "X;Y", "X\\Y", "X\"Y",
+                "X/Y", "X[Y]", "X?Y", "X=Y", "X{Y}", "X\tY", "Xä", "X\u007fY", "X\0Y"};
+        for (String name : invalid) {
+            assertThatIllegalArgumentException().as("name %s", name)
+                    .isThrownBy(() -> HttpHeaders.builder().add(name, "v"));
+            assertThatIllegalArgumentException().as("set %s", name)
+                    .isThrownBy(() -> HttpHeaders.builder().set(name, "v"));
+            assertThatIllegalArgumentException().as("sensitive %s", name)
+                    .isThrownBy(() -> HttpHeaders.builder().sensitive(name));
+            assertThatIllegalArgumentException().as("getFirst %s", name)
+                    .isThrownBy(() -> HttpHeaders.empty().getFirst(name));
+        }
+        assertThatIllegalArgumentException().isThrownBy(() -> HttpHeaders.builder().add(" ", "v"));
+        assertThatIllegalArgumentException().isThrownBy(() -> HttpHeaders.builder().add(null, "v"));
+    }
+
+    /** Finding #10 (header injection): valid names and values are stored unchanged. */
+    @Test
+    void validHeaderNamesAndValuesAreKeptUnchanged() {
+        String[] names = {"Accept", "X-Subscription-Token", "x_custom", "Sec-WebSocket-Key", "!#$%&'*+-.^_`|~09aZ"};
+        HttpHeaders.Builder builder = HttpHeaders.builder();
+        for (String name : names) {
+            builder.add(name, "v-" + name);
+        }
+        String value = "text/plain; charset=\"UTF-8\", q=0.9 \t(comment) ü €";
+        HttpHeaders headers = builder.add("Content-Type", value).add("Empty", "").add(" Trimmed ", "t").build();
+
+        for (String name : names) {
+            assertThat(headers.getFirst(name)).contains("v-" + name);
+        }
+        assertThat(headers.getNames()).contains(names);
+        assertThat(headers.getFirst("Content-Type")).contains(value);
+        assertThat(headers.getFirst("Empty")).contains("");
+        assertThat(headers.getFirst("Trimmed")).contains("t");
+        assertThat(headers.getNames()).contains("Trimmed").doesNotContain(" Trimmed ");
+    }
+
     @Test
     void requestCopiesBodyAndHidesItInToString() {
         byte[] body = "{\"q\":1}".getBytes(StandardCharsets.UTF_8);

@@ -106,11 +106,53 @@ public final class HttpHeaders {
         return builder;
     }
 
+    /**
+     * Trims the name and requires it to be an RFC 7230 token: visible ASCII ({@code 0x21}–{@code 0x7E}) without
+     * the separators {@code ()<>@,;:\"/[]?={}}. Rejects names that could smuggle a second header or a value.
+     */
     private static String requireName(String name) {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("header name must not be blank");
         }
-        return name.trim();
+        String key = name.trim();
+        for (int i = 0; i < key.length(); i++) {
+            if (!isTokenChar(key.charAt(i))) {
+                throw new IllegalArgumentException("header name must be an RFC 7230 token (visible ASCII without "
+                        + "separators), got '" + key + "'");
+            }
+        }
+        return key;
+    }
+
+    private static boolean isTokenChar(char c) {
+        if (c <= 0x20 || c >= 0x7F) {
+            return false;
+        }
+        switch (c) {
+            case '(': case ')': case '<': case '>': case '@': case ',': case ';': case ':': case '\\':
+            case '"': case '/': case '[': case ']': case '?': case '=': case '{': case '}':
+                return false;
+            default:
+                return true;
+        }
+    }
+
+    /**
+     * Rejects values that would end the header line early (CR, LF, NUL). The message names the header but never
+     * the value, because the value may be a credential.
+     */
+    private static String requireValue(String key, String value) {
+        if (value == null) {
+            throw new IllegalArgumentException("value of header '" + key + "' must not be null");
+        }
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            if (c == '\r' || c == '\n' || c == '\0') {
+                throw new IllegalArgumentException("value of header '" + key
+                        + "' must not contain CR, LF or NUL characters");
+            }
+        }
+        return value;
     }
 
     @Override
@@ -164,12 +206,15 @@ public final class HttpHeaders {
         private Builder() {
         }
 
-        /** Appends a value. */
+        /**
+         * Appends a value.
+         *
+         * @throws IllegalArgumentException if the name is not an RFC 7230 token or the value contains CR, LF or
+         *         NUL; the message names the header, never the value
+         */
         public Builder add(String name, String value) {
             String key = requireName(name);
-            if (value == null) {
-                throw new IllegalArgumentException("value of header '" + key + "' must not be null");
-            }
+            requireValue(key, value);
             List<String> list = values.get(key);
             if (list == null) {
                 list = new ArrayList<String>(1);
@@ -179,7 +224,12 @@ public final class HttpHeaders {
             return this;
         }
 
-        /** Replaces all values of the header. */
+        /**
+         * Replaces all values of the header.
+         *
+         * @throws IllegalArgumentException if the name is not an RFC 7230 token or the value contains CR, LF or
+         *         NUL; the message names the header, never the value
+         */
         public Builder set(String name, String value) {
             remove(name);
             return add(name, value);
