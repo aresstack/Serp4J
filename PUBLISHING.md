@@ -72,8 +72,10 @@ Konsumenten binden dafür `https://central.sonatype.com/repository/maven-snapsho
    git push origin v0.1.0
    ```
 
-4. Der Workflow `.github/workflows/release.yml` baut und testet (JDK 21 + JDK 8), lädt das signierte Bündel mit
-   `publishAggregationToCentralPortal` in das Portal und legt ein GitHub Release mit dem Changelog-Abschnitt an.
+4. Der Workflow `.github/workflows/release.yml` baut und testet (JDK 21 + JDK 8), erzeugt das signierte Bündel
+   (`zipAggregation`) und sichert es **vor** dem Upload als Workflow-Artefakt `central-bundle-X.Y.Z` (30 Tage), lädt es
+   dann mit `publishAggregationToCentralPortal` in das Portal und legt ein GitHub Release mit dem Changelog-Abschnitt
+   an. Scheitert der Upload, lässt sich das gesicherte Bündel im Portal von Hand hochladen.
 5. Im Portal unter *Deployments* das Bündel prüfen und mit **Publish** freigeben (`publishingType = USER_MANAGED`
    im Root-`build.gradle.kts`). Danach ist die Version nach wenigen Minuten auf Maven Central sichtbar, in der
    Suche nach bis zu einigen Stunden.

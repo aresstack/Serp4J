@@ -31,6 +31,8 @@ public interface ProviderPort extends AutoCloseable {
      * Releases everything this provider owns (see the ownership rules above). Idempotent; a second call is a no-op.
      * Calls on a closed provider fail with {@link com.aresstack.serp4j.core.error.SearchErrorCategory#CANCELLED}
      * or {@link com.aresstack.serp4j.core.error.SearchErrorCategory#SESSION_CLOSED}.
+     *
+     * <p>Thread-safe: may be called from any thread, concurrently with running calls and with a second {@code close()}; the first call wins, concurrent calls return after the resources are released or at once. (ADR-017 rule 8, architecture.md §6.1 rule 8).</p>
      */
     @Override
     void close();
