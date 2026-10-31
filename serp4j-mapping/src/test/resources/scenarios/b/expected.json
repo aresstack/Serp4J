@@ -1,0 +1,88 @@
+{
+  "definition": "synthetic-b-web",
+  "version": 1,
+  "results": [
+    {
+      "id": "organic#1",
+      "type": "organic",
+      "url": "https://example.com",
+      "title": "Example",
+      "snippet": "Description & more",
+      "additionalSnippets": [
+        "More text",
+        "Even more"
+      ],
+      "domain": "example.com",
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 1,
+        "area": "main"
+      }
+    },
+    {
+      "id": "organic#3",
+      "type": "organic",
+      "url": "https://third.example.net",
+      "title": "Third",
+      "snippet": "Third",
+      "domain": "third.example.net",
+      "thumbnail": "https://img.example/3.png",
+      "position": {
+        "rankInGroup": 3,
+        "rankAbsolute": 3,
+        "area": "main"
+      },
+      "extensions": {
+        "values": {
+          "synthetic-b:thumbnailWidth": 120
+        },
+        "unmapped": {
+          "synthetic-b": {
+            "thumbnail": {
+              "height": 80
+            }
+          }
+        }
+      }
+    }
+  ],
+  "features": [
+    {
+      "id": "infobox#1",
+      "type": "knowledge_panel",
+      "class": "KnowledgePanelFeature",
+      "title": "Example Corp",
+      "description": "A company.",
+      "extensions": {
+        "unmapped": {
+          "synthetic-b": {
+            "attributes": [
+              {
+                "key": "Founded",
+                "value": "1999"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "experimental#1",
+      "type": "experimental_block",
+      "class": "GenericSerpFeature",
+      "content": {
+        "foo": "bar"
+      }
+    }
+  ],
+  "metadata": {
+    "originalQuery": "example",
+    "durationMillis": 42
+  },
+  "warnings": [
+    {
+      "code": "mapping_incomplete",
+      "message": "section 'organic': element at $.results[1] skipped, required field(s) missing: [url]"
+    }
+  ]
+}

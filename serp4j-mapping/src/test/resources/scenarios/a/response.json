@@ -1,0 +1,12 @@
+{
+  "search_information": { "query": "example", "total_results": 1234567 },
+  "organic_results": [
+    { "title": "Example", "link": "https://example.com", "snippet": "Description", "position": 1, "cached_page_link": "https://cache.example/1" },
+    { "title": "Second", "link": "https://Second.Example.org/path", "snippet": "Second description", "position": 2 }
+  ],
+  "related_questions": [
+    { "question": "What is an example?", "answer": "An example is …", "link": "https://example.com/faq" }
+  ],
+  "related_searches": [ { "query": "example meaning" }, { "query": "example synonyms" } ],
+  "pagination": { "next": "https://a.example/search?page=2" }
+}

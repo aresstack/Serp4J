@@ -1,0 +1,38 @@
+{
+  "id": "synthetic-c-web",
+  "version": 1,
+  "namespace": "synthetic-c",
+  "description": "Synthetic test definition (flat polymorphic item list with type discriminator); not a real provider.",
+  "metadata": {
+    "originalQuery": "$.tasks[0].result[0].keyword",
+    "totalResultsEstimate": "$.tasks[0].result[0].se_results_count",
+    "providerRequestId": "$.tasks[0].id",
+    "cost": "$.cost",
+    "currency": { "default": "USD" }
+  },
+  "sections": [
+    {
+      "id": "serp", "kind": "elements", "path": "$.tasks[0].result[0].items[*]",
+      "discriminator": "type",
+      "discriminatorMap": {
+        "organic": "item:organic",
+        "paid": "item:paid",
+        "featured_snippet": "feature:featured_snippet",
+        "knowledge_graph": "feature:knowledge_panel",
+        "people_also_ask": "feature:people_also_ask"
+      },
+      "skipWhen": ["images"],
+      "position": "fields",
+      "fields": {
+        "rankInGroup": "rank_group",
+        "rankAbsolute": "rank_absolute"
+      },
+      "fieldsByType": {
+        "organic": { "title": "title", "url": "url", "snippet": "description", "domain": "domain", "displayUrl": "breadcrumb" },
+        "paid": { "title": "title", "url": "url", "snippet": "description", "domain": "domain", "displayUrl": "breadcrumb" },
+        "featured_snippet": { "text": "description", "sourceUrl": "url", "sourceTitle": "title", "sourceDomain": "domain" },
+        "knowledge_panel": { "title": "title", "description": "description" }
+      }
+    }
+  ]
+}
