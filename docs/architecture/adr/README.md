@@ -2,7 +2,7 @@
 
 Format: Kontext · Alternativen · Entscheidung · Konsequenzen. Angelo hat das Architekturkonzept am 2026-10-31
 grundsätzlich angenommen und die drei Review-Punkte A–C sowie die Entscheidungen E-1 bis E-8 vorgegeben; sie sind in
-den ADRs eingearbeitet. `Vorgeschlagen` steht nur noch bei Entscheidungen, die Angelo nicht ausdrücklich genannt hat. Die Gesamtarchitektur steht in [architecture.md](../architecture.md).
+den ADRs eingearbeitet. `Vorgeschlagen` steht nur noch bei Entscheidungen, die Angelo nicht ausdrücklich genannt oder noch nicht abgenommen hat (ADR-019: sein Vorschlag, Abnahme offen). Die Gesamtarchitektur steht in [architecture.md](../architecture.md).
 
 | ADR | Titel | Status |
 |---|---|---|
@@ -24,3 +24,4 @@ den ADRs eingearbeitet. `Vorgeschlagen` steht nur noch bei Entscheidungen, die A
 | [016](ADR-016-google-browser-adapter-grenzen.md) | Grenzen direkter Google-Zugriffe (Browser und HTTP) | Angenommen |
 | [017](ADR-017-lifecycle-und-ownership.md) | Lifecycle und Ownership gemeinsam genutzter Infrastruktur | Angenommen |
 | [018](ADR-018-google-zugriffswege.md) | Zwei Zugriffswege auf Google: HTTP und Browser | Angenommen |
+| [019](ADR-019-response-mapping.md) | Response-Mapping in zwei Ebenen: deklarative Definitionen plus Custom Mapper, Modul `serp4j-mapping` | Vorgeschlagen |

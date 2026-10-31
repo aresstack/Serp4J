@@ -1,0 +1,13 @@
+{
+  "status_code": 20000,
+  "cost": 0.002,
+  "tasks": [ { "id": "t-1", "result": [ { "keyword": "example", "se_results_count": 987, "items": [
+    { "type": "organic", "rank_group": 1, "rank_absolute": 2, "position": "left", "title": "Example", "url": "https://example.com", "description": "Description", "domain": "example.com", "breadcrumb": "example.com › home", "is_featured_snippet": false },
+    { "type": "featured_snippet", "rank_group": 1, "rank_absolute": 1, "title": "Snippet title", "description": "Snippet text", "url": "https://example.com/snippet", "domain": "example.com" },
+    { "type": "paid", "rank_group": 1, "rank_absolute": 3, "position": "right", "title": "Ad", "url": "https://ad.example", "description": "Buy now" },
+    { "type": "knowledge_graph", "rank_group": 1, "rank_absolute": 4, "title": "Example Corp", "description": "A company.", "items": [ { "type": "knowledge_graph_row_item", "title": "Founded", "text": "1999" } ] },
+    { "type": "people_also_ask", "rank_group": 1, "rank_absolute": 5, "items": [ { "type": "people_also_ask_element", "title": "What is an example?", "expanded_element": [ { "description": "An example is …", "url": "https://example.com/faq" } ] } ] },
+    { "type": "organic", "rank_group": 2, "rank_absolute": 6, "title": "Second", "url": "https://second.example.org/path", "description": "Second description", "domain": "second.example.org" },
+    { "type": "brand_new_widget_2027", "rank_group": 1, "rank_absolute": 7, "payload": { "anything": [1, 2, 3] } }
+  ] } ] } ]
+}

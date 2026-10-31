@@ -14,9 +14,10 @@ notwendig erkannt wurden: **0** (Charakterisierung in AskAI), **S** (Browser-Spi
 |---|---|---|---|---|---|
 | **0** | Charakterisierung in AskAI: Fixtures, Golden-Tests | (AskAI, nur Tests) | E-1 | S | hoch |
 | **A** | Build-Gerüst, Core Domain & Ports, Port-Module | `build-logic`, `serp4j-bom`, `serp4j-core`, `serp4j-http-api` | Freigabe | L | kritisch |
-| **B** | Brave-Adapter | `serp4j-provider-brave` | A, (E für Contract-Tests), E-1: echte Fixture vor dem Response-Mapper | M | hoch |
-| **C** | Bright-Data-Adapter | `serp4j-provider-brightdata` | A, (E), E-1; `brd_json`-Default erst nach echter Prüfung (E-2) | M | hoch |
-| **D** | DataForSEO-Adapter (Web) | `serp4j-provider-dataforseo` | A, (E); Fixtures vorhanden (E-1) | L | hoch |
+| **MP** | Mapping-Infrastruktur: `serp4j-mapping` und J1 (`JsonTrees` in `serp4j-json`) | `serp4j-mapping`, `serp4j-json` (Teil 1), `serp4j-testkit` (Contract-Test) | A; Abnahme von ADR-019 | M | kritisch |
+| **B** | Brave-Adapter | `serp4j-provider-brave` | A, MP, (E für Contract-Tests), E-1: echte Fixture vor der Mapping-Definition | M | hoch |
+| **C** | Bright-Data-Adapter | `serp4j-provider-brightdata` | A, MP, (E), E-1; `brd_json`-Default erst nach echter Prüfung (E-2) | M | hoch |
+| **D** | DataForSEO-Adapter (Web) | `serp4j-provider-dataforseo` | A, MP, (E); Fixtures vorhanden (E-1) | L | hoch |
 | **D2** | DataForSEO AI Mode als zustandsloser `SearchProvider` (E-8) | `serp4j-provider-dataforseo` | D; echte AI-Mode-Fixture | S–M | hoch |
 | **E** | Testkit & Mock-Provider | `serp4j-testkit` | A | M | kritisch |
 | **T** | HTTP-Transport AHC | `serp4j-http-ahc` | A | S | hoch |
@@ -25,7 +26,7 @@ notwendig erkannt wurden: **0** (Charakterisierung in AskAI), **S** (Browser-Spi
 | **G1** | Google HTTP (Quick Web Search, #6) | `serp4j-engine-google-common`, `serp4j-engine-google-http` | A, T, S0 | M | mittel |
 | **G2** | Google Browser Search + AI Mode (#7) | `serp4j-engine-google-browser` | A, F, S1–S4, G1 (Parser) | L | mittel |
 | **H** | Orchestrierung & Registry | `serp4j-orchestration` | A, E; Abschluss mit B–D | M | hoch |
-| **J** | JSON-Format des Modells | `serp4j-json` | A | S | niedrig |
+| **J** | JSON-Format des Modells (J2; J1 gehört zu MP) | `serp4j-json` | A, MP | S | niedrig |
 | **M** | AskAI auf Serp4J umstellen | (AskAI) | B, C, D, H, T, 0 | M | hoch, aber zuletzt |
 | später | Camoufox-Integration (gemeinsame Bibliothek, Java 8), Bright Data AI Mode (Dataset-Workflow), JDK-Transport, Analyzer, weitere Provider | `serp4j-browser-camoufox`, `serp4j-http-jdk`, `serp4j-analysis-*` | gemeinsame Camoufox-Bibliothek (E-5/E-6) | – | nach 0.1 |
 
@@ -41,6 +42,7 @@ graph LR
     C[C Bright Data]
     D[D DataForSEO]
     E[E Testkit]
+    MP[MP Mapping + JSON-Baum]
     T[T HTTP AHC]
     F[F Browser + Playwright]
     S0[S0 Spike Google-HTTP]
@@ -52,7 +54,8 @@ graph LR
     J[J JSON]
     M[M AskAI-Umstellung]
 
-    A --> B & C & D & E & T & F & J & H
+    A --> MP & E & T & F & H
+    MP --> B & C & D & J
     E --> B & C & D & H
     P0 --> B & C & D
     A & T --> S0 --> G1
@@ -66,7 +69,7 @@ graph LR
 | Welle | Parallel | Voraussetzung |
 |---|---|---|
 | **1** | **A**; parallel dazu **0** (anderes Repo, rein additiv) | Freigabe, für 0 zusätzlich E-1 |
-| **2** | **E** zuerst bzw. im Gleichschritt mit **B, C, D**; außerdem **T**, **F**, **J**, Beginn **H** gegen Mocks | A gemergt |
+| **2** | **MP** und **E** zuerst (parallel); dann **B, C, D** (Request-Mapper und Provider-Klasse können vor MP beginnen, die Mapping-Definition braucht MP); außerdem **T**, **F**, **J**, Beginn **H** gegen Mocks | A gemergt; für die Definitionen MP gemergt |
 | **3a** | **S0** (nach A und T); parallel **D2** (nach D) und **S1–S4** (nach F) | T bzw. F gemergt |
 | **3b** | **G1** (nach S0); **G2** (nach S1–S4 und G1); Abschluss **H** mit echten Providern | S0 bzw. S1–S4 abgeschlossen |
 | **4** | **M**, Release **0.1.0** | B, C, D, H, T gemergt, Parität grün |
@@ -112,8 +115,10 @@ Angelo macht die Freigabe von A von der Korrektur der beiden Core-Verträge abh�
 1. Enums und Validator übernehmen (Paket `com.aresstack.serp4j.provider.<name>`, ohne Gson-Annotationen).
 2. Unveränderliche `…SearchOptions` + `…RequestOptions`; Credential über `CredentialProvider`.
 3. Request-Mapper übernehmen; Golden-Tests aus 0 grün.
-4. Response-Mapper neu auf `SearchData`/`SearchMetadata` nach WP1 §5; Organic mindestens identisch zu heute;
-   Extensions und `GenericSerpFeature` für alles andere.
+4. Response-Mapper über die Mapping-Infrastruktur (MP, ADR-019): Mapping-Definition als Ressource
+   `…/mapping/<name>-<vertical>-v1.json` gegen echte Fixtures, Custom Mapper in Java nur für verschachtelte Features
+   und Rangsemantik; Organic mindestens identisch zu heute; `GenericSerpFeature` und `Extensions.unmapped` für alles
+   andere; `MappingDefinitionContractTest` grün.
 5. Provider-Klasse auf `HttpTransport`; `SearchCapabilities` vollständig deklariert; `SearchProviderFactory`-Eintrag.
 6. Contract-Tests aus E.
 
@@ -130,6 +135,20 @@ Zusätzlich:
   Capabilities enthalten `AI_ANSWER`, `CITED_SOURCES`, aber **kein** `conversational`. Braucht eine echte Fixture.
 - **Fertig, wenn:** Contract-Test, Golden-Tests und Fixture-Tests grün; „unbekannter Typ überlebt"; keine Secrets in
   Ausgaben; Live-Test vorhanden (läuft nur manuell).
+
+### MP – Mapping-Infrastruktur (ADR-019)
+
+- `serp4j-mapping` (Java 8, nur `core`): `TreePath` (Namen, Index, `[*]`, zitierte Namen), `MappingDefinitions.from(StructuredValue)`
+  mit Validierung, `MappingEngine` (Metadaten, Sektionen `items`/`features`/`elements`, Diskriminator, `fieldsByType`,
+  Positionsmodi, Pflichtfelder, Unmapped-Erhalt, Warnungen), `ValueConverters` (Standardkonverter, registrierbar),
+  `CustomMapperRegistry` je Definition (`ItemMapper`, `FeatureMapper` je Sektion und Typ, `MetadataMapper`).
+- J1 in `serp4j-json`: `JsonTrees.read/write` (JSON-Text ↔ `StructuredValue`), einzige Gson-Stelle.
+- `serp4j-testkit`: `MappingDefinitionContractTest` (Definition lädt, jeder Pfad trifft in mindestens einer Fixture,
+  Golden-Output, „unbekannter Typ überlebt").
+- Referenz für die Semantik: `spikes/mapping-prototype` (wird nach MP gelöscht oder als Beispiel nach `serp4j-examples`
+  übernommen).
+- **Fertig, wenn:** Unit-Tests grün; eine Beispieldefinition im Testkit gegen eine **echte** DataForSEO-Fixture (E-1)
+  läuft; ArchUnit: `serp4j-mapping` ohne Gson; Javadoc der öffentlichen API.
 
 ### E – Testkit & Mock-Provider
 
@@ -217,9 +236,10 @@ wird nicht publiziert.
 | alle | Angelos endgültige Abnahme und ausdrückliche Startfreigabe |
 | A – Core und Build | Korrektur der beiden Core-Vertragsfragen (Review-Punkte B und C, oben eingearbeitet); E-1/E-2 **nicht** nötig |
 | 0 | vorhandene DataForSEO-Fixtures (E-1); für Brave/Bright Data ein Recording-Lauf mit Angelos Keys |
-| B – Brave | A, E-1: echte Fixture |
-| C – Bright Data | A, E-1 und E-2 (Default erst nach echter Prüfung) |
-| D – DataForSEO | A, vorhandene Fixtures (E-1) |
+| MP – Mapping-Infrastruktur | A, Abnahme von ADR-019 durch Angelo |
+| B – Brave | A, MP, E-1: echte Fixture |
+| C – Bright Data | A, MP, E-1 und E-2 (Default erst nach echter Prüfung) |
+| D – DataForSEO | A, MP, vorhandene Fixtures (E-1) |
 | D2 – DataForSEO AI Mode | D, echte AI-Mode-Fixture (E-8) |
 | E – Testkit | A |
 | T – HTTP-Transport | A |
@@ -228,7 +248,7 @@ wird nicht publiziert.
 | G1 – Google HTTP | A, T, S0; nicht publiziert (E-3/E-4) |
 | G2 – Google Browser | F, S, G1; nicht publiziert (E-3/E-4) |
 | H – Orchestrierung | A und E |
-| J – JSON | A |
+| J – JSON (J2) | A, MP |
 | Release 0.1.0 | nmcp-Publishing (E-7) |
 | Camoufox (später) | gemeinsame Bibliothek (E-5), Java 8 (E-6) |
 | M – AskAI-Migration | gesonderte Freigabe |

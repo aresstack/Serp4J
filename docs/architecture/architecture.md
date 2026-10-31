@@ -43,6 +43,10 @@ AskAI ist ein Konsument unter mehreren und keine Abhängigkeit.
    als Ports.
 12. **Migration ohne Funktionsverlust:** erst Charakterisierungstests in AskAI, dann Portierung, dann
     Paritätstest, dann Umschalten über eine einzige Bridge-Klasse in AskAI.
+13. **Response-Mapping in zwei Ebenen:** eine deklarative, versionierte Mapping-Definition je Provider (Pfade,
+    Feldnamen, Alternativen, Defaults, Konvertierungen) plus Custom Mapper in Java für polymorphe und verschachtelte
+    SERP-Features. Der gemeinsame Mechanismus liegt im eigenen Modul `serp4j-mapping`; Gson bleibt in `serp4j-json`
+    (§5.6, [ADR-019](adr/ADR-019-response-mapping.md)).
 
 ---
 
@@ -56,7 +60,8 @@ serp4j/                                       (Root, nicht publiziert)
 │
 ├── serp4j-core                               Domain-Modell + Such-Ports                Java 8 · 0 Deps
 ├── serp4j-orchestration                      Use Cases, Registry, Orchestrator, Merger  Java 8 · core
-├── serp4j-json                               JSON-Format des Domain-Modells             Java 8 · core, gson
+├── serp4j-json                               JSON ↔ StructuredValue, JSON-Format des Modells  Java 8 · core, gson
+├── serp4j-mapping                            Response-Mapping: Definitionen, Engine, Custom-Mapper-Registry  Java 8 · core
 │
 ├── serp4j-http-api                           HTTP-Transport-Port + Auth-Strategien      Java 8 · 0 Deps
 ├── serp4j-http-ahc                           Adapter async-http-client 2.x              Java 8
@@ -91,7 +96,8 @@ Abweichungen von den WP-Vorschlägen und ihre Gründe:
 | Testkit | zwei Module (`serp4j-testkit`, `serp4j-browser-testkit`) | WP4 (ein Testkit mit `browser-api`). Grund: Cloud-only-Konsumenten sollen auch im Test keine Browser-Typen erhalten. |
 | Treibermodule | Namen `-driver-node` / `-driver-graal` (WP4) | WP3 Q2 (`runtime-node`/`runtime-graal`) |
 | HTTP-Port | eigenes Modul `serp4j-http-api` (WP4) | WP5 (Port im Core). Grund: Browser-Provider und Testkonsumenten brauchen keinen HTTP-Port. |
-| JSON-Modul | `serp4j-json` mit Gson (WP1, WP4) | – |
+| JSON-Modul | `serp4j-json` mit Gson (WP1, WP4); zusätzlich einzige Stelle für JSON ↔ `StructuredValue` | – |
+| Mapping-Modul | eigenes Modul `serp4j-mapping` (Java 8, nur `core`) | WP1/WP5 (Mapper vollständig je Provider handgeschrieben). Grund: Angelos Mapping-Vorschlag; der deklarative Mechanismus soll Nutzern für eigene Provider zur Verfügung stehen. Siehe [ADR-019](adr/ADR-019-response-mapping.md). |
 | Kein `serp4j-all` | nur BOM | – |
 | Camoufox | dünnes Integrationsmodul auf Basis einer gemeinsamen Bibliothek (E-5), **nicht** im ersten Implementierungsumfang | WP3/WP4 (Teil von F). Grund: Chromium reicht für die ersten Google-Adapter; die gemeinsame Bibliothek existiert noch nicht. |
 | Google-Module | drei Module statt `serp4j-engine-google`: `-common`, `-http`, `-browser` | WP3/WP4 (ein Modul nur mit `browser-api`). Grund: Review-Punkt A. Der direkte HTTP-Weg braucht `http-api`, der Browserweg `browser-api`; wer nur HTTP nutzt, soll keinen Browser-Port erhalten. Siehe [ADR-018](adr/ADR-018-google-zugriffswege.md). |
@@ -125,10 +131,14 @@ com.aresstack.serp4j.orchestration.plan        SearchPlan, SessionPlan, Selectio
 com.aresstack.serp4j.orchestration.merge       ResultMerger, UrlDeduplicatingMerger, UrlCanonicalizer
 com.aresstack.serp4j.orchestration.registry    SearchProviderRegistry, SearchProviderRegistries, SwappableSearchProviderRegistry
 
-com.aresstack.serp4j.json                      Serp4jJson (Lesen/Schreiben, formatVersion)
+com.aresstack.serp4j.json                      Serp4jJson (Lesen/Schreiben, formatVersion), JsonTrees (JSON ↔ StructuredValue)
+com.aresstack.serp4j.mapping                   MappingEngine, MappingDefinition, MappingDefinitions, SectionDefinition, FieldMapping, MappingResult, MappingContext
+com.aresstack.serp4j.mapping.convert           ValueConverter, ValueConverters
+com.aresstack.serp4j.mapping.custom            ItemMapper, FeatureMapper, MetadataMapper, CustomMapperRegistry
+com.aresstack.serp4j.mapping.path              TreePath
 com.aresstack.serp4j.http                      HttpTransport, HttpRequest, HttpResponse, RequestAuthentication, HttpTransportException
 com.aresstack.serp4j.http.ahc                  AhcHttpTransport, AhcHttpTransportOptions
-com.aresstack.serp4j.provider.brave            BraveSearchProvider, BraveSearchOptions, BraveRequestOptions, BraveExtensions, internal.*
+com.aresstack.serp4j.provider.brave            BraveSearchProvider, BraveSearchOptions, BraveRequestOptions, BraveExtensions, internal.* (Response-Mapper, Custom Mapper; Definitionen unter resources …/brave/mapping/)
 com.aresstack.serp4j.provider.brightdata       …
 com.aresstack.serp4j.provider.dataforseo       …
 com.aresstack.serp4j.browser                   BrowserRuntime, BrowserSession, NetworkObserver, …
@@ -164,6 +174,7 @@ graph TD
     core[serp4j-core]:::port
     orch[serp4j-orchestration]:::j8
     json[serp4j-json]:::j8
+    mapping[serp4j-mapping]:::j8
     httpapi[serp4j-http-api]:::port
     ahc[serp4j-http-ahc]:::j8
     jdk[serp4j-http-jdk]:::later
@@ -183,11 +194,13 @@ graph TD
 
     orch --> core
     json --> core
+    mapping --> core
     ahc --> httpapi
     jdk --> httpapi
     brave --> core & httpapi
     bright --> core & httpapi
     d4s --> core & httpapi
+    brave & bright & d4s -. "implementation" .-> mapping & json
     pw --> bapi
     camou --> pw
     gcommon --> core
@@ -203,7 +216,9 @@ Regeln, die der Build erzwingt (Modulgrenze) oder ein Architekturtest prüft (Ar
 
 1. Ports (`serp4j-core`, `serp4j-http-api`, `serp4j-browser-api`) haben **keine** ausgehenden Kanten.
 2. `serp4j-browser-api` kennt `serp4j-core` **nicht**. Der Browser-Port spricht nur über Browserbegriffe.
-3. Kein Adapter hängt an einem anderen Adapter, an `serp4j-orchestration` oder an `serp4j-json`.
+3. Kein Adapter hängt an einem anderen Adapter oder an `serp4j-orchestration`. `serp4j-mapping` und `serp4j-json`
+   sind für Adapter erlaubt, aber nur als `implementation` (nie `api`): Kein Typ aus diesen Modulen erscheint in der
+   öffentlichen Signatur eines Adapters.
 4. Die Google-Module hängen nie an Playwright und nie an einem konkreten HTTP-Adapter. `BrowserRuntime` und
    `HttpTransport` werden injiziert. `serp4j-engine-google-http` kennt den Browser-Port nicht.
 5. Innerhalb von `serp4j-core`: `core.model..` hängt an nichts außer JDK; `core.port..` und `core.error` nur an `core.model..`.
@@ -218,8 +233,9 @@ Regeln, die der Build erzwingt (Modulgrenze) oder ein Architekturtest prüft (Ar
 | `serp4j-core`, `serp4j-http-api`, `serp4j-browser-api` | – | – | – |
 | `serp4j-orchestration` | core | – | – |
 | `serp4j-json` | core | gson | – |
+| `serp4j-mapping` | core | – | – |
 | `serp4j-http-ahc` | http-api | async-http-client 2.x (3.x verlangt Java 11) | – |
-| `serp4j-provider-*` | core, http-api | gson | – |
+| `serp4j-provider-*` | core, http-api | mapping, json (Gson nur transitiv über `serp4j-json`) | – |
 | `serp4j-browser-playwright` | browser-api | playwright (ohne `driver`, `driver-bundle`) | – |
 | `…-driver-node` | – | – | playwright `driver`, `driver-bundle` |
 | `…-driver-graal` | – | – | `com.aresstack:playwright4j` |
@@ -229,8 +245,8 @@ Regeln, die der Build erzwingt (Modulgrenze) oder ein Architekturtest prüft (Ar
 | `serp4j-testkit` | core, http-api | – (JUnit Jupiter `compileOnly`) | – |
 | `serp4j-browser-testkit` | browser-api | – (JUnit Jupiter `compileOnly`) | – |
 
-**Eine** JSON-Bibliothek im Projekt: Gson, nur als `implementation`. Auch das spätere Camoufox-Modul nutzt Gson statt
-Jackson.
+**Eine** JSON-Bibliothek im Projekt: Gson, nur als `implementation` und nur in `serp4j-json`. Provider-Module parsen
+über `JsonTrees` nach `StructuredValue` und kennen Gson nicht. Auch das spätere Camoufox-Modul nutzt Gson statt Jackson.
 
 ### 3.2 Typische Konsumenten
 
@@ -405,7 +421,9 @@ Jeder Adapter:
    SERP-Elemente nie;
 4. befüllt nie `SearchAnalysis`;
 5. schließt nie injizierte Infrastruktur (Transport, Browser-Runtime, Scheduler, Credential-Provider), siehe §6.1;
-6. besteht den Contract-Test aus dem Testkit.
+6. besteht den Contract-Test aus dem Testkit;
+7. bildet Antworten über die Mapping-Infrastruktur ab (§5.6): deklarative Definition als Ressource plus Custom Mapper
+   in Java; Gson-Typen erscheinen außerhalb von `serp4j-json` nicht.
 
 ### 5.5 Provider-spezifische Präzisierungen
 
@@ -416,6 +434,52 @@ Jeder Adapter:
 | DataForSEO | Engine pro Request statt nur aus Konfiguration. `cost`/`time` → `ProviderUsage`/`ExecutionInfo`. Bedingung für `target_search_mode` wird gegen die API-Doku geprüft und korrigiert. Länder-Lookup für `location_code` optional im Provider-Modul; sonst Provider-Option. **AI Mode (E-8):** derselbe Provider bietet zusätzlich das Ziel `google/AI_MODE` über den eigenen Live-Endpunkt an, als **zustandslose** Suche (`SearchProvider`, kein Dialog). Der Endpunkt wird über das Vertical des Requests gewählt. |
 | AI Overview ≠ AI Mode | Ein Adapter klassifiziert KI-Antworten nach dem **tatsächlich ausgeführten Suchmodus**, nicht nach dem JSON-Elementtyp (DataForSEO nutzt teils dieselbe Struktur für beide). Vertical `WEB` → `GeneratedAnswerFeature` Typ `ai_overview`; Vertical `AI_MODE` → Typ `ai_mode_answer`; `SearchMetadata.vertical` hält den Modus fest. |
 | Google HTTP | `GoogleHttpSearchProvider`: `GET https://www.google.com/search?q=<url-kodiert>` (plus `hl`/`gl`/`start`/`num` aus dem Request), **nie** `udm=50`. Parsing des HTML in `engine-google-common`. Nachgeladene Responses wie `/async/folsrch` werden erst als Quelle genutzt, wenn Format und Verhalten durch Fixtures belegt sind (#6). Ob der Aufruf ohne Browserprofil und Cookies reproduzierbar funktioniert, klärt Spike S0 vor Paket G1. |
+
+### 5.6 Response-Mapping in zwei Ebenen ([ADR-019](adr/ADR-019-response-mapping.md))
+
+Das Mapping von Provider-Antworten auf `SearchData`/`SearchMetadata` ist keine Implementierungsfrage des einzelnen
+Providers, sondern eine gemeinsame Infrastruktur mit festen Regeln. Angelos sieben Prinzipien gelten verbindlich:
+(1) jeder Provider hat seinen eigenen Response-Mapper, (2) ein gemeinsamer Mechanismus für deklaratives Feld-Mapping,
+(3) komplexe Transformationen über Java-Adapter, (4) Mapping-Konfigurationen unabhängig von den Domain-Klassen,
+(5) unbekannte Daten gehen nie still verloren, (6) Mapper mit echten Provider-JSON-Fixtures testbar, (7) Domain-Modell
+unabhängig von Gson und jeder JSON-Bibliothek.
+
+```
+Provider-Antwort (JSON-Text)
+   │  serp4j-json: JsonTrees.read            (einzige Stelle mit Gson)
+   ▼
+StructuredValue (serp4j-core, ADR-006)
+   │  serp4j-mapping: MappingEngine.map(tree, definition, registry)
+   │     Ebene 1  MappingDefinition    – JSON-Ressource im Provider-Modul, versioniert
+   │     Ebene 2  CustomMapperRegistry – Java, gehört zu genau dieser Definition
+   ▼
+SearchData + SearchMetadata-Fragmente + SearchWarnings   (Extensions.unmapped für alles Nichtkonsumierte)
+```
+
+| Ebene | Was | Wo | Beispiele |
+|---|---|---|---|
+| 1 deklarativ | Pfade (`$.a.b[*].c`), Sektionen mit Diskriminator, alternative Feldnamen, Defaults, Pflichtfelder, Konverter, Rang aus Index oder Feldern, Extensions mit Namensraum, Unmapped-Erhalt | `…/provider/<name>/mapping/<name>-<vertical>-v<n>.json` | Brave `web.results[]` → Items; DataForSEO `items[]` mit `type` → `item:organic`, `feature:knowledge_panel` |
+| 2 Java | `ItemMapper` je Sektion, `FeatureMapper` je (Sektion, Typ), `MetadataMapper`, eigene `ValueConverter` | Provider-Modul (`internal`), bei Nutzern im eigenen Code | Knowledge-Graph-Fakten, PAA-Fragen mit Antwortquelle, KI-Antwort mit `SourceReference`s, `SerpPosition.area` aus `position`, Klassifikation AI Overview ≠ AI Mode |
+
+Regeln:
+
+1. `serp4j-mapping` hängt nur an `serp4j-core` und arbeitet ausschließlich auf `StructuredValue`. Gson ist nur in
+   `serp4j-json` eine Abhängigkeit.
+2. Die deklarative Pfadsprache bleibt klein (Namen, Index, `[*]`), ohne Filter oder Ausdrücke. Was sie nicht ausdrückt,
+   ist Java. Diese Grenze wird nicht durch Konfigurationsfeatures verschoben.
+3. Custom Mapper sind an eine Definition gebunden, nie global je Typ-Code.
+4. Nicht konsumierte Felder eines Elements landen als `StructuredValue` in `Extensions.unmapped(<namespace>)`, unbekannte
+   Typen als `GenericSerpFeature` mit Warnung; die Engine wirft nur bei ungültiger Definition.
+5. Jede Definition wird im Testkit gegen echte Fixtures geprüft (`MappingDefinitionContractTest`): Laden, jeder Pfad
+   trifft in mindestens einer Fixture, Golden-Output, „unbekannter Typ überlebt". Für Brave und Bright Data entstehen
+   Definitionen erst nach dem Recording-Lauf (E-1).
+6. Die Engine, der Definitionsleser, die Registries und die Mapper-Interfaces sind öffentliche API für Nutzer mit
+   eigenen Providern.
+
+Ein Prototyp mit drei Antwortstrukturen (zwei nach Angelos Beispiel, eine DataForSEO-artig polymorph) liegt unter
+[`spikes/mapping-prototype`](../../spikes/mapping-prototype/README.md). Er ist kein Produktivcode; seine Befunde
+(Mapper je Sektion statt global, eine polymorphe Sektion statt zwei auf demselben Pfad, `fieldsByType`) sind in ADR-019
+eingeflossen.
 
 ---
 
@@ -569,6 +633,8 @@ Secret-Muster gescannt.
 | Architekturregeln | `serp4j-core`, `serp4j-orchestration` | ArchUnit (Java-8-fähige Version) | immer |
 | Request-Mapping (golden) | Provider-Module | erwartete URL/Body/Header als Datei | immer |
 | Response-Mapping | Provider-Module | echte, anonymisierte Fixtures aus `serp4j-testkit` | immer |
+| Mapping-Engine | `serp4j-mapping` | Unit-Tests: Pfade, Konverter, Sektionen, Polymorphie, Unmapped-Erhalt | immer |
+| Mapping-Definitionen | Provider-Module | `MappingDefinitionContractTest` aus `serp4j-testkit`: Definition lädt, jeder Pfad trifft in einer Fixture, Golden-Output, „unbekannter Typ überlebt" | immer |
 | Provider-Vertrag | Provider-Module | `SearchProviderContractTest` + `FakeHttpTransport` | immer |
 | Dialog-Vertrag | `serp4j-engine-google-browser`, Mocks | `ConversationalSearchProviderContractTest` | immer |
 | Orchestrierung | `serp4j-orchestration` | `MockSearchProvider`/`ScriptedSearchProvider` mit Fehlerinjektion und Latenz | immer |
@@ -670,7 +736,8 @@ Weitere offene **technische** Fragen sind per Spike zu klären und gehören nich
 | R5 | Versionskopplung Playwright ↔ Treiber ↔ Camoufox | Start schlägt fehl | Kompatibilität im Version Catalog und in der BOM, Probe meldet `INCOMPATIBLE_DRIVER`, CI je Kombination | WP3 R5, WP4 §5 |
 | R6 | Playwright Java gibt Java 8 auf | Baseline-Bruch | Browsermodule getrennt anhebbar, ohne den Core zu berühren | WP3 R9 |
 | R7 | Modell zu groß für einfache Nutzer | Akzeptanz | Komfortzugriffe (`getOrganicResults()`), Mindestvertrag nur URL + Provider/Engine/Query | WP1 §6 |
-| R8 | Provider-JSON ändert sich | stille Verluste | `GenericSerpFeature`, Unmapped-`StructuredValue`, „unbekannter Typ überlebt"-Test | WP1, WP5 |
+| R8 | Provider-JSON ändert sich | stille Verluste | `GenericSerpFeature`, Unmapped-`StructuredValue`, „unbekannter Typ überlebt"-Test; Feldumbenennungen als Definitionsänderung ohne Code-Release (§5.6) | WP1, WP5 |
+| R15 | Deklarative Mapping-Ebene wächst zur Ausdruckssprache (Filter, Bedingungen) | schwer testbar, zweite Programmiersprache | Grenze in ADR-019 fest: Pfade + Konverter; alles andere Java; Review-Regel für Erweiterungen der Definition | Angelos Mapping-Vorschlag |
 | R9 | Threading-Fallen Playwright | hängende Sitzungen | Actor-Modell, TCK-Test für Event-Zustellung | WP3 R7 |
 | R10 | Hot-Reload in AskAI bricht | Suchen scheitern bei Reload | AskAI-Registry bleibt; Serp4J garantiert idempotentes `close()` und Threadsicherheit (Contract-Test) | WP5 |
 | R11 | PF4J-Plugin-Classpath in AskAI | Plugin lädt nicht | `AgentPluginLoadIntegrationTest` als Gate des Umschaltens | WP5 |
@@ -690,5 +757,6 @@ Weitere offene **technische** Fragen sind per Spike zu klären und gehören nich
 | Stateful Search Sessions berücksichtigt | §8, ADR-009 |
 | Migration aus AskAI nachvollziehbar geplant | §11, WP5, ADR-014 |
 | Java-8-Kompatibilität des Core gewährleistet | §1, §12, ADR-002 |
-| wesentliche Entscheidungen begründet und dokumentiert | ADR-001 bis ADR-018 |
+| wesentliche Entscheidungen begründet und dokumentiert | ADR-001 bis ADR-019 |
+| **konfigurierbare Mapping-Infrastruktur** (zwei Ebenen, sieben Prinzipien, eigenes Modul, Unmapped-Erhalt, Fixture-Tests, für Nutzer offen) | §5.6, [ADR-019](adr/ADR-019-response-mapping.md), Prototyp `spikes/mapping-prototype`; Abnahme durch Angelo offen |
 | priorisierter, parallelisierbarer Implementierungsplan | [implementation-plan.md](implementation-plan.md) |
