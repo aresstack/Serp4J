@@ -1,0 +1,28 @@
+# Einzige Stelle für externe Versionen (architecture.md §12, WP4 §6.3).
+# Regel: Test-Abhängigkeiten der Java-8-Module müssen selbst auf JDK 8 laufen.
+
+[versions]
+junit-jupiter = "5.11.4"      # 5.x bleibt Java 8; JUnit 6 verlangt Java 17
+assertj = "3.27.3"            # Java 8
+archunit = "1.4.1"            # Java 8
+gson = "2.13.1"               # nur serp4j-json
+asynchttpclient = "2.12.4"    # 2.x bleibt Java 8; 3.x verlangt Java 11
+jsoup = "1.18.3"              # Java 8, ohne transitive Abhängigkeiten
+playwright = "1.62.0"         # muss zur Core-Version von playwright4j passen
+playwright4j = "0.3.0"
+nmcp = "0.1.5"                # com.gradleup.nmcp (E-7, ADR-015)
+
+[libraries]
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit-jupiter" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+archunit-junit5 = { module = "com.tngtech.archunit:archunit-junit5", version.ref = "archunit" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+asynchttpclient = { module = "org.asynchttpclient:async-http-client", version.ref = "asynchttpclient" }
+jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
+playwright = { module = "com.microsoft.playwright:playwright", version.ref = "playwright" }
+
+[plugins]
+nmcp-module = { id = "com.gradleup.nmcp", version.ref = "nmcp" }
+nmcp-aggregation = { id = "com.gradleup.nmcp.aggregation", version.ref = "nmcp" }
