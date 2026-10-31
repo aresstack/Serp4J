@@ -1,0 +1,60 @@
+=== provider-a-web (v1) ===
+  metadata={"originalQuery":"example","totalResultsEstimate":1234567,"nextPageUrl":"https://a.example/search?page=2"}
+  Item e1 [organic] pos=1/null MAIN
+    url=https://example.com  title=Example
+    snippet=Description
+    domain=example.com  displayUrl=null
+    unmapped={"cached_page_link":"https://cache/1"}
+  Item e2 [organic] pos=2/null MAIN
+    url=https://second.example.org/path  title=Second
+    snippet=Second description
+    domain=second.example.org  displayUrl=null
+  Feature e3 [people_also_ask]
+    fields={"question":"What is an example?","answer":"An example is …","sourceUrl":"https://example.com/faq"}
+
+=== provider-b-web (v1) ===
+  metadata={"originalQuery":"example","providerReportedMillis":42}
+  Item e1 [organic] pos=1/1 MAIN
+    url=https://example.com  title=Example
+    snippet=Description  +[More text, Even more]
+    domain=example.com  displayUrl=null
+  Item e3 [organic] pos=3/3 MAIN
+    url=https://third.example.net  title=Third
+    snippet=Third
+    domain=third.example.net  displayUrl=null
+    extensions={"b:thumbnail":"https://img/3.png"}
+  Feature e4 [knowledge_panel]
+    fields={"title":"Example Corp","description":"A company."}
+    unmapped={"attributes":[{"key":"Founded","value":"1999"}]}
+  Feature e5 [experimental_block, GENERIC]
+    unmapped={"foo":"bar"}
+  WARN organic: required field 'url' missing
+  WARN organic: element 2 without url skipped
+
+=== provider-c-web (v1) ===
+  metadata={"originalQuery":"example","totalResultsEstimate":987,"providerRequestId":"t-1","cost":0.002}
+  Item e1 [organic] pos=1/2 MAIN
+    url=https://example.com  title=Example
+    snippet=Description
+    domain=example.com  displayUrl=example.com › home
+  Item e3 [paid] pos=1/3 SIDEBAR
+    url=https://ad.example  title=Ad
+    snippet=Buy now
+  Item e6 [organic] pos=2/6 MAIN
+    url=https://second.example.org/path  title=Second
+    snippet=Second description
+    domain=second.example.org  displayUrl=null
+  Feature e2 [featured_snippet]
+    fields={"rankInGroup":1,"rankAbsolute":1,"title":"Snippet title","text":"Snippet text","sourceUrl":"https://example.com/snippet"}
+    unmapped={"domain":"example.com"}
+  Feature e4 [knowledge_panel]
+    fields={"title":"Example Corp","description":"A company.","facts":[{"key":"Founded","value":"1999"}]}
+    unmapped={"rank_group":1,"rank_absolute":4}
+  Feature e5 [people_also_ask]
+    fields={"questions":[{"question":"What is an example?","answer":"An example is …","sourceUrl":"https://example.com/faq"}]}
+    unmapped={"rank_group":1,"rank_absolute":5}
+  Feature e7 [brand_new_widget_2027, GENERIC]
+    unmapped={"type":"brand_new_widget_2027","rank_group":1,"rank_absolute":7,"payload":{"anything":[1,2,3]}}
+  unmappedRoot={"status_code":20000}
+  WARN serp: unknown element type 'brand_new_widget_2027' kept as GenericSerpFeature
+
