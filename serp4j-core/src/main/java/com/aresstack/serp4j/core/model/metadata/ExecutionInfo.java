@@ -8,20 +8,29 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 
-/** How the call was executed: timing, provider task/request identifiers, attempts, cache hit. */
+/**
+ * How the call was executed: timing (measured by Serp4J and as reported by the provider), provider task/request
+ * identifiers, the provider-side source URL, attempts, cache hit. All fields are optional (WP1 §4.8).
+ */
 public final class ExecutionInfo {
 
     private final Instant startedAt;
     private final Duration duration;
+    private final Duration providerReportedDuration;
     private final String providerRequestId;
+    private final String sourceUrl;
     private final Integer attempts;
+    private final Instant providerTimestamp;
     private final Boolean cached;
 
     private ExecutionInfo(Builder builder) {
         this.startedAt = builder.startedAt;
         this.duration = builder.duration;
+        this.providerReportedDuration = builder.providerReportedDuration;
         this.providerRequestId = builder.providerRequestId;
+        this.sourceUrl = builder.sourceUrl;
         this.attempts = builder.attempts;
+        this.providerTimestamp = builder.providerTimestamp;
         this.cached = builder.cached;
     }
 
@@ -33,8 +42,14 @@ public final class ExecutionInfo {
         return Optional.ofNullable(startedAt);
     }
 
+    /** Wall-clock duration of the call as measured by Serp4J. */
     public Optional<Duration> getDuration() {
         return Optional.ofNullable(duration);
+    }
+
+    /** Processing time as reported by the provider itself (e.g. DataForSEO {@code time}, Bright Data {@code search_time}). */
+    public Optional<Duration> getProviderReportedDuration() {
+        return Optional.ofNullable(providerReportedDuration);
     }
 
     /** Provider-side identifier of the request or task, useful for support inquiries. */
@@ -42,12 +57,39 @@ public final class ExecutionInfo {
         return Optional.ofNullable(providerRequestId);
     }
 
+    /**
+     * URL of the search result page the provider fetched or offers for verification (e.g. DataForSEO
+     * {@code check_url}, Bright Data {@code input.original_url}).
+     */
+    public Optional<String> getSourceUrl() {
+        return Optional.ofNullable(sourceUrl);
+    }
+
     public OptionalInt getAttempts() {
         return attempts == null ? OptionalInt.empty() : OptionalInt.of(attempts);
     }
 
+    /** Timestamp the provider attached to the response (e.g. DataForSEO {@code datetime}, Bright Data {@code general.timestamp}). */
+    public Optional<Instant> getProviderTimestamp() {
+        return Optional.ofNullable(providerTimestamp);
+    }
+
     public Optional<Boolean> getCached() {
         return Optional.ofNullable(cached);
+    }
+
+    /** Returns a builder pre-populated with all values of this instance. */
+    public Builder toBuilder() {
+        Builder builder = new Builder();
+        builder.startedAt = startedAt;
+        builder.duration = duration;
+        builder.providerReportedDuration = providerReportedDuration;
+        builder.providerRequestId = providerRequestId;
+        builder.sourceUrl = sourceUrl;
+        builder.attempts = attempts;
+        builder.providerTimestamp = providerTimestamp;
+        builder.cached = cached;
+        return builder;
     }
 
     @Override
@@ -61,28 +103,37 @@ public final class ExecutionInfo {
         ExecutionInfo that = (ExecutionInfo) o;
         return Objects.equals(startedAt, that.startedAt)
                 && Objects.equals(duration, that.duration)
+                && Objects.equals(providerReportedDuration, that.providerReportedDuration)
                 && Objects.equals(providerRequestId, that.providerRequestId)
+                && Objects.equals(sourceUrl, that.sourceUrl)
                 && Objects.equals(attempts, that.attempts)
+                && Objects.equals(providerTimestamp, that.providerTimestamp)
                 && Objects.equals(cached, that.cached);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(startedAt, duration, providerRequestId, attempts, cached);
+        return Objects.hash(startedAt, duration, providerReportedDuration, providerRequestId, sourceUrl, attempts,
+                providerTimestamp, cached);
     }
 
     @Override
     public String toString() {
         return "ExecutionInfo{startedAt=" + startedAt + ", duration=" + duration
-                + ", providerRequestId=" + providerRequestId + ", attempts=" + attempts + ", cached=" + cached + '}';
+                + ", providerReportedDuration=" + providerReportedDuration
+                + ", providerRequestId=" + providerRequestId + ", sourceUrl=" + sourceUrl
+                + ", attempts=" + attempts + ", providerTimestamp=" + providerTimestamp + ", cached=" + cached + '}';
     }
 
     /** Builder for {@link ExecutionInfo}. */
     public static final class Builder {
         private Instant startedAt;
         private Duration duration;
+        private Duration providerReportedDuration;
         private String providerRequestId;
+        private String sourceUrl;
         private Integer attempts;
+        private Instant providerTimestamp;
         private Boolean cached;
 
         private Builder() {
@@ -93,11 +144,15 @@ public final class ExecutionInfo {
             return this;
         }
 
+        /** @throws IllegalArgumentException if {@code duration} is negative */
         public Builder duration(Duration duration) {
-            if (duration != null && duration.isNegative()) {
-                throw new IllegalArgumentException("duration must not be negative but was " + duration);
-            }
-            this.duration = duration;
+            this.duration = requireNonNegative(duration, "duration");
+            return this;
+        }
+
+        /** @throws IllegalArgumentException if {@code providerReportedDuration} is negative */
+        public Builder providerReportedDuration(Duration providerReportedDuration) {
+            this.providerReportedDuration = requireNonNegative(providerReportedDuration, "providerReportedDuration");
             return this;
         }
 
@@ -106,8 +161,19 @@ public final class ExecutionInfo {
             return this;
         }
 
+        /** Blank values are treated as absent; surrounding whitespace is removed. */
+        public Builder sourceUrl(String sourceUrl) {
+            this.sourceUrl = Preconditions.trimToNull(sourceUrl);
+            return this;
+        }
+
         public Builder attempts(int attempts) {
             this.attempts = Preconditions.requirePositive(attempts, "attempts");
+            return this;
+        }
+
+        public Builder providerTimestamp(Instant providerTimestamp) {
+            this.providerTimestamp = providerTimestamp;
             return this;
         }
 
@@ -118,6 +184,13 @@ public final class ExecutionInfo {
 
         public ExecutionInfo build() {
             return new ExecutionInfo(this);
+        }
+
+        private static Duration requireNonNegative(Duration value, String name) {
+            if (value != null && value.isNegative()) {
+                throw new IllegalArgumentException(name + " must not be negative but was " + value);
+            }
+            return value;
         }
     }
 }
