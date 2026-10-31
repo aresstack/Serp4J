@@ -1,6 +1,6 @@
 # ADR-011 – Playwright-Adapter in Java 8, Treiber als Laufzeitmodule
 
-**Status:** Vorgeschlagen · **Quellen:** WP3 B-3, Q2; WP4 §5, Frage 9
+**Status:** Angenommen (Angelo, 2026-10-31) · **Quellen:** WP3 B-3, Q2; WP4 §5, Frage 9
 
 ## Kontext
 Playwright Java braucht einen JS-Treiber: offiziell Node (`driver` + `driver-bundle`, Java 8+) oder `playwright4j`

@@ -1,7 +1,7 @@
 # Serp4J – Priorisierter Implementierungsplan
 
-> **Status:** Zur Abnahme durch Angelo · **Stand:** 2026-10-31
-> **Wichtig:** Keines der Pakete wird vor Angelos ausdrücklicher Freigabe begonnen.
+> **Status:** Nach Angelos Review vom 2026-10-31 angepasst (Review-Punkte A–C, Entscheidungen E-1 bis E-8) · Merge- und Startfreigabe ausstehend
+> **Wichtig:** Keines der Pakete wird vor Angelos ausdrücklicher Freigabe begonnen. Paket A kann nach seiner Aussage als erstes freigegeben werden; E-1 und E-2 müssen dafür nicht abgewartet werden.
 > Grundlage: [architecture.md](architecture.md), [ADRs](adr/README.md), Paketschnitt A–H aus Angelos Auftrag.
 
 ## 1. Überblick
@@ -14,18 +14,20 @@ notwendig erkannt wurden: **0** (Charakterisierung in AskAI), **S** (Browser-Spi
 |---|---|---|---|---|---|
 | **0** | Charakterisierung in AskAI: Fixtures, Golden-Tests | (AskAI, nur Tests) | E-1 | S | hoch |
 | **A** | Build-Gerüst, Core Domain & Ports, Port-Module | `build-logic`, `serp4j-bom`, `serp4j-core`, `serp4j-http-api` | Freigabe | L | kritisch |
-| **B** | Brave-Adapter | `serp4j-provider-brave` | A, (E für Contract-Tests) | M | hoch |
-| **C** | Bright-Data-Adapter | `serp4j-provider-brightdata` | A, (E), E-2 | M | hoch |
-| **D** | DataForSEO-Adapter | `serp4j-provider-dataforseo` | A, (E) | L | hoch |
+| **B** | Brave-Adapter | `serp4j-provider-brave` | A, (E für Contract-Tests), E-1: echte Fixture vor dem Response-Mapper | M | hoch |
+| **C** | Bright-Data-Adapter | `serp4j-provider-brightdata` | A, (E), E-1; `brd_json`-Default erst nach echter Prüfung (E-2) | M | hoch |
+| **D** | DataForSEO-Adapter (Web) | `serp4j-provider-dataforseo` | A, (E); Fixtures vorhanden (E-1) | L | hoch |
+| **D2** | DataForSEO AI Mode als zustandsloser `SearchProvider` (E-8) | `serp4j-provider-dataforseo` | D; echte AI-Mode-Fixture | S–M | hoch |
 | **E** | Testkit & Mock-Provider | `serp4j-testkit` | A | M | kritisch |
 | **T** | HTTP-Transport AHC | `serp4j-http-ahc` | A | S | hoch |
 | **F** | Browser-Abstraktion & Playwright | `serp4j-browser-api`, `serp4j-browser-testkit`, `serp4j-browser-playwright`, `-driver-node`, `-driver-graal` | A (nur Build-Gerüst) | L | mittel |
-| **S** | Spikes S1–S4 (Treiber, Netzwerk/BiDi, AI-Mode-Ablauf, Parallelität) | Wegwerf-Prototypen in `serp4j-examples` | F (teilweise), E-3 | M | mittel |
-| **G** | Google Search / AI Mode | `serp4j-engine-google` | A, F, S, E-3 | L | mittel |
+| **S** | Spikes S0–S4 (Google-HTTP ohne Browserkontext, Treiber, Netzwerk/BiDi, AI-Mode-Ablauf, Parallelität) | Wegwerf-Prototypen in `serp4j-examples` | S0: A, T · S1–S4: F | M | mittel |
+| **G1** | Google HTTP (Quick Web Search, #6) | `serp4j-engine-google-common`, `serp4j-engine-google-http` | A, T, S0 | M | mittel |
+| **G2** | Google Browser Search + AI Mode (#7) | `serp4j-engine-google-browser` | A, F, S1–S4, G1 (Parser) | L | mittel |
 | **H** | Orchestrierung & Registry | `serp4j-orchestration` | A, E; Abschluss mit B–D | M | hoch |
 | **J** | JSON-Format des Modells | `serp4j-json` | A | S | niedrig |
 | **M** | AskAI auf Serp4J umstellen | (AskAI) | B, C, D, H, T, 0 | M | hoch, aber zuletzt |
-| später | Camoufox, JDK-Transport, Analyzer, weitere Provider | `serp4j-browser-camoufox`, `serp4j-http-jdk`, `serp4j-analysis-*` | E-5, E-6 | – | nach 0.1 |
+| später | Camoufox-Integration (gemeinsame Bibliothek, Java 8), Bright Data AI Mode (Dataset-Workflow), JDK-Transport, Analyzer, weitere Provider | `serp4j-browser-camoufox`, `serp4j-http-jdk`, `serp4j-analysis-*` | gemeinsame Camoufox-Bibliothek (E-5/E-6) | – | nach 0.1 |
 
 Größen: S ≈ 1–2 Tage, M ≈ 3–5 Tage, L ≈ 1–2 Wochen für einen Agenten (grobe Schätzung ohne Messgrundlage).
 
@@ -42,7 +44,9 @@ graph LR
     T[T HTTP AHC]
     F[F Browser + Playwright]
     S[S Spikes]
-    G[G Google]
+    G1[G1 Google HTTP]
+    G2[G2 Google Browser]
+    D2[D2 DataForSEO AI Mode]
     H[H Orchestrierung]
     J[J JSON]
     M[M AskAI-Umstellung]
@@ -50,8 +54,10 @@ graph LR
     A --> B & C & D & E & T & F & J & H
     E --> B & C & D & H
     P0 --> B & C & D
-    F --> S --> G
-    A --> G
+    A & T --> G1
+    F --> S --> G2
+    G1 --> G2
+    D --> D2
     B & C & D --> H
     B & C & D & H & T & P0 --> M
 ```
@@ -60,7 +66,7 @@ graph LR
 |---|---|---|
 | **1** | **A**; parallel dazu **0** (anderes Repo, rein additiv) | Freigabe, für 0 zusätzlich E-1 |
 | **2** | **E** zuerst bzw. im Gleichschritt mit **B, C, D**; außerdem **T**, **F**, **J**, Beginn **H** gegen Mocks | A gemergt |
-| **3** | **S**, danach **G**; Abschluss **H** mit echten Providern | F gemergt, E-3 entschieden |
+| **3** | **S0** und **G1** (nach T); **D2**; **S1–S4**, danach **G2**; Abschluss **H** mit echten Providern | T bzw. F gemergt |
 | **4** | **M**, Release **0.1.0** | B, C, D, H, T gemergt, Parität grün |
 
 Bis zu sieben Agenten können in Welle 2 gleichzeitig arbeiten, weil jedes Paket ein eigenes Modul besitzt.
@@ -89,6 +95,16 @@ geplanten Module angelegt, damit spätere Pakete nur ihr eigenes Verzeichnis anf
   `toBuilder()`; ArchUnit grün; `--release 8` und JDK-8-Testlauf grün; Javadoc ohne Fehler; keine Drittabhängigkeit.
 - Empfehlung: A in zwei PRs teilen (A1 Build + Modell, A2 Ports + http-api), damit E und H früher starten können.
 
+### A – Core-Vertragsfragen aus dem Review (Pflicht vor Freigabe von A)
+
+Angelo macht die Freigabe von A von der Korrektur der beiden Core-Verträge abhängig. Beide sind in
+[architecture.md](architecture.md) eingearbeitet und müssen in A umgesetzt werden:
+- `SearchMetadata.getProvider()`, `getEngine()`, `getVertical()` als `Optional`; `getContributingProviders()` nie leer
+  (Review-Punkt B, ADR-008).
+- Ownership-Regel für injizierte Infrastruktur in den Javadocs von `ProviderPort`, `SearchProvider`,
+  `ConversationalSearchProvider`, `HttpTransport`, `BrowserRuntime` und als Contract-Test im Testkit
+  (Review-Punkt C, ADR-017).
+
 ### B, C, D – Cloud-Adapter (je Provider gleiche Reihenfolge)
 
 1. Enums und Validator übernehmen (Paket `com.aresstack.serp4j.provider.<name>`, ohne Gson-Annotationen).
@@ -101,10 +117,15 @@ geplanten Module angelegt, damit spätere Pakete nur ihr eigenes Verzeichnis anf
 
 Zusätzlich:
 - **B Brave:** Seitenindex-Semantik als Capability; `mixed` für `SerpPosition.area`/`rankAbsolute`.
-- **C Bright Data:** `brd_json=1` nach E-2; Polling über geteilten Scheduler; Async-Pfad mit `FakeHttpTransport`-Sequenz
-  getestet; Tests für Bing, DuckDuckGo, Yandex.
+- **C Bright Data:** heutiges Verhalten beim `brd_json` unverändert übernehmen, Option setzbar, Default erst nach
+  echter Prüfung (E-2); Polling über geteilten, injizierten Scheduler (Ownership nach ADR-017); Async-Pfad mit
+  `FakeHttpTransport`-Sequenz getestet; Tests für Bing, DuckDuckGo, Yandex. Response-Mapper erst mit echter Fixture (E-1).
 - **D DataForSEO:** Engine pro Request; `cost`/`time`; `target_search_mode`-Bedingung prüfen und testen; alle
-  Item-Typen nach WP1 §5.3.
+  Item-Typen nach WP1 §5.3; vorhandene Playground-Fixtures (E-1) nach `serp4j-testkit` übernehmen.
+- **D2 DataForSEO AI Mode (E-8):** Ziel `google/AI_MODE` über den AI-Mode-Live-Endpunkt als zustandslose Suche im
+  selben Provider; Endpunktwahl über das Vertical; `GeneratedAnswerFeature` Typ `ai_mode_answer` mit
+  `SourceReference`s; Klassifikation nach ausgeführtem Suchmodus, nicht nach JSON-Elementtyp (AI Overview ≠ AI Mode);
+  Capabilities enthalten `AI_ANSWER`, `CITED_SOURCES`, aber **kein** `conversational`. Braucht eine echte Fixture.
 - **Fertig, wenn:** Contract-Test, Golden-Tests und Fixture-Tests grün; „unbekannter Typ überlebt"; keine Secrets in
   Ausgaben; Live-Test vorhanden (läuft nur manuell).
 
@@ -114,6 +135,8 @@ Zusätzlich:
 - `MockSearchProvider`, `ScriptedSearchProvider`, `ScriptedConversationalProvider` (Fehlerinjektion je Kategorie, Latenz).
 - `SearchProviderContractTest`, `ConversationalSearchProviderContractTest` (abstrakt, JUnit 5).
 - Fixtures aus 0 unter `fixtures/<provider>/`, Secret-Scan-Test.
+- Contract-Test „geteilte Infrastruktur überlebt `close()` eines Providers" (ADR-017) und „Einzelantwort setzt Provider"
+  (ADR-008).
 - **Fertig, wenn:** Mocks bestehen ihre eigenen Contract-Tests; JUnit nur `compileOnly`.
 
 ### T – HTTP-Transport AHC
@@ -132,20 +155,35 @@ Zusätzlich:
 - **Fertig, wenn:** TCK im eigenen CI-Job (Linux, Chromium) grün mit beiden Treibern; Core-Build bleibt ohne Browser.
 - Camoufox ist **nicht** Teil von F (E-5/E-6).
 
-### S – Spikes (vor G)
+### S – Spikes
 
-S1 Treibervergleich (Start, Speicher, Größe) · S2 `onResponse`/`body()` Chromium vs. BiDi · S3 AI-Mode-Ablauf
-(Erstfrage, Folgefrage, Fertig-Erkennung, Verfügbarkeit DE ohne Login, Fortsetzbarkeit) · S4 Parallelität.
-Ergebnis je Spike: kurzer Bericht unter `docs/spikes/` und, bei S3, ein Fixture-Set. Spike-Code wird nicht publiziert.
+S0 (vor G1): `GET /search?q=…` ohne Browserprofil und Cookies: Consent-Redirect, Blockierung, Antwortvarianten,
+`/async/folsrch` (#6) · S1 Treibervergleich (Start, Speicher, Größe) · S2 `onResponse`/`body()` Chromium vs. BiDi ·
+S3 AI-Mode-Ablauf (initialer Transport HTML vs. dynamisch, `/async/folif` für Folgefragen, Fertig-Erkennung,
+Verfügbarkeit DE ohne Login, Fortsetzbarkeit; #7) · S4 Parallelität.
+Ergebnis je Spike: kurzer Bericht unter `docs/spikes/` und, bei S0 und S3, ein HTML-/Response-Fixture-Set. Spike-Code
+wird nicht publiziert.
 
-### G – Google Search / AI Mode
+### G1 – Google HTTP (Quick Web Search, #6)
 
-- `GoogleSearchProvider` (`SearchProvider`) und `GoogleAiModeProvider` (`ConversationalSearchProvider`) in einem Modul.
-- Gemeinsam: `GoogleUrlBuilder`, `GoogleObstacleDetector`, Consent-Handling nur mit eindeutig ablehnender Option,
-  versionierte Skripte `google/serp-v1.js`, `google/ai-mode-v1.js`, Mapping in Java.
+- `serp4j-engine-google-common`: `GoogleUrlBuilder`, `GoogleObstacleDetector`, `GoogleSerpHtmlParser` (jsoup) gegen
+  HTML-Fixtures aus S0.
+- `serp4j-engine-google-http`: `GoogleHttpSearchProvider` über `HttpTransport`; `hl`/`gl`/`start`/`num`; nie `udm=50`;
+  Hindernisse → `BLOCKED`/`UNSUPPORTED`; Degradation → Warnung; Capabilities aus S0.
 - Grenzen nach ADR-016; Publish-Flag aus (E-3/E-4).
-- **Fertig, wenn:** Extraktion gegen HTML-Fixtures getestet; Dialog-Contract-Test grün; Degradation als Warnung;
-  Live-Smoke manuell.
+- **Fertig, wenn:** Parser und Provider gegen Fixtures getestet; Contract-Test grün; Live-Smoke manuell; Akzeptanzkriterien
+  aus #6, soweit sie Serp4J betreffen.
+
+### G2 – Google Browser Search / AI Mode (#7)
+
+- `GoogleBrowserSearchProvider` (`SearchProvider`) und `GoogleAiModeProvider` (`ConversationalSearchProvider`) in
+  `serp4j-engine-google-browser`, Parser aus `-common` wiederverwendet.
+- Extraktionsquelle je Fall nach S3: DOM-Skripte `google/serp-v1.js`, `google/ai-mode-v1.js` und/oder beobachtete
+  Responses (`/async/folif`); keine undokumentierten RPC-IDs als feste API.
+- Consent-Handling nur mit eindeutig ablehnender Option; `BrowserRuntime` wird injiziert und nie vom Provider
+  geschlossen (ADR-017).
+- **Fertig, wenn:** Extraktion gegen Fixtures getestet; Dialog-Contract-Test grün (Erstfrage + Folgefrage mit
+  `FakeBrowserRuntime`); Degradation als Warnung; Live-Smoke manuell.
 
 ### H – Orchestrierung & Registry
 
@@ -174,13 +212,24 @@ Ergebnis je Spike: kurzer Bericht unter `docs/spikes/` und, bei S3, ein Fixture-
 
 | Paket | Braucht vor Beginn |
 |---|---|
-| alle | Angelos Abnahme der Architektur und ausdrückliche Implementierungsfreigabe |
-| 0 | E-1 (Fixtures) |
-| C | E-2 (`brd_json`) |
-| G | E-3 (Google-Adapter ja/nein); E-8 (browserloser AI-Mode-Weg zuerst?) |
-| Release 0.1.0 | E-4, E-7 |
-| Camoufox (später) | E-5, E-6 |
-| M | gesonderte Freigabe für Änderungen im AskAI-Repository |
+| alle | Angelos endgültige Abnahme und ausdrückliche Startfreigabe |
+| A – Core und Build | Korrektur der beiden Core-Vertragsfragen (Review-Punkte B und C, oben eingearbeitet); E-1/E-2 **nicht** nötig |
+| 0 | vorhandene DataForSEO-Fixtures (E-1); für Brave/Bright Data ein Recording-Lauf mit Angelos Keys |
+| B – Brave | A, E-1: echte Fixture |
+| C – Bright Data | A, E-1 und E-2 (Default erst nach echter Prüfung) |
+| D – DataForSEO | A, vorhandene Fixtures (E-1) |
+| D2 – DataForSEO AI Mode | D, echte AI-Mode-Fixture (E-8) |
+| E – Testkit | A |
+| T – HTTP-Transport | A |
+| F – Browser | A |
+| S – Spikes | S0: A, T · S1–S4: F |
+| G1 – Google HTTP | A, T, S0; nicht publiziert (E-3/E-4) |
+| G2 – Google Browser | F, S, G1; nicht publiziert (E-3/E-4) |
+| H – Orchestrierung | A und E |
+| J – JSON | A |
+| Release 0.1.0 | nmcp-Publishing (E-7) |
+| Camoufox (später) | gemeinsame Bibliothek (E-5), Java 8 (E-6) |
+| M – AskAI-Migration | gesonderte Freigabe |
 
 ## 5. Definition of Done (alle Pakete)
 

@@ -1,6 +1,6 @@
 # Serp4J – Verbindliche Gesamtarchitektur
 
-> **Status:** Zur Abnahme durch Angelo · **Stand:** 2026-10-31 · **Phase:** Architektur (keine produktive Implementierung)
+> **Status:** Konzept von Angelo grundsätzlich angenommen (2026-10-31), Nachbesserungen aus dem Review eingearbeitet, Merge-Freigabe ausstehend · **Phase:** Architektur (keine produktive Implementierung)
 > **Grundlage:** WP1 [Domain-Modell](wp1-domain-model.md) · WP2 [Architektur & Ports](wp2-architecture-ports.md) ·
 > WP3 [Browser](wp3-browser.md) · WP4 [Build & Distribution](wp4-build-distribution.md) · WP5 [Migration](wp5-migration.md)
 > **Entscheidungen im Detail:** [ADRs](adr/README.md) · **Umsetzung:** [Implementierungsplan](implementation-plan.md)
@@ -31,11 +31,17 @@ AskAI ist ein Konsument unter mehreren und keine Abhängigkeit.
    Normale Provider sehen davon nichts.
 7. **Der Browser ist Infrastruktur.** `serp4j-browser-api` ist ein eigenes, abhängigkeitsfreies Modul (nicht im
    Core). Google-Adapter hängen nur davon ab, nie von Playwright.
-8. **Playwright-Adapter in Java 8**, der JS-Treiber wird als eigenes Laufzeitmodul gewählt (Node für Java 8,
+8. **Zwei technische Wege zu Google:** `GoogleHttpSearchProvider` (direkter HTTP-Aufruf über `HttpTransport`, Quick
+   Web Search aus #6) und browserbasierte Provider (`GoogleBrowserSearchProvider`, `GoogleAiModeProvider`). Beide
+   bedienen dieselbe Engine; die Auswahl erfolgt über Provider, nicht im Orchestrator. Keiner davon wird in 0.x
+   veröffentlicht ([ADR-018](adr/ADR-018-google-zugriffswege.md)).
+9. **Geteilte Infrastruktur gehört dem Aufrufer.** Ein Provider schließt nie einen injizierten Transport oder eine
+   injizierte Browser-Runtime ([ADR-017](adr/ADR-017-lifecycle-und-ownership.md)).
+10. **Playwright-Adapter in Java 8**, der JS-Treiber wird als eigenes Laufzeitmodul gewählt (Node für Java 8,
    `playwright4j` für Java 21).
-9. **Konfiguration und Secrets bleiben beim Host.** Serp4J definiert nur `CredentialProvider` und `HttpTransport`
+11. **Konfiguration und Secrets bleiben beim Host.** Serp4J definiert nur `CredentialProvider` und `HttpTransport`
    als Ports.
-10. **Migration ohne Funktionsverlust:** erst Charakterisierungstests in AskAI, dann Portierung, dann
+12. **Migration ohne Funktionsverlust:** erst Charakterisierungstests in AskAI, dann Portierung, dann
     Paritätstest, dann Umschalten über eine einzige Bridge-Klasse in AskAI.
 
 ---
@@ -64,9 +70,11 @@ serp4j/                                       (Root, nicht publiziert)
 ├── serp4j-browser-playwright                 Adapter Playwright-Java-API (ohne Treiber) Java 8
 ├── serp4j-browser-playwright-driver-node     nur Runtime-Deps: Node-Treiber            Java 8
 ├── serp4j-browser-playwright-driver-graal    nur Runtime-Deps: playwright4j (GraalJS)  Java 21
-├── serp4j-browser-camoufox  (später, E-11)   Camoufox-Backend                          offen (Empf. Java 8)
+├── serp4j-browser-camoufox  (später)         Integration der gemeinsamen Camoufox-Bibliothek (E-5)  Java 8 (E-6)
 │
-├── serp4j-engine-google                      Google Search + Google AI Mode             Java 8 · core, browser-api
+├── serp4j-engine-google-common               Google-URLs, Hinderniserkennung, HTML-Parser Java 8 · core, jsoup
+├── serp4j-engine-google-http                 GoogleHttpSearchProvider (Quick Web Search) Java 8 · core, http-api, common
+├── serp4j-engine-google-browser              GoogleBrowserSearchProvider, GoogleAiModeProvider  Java 8 · core, browser-api, common
 │
 ├── serp4j-testkit                            Mock-Provider, FakeHttpTransport, Contracts, Fixtures   Java 8
 ├── serp4j-browser-testkit                    FakeBrowserRuntime, Browser-TCK            Java 8
@@ -85,7 +93,8 @@ Abweichungen von den WP-Vorschlägen und ihre Gründe:
 | HTTP-Port | eigenes Modul `serp4j-http-api` (WP4) | WP5 (Port im Core). Grund: Browser-Provider und Testkonsumenten brauchen keinen HTTP-Port. |
 | JSON-Modul | `serp4j-json` mit Gson (WP1, WP4) | – |
 | Kein `serp4j-all` | nur BOM | – |
-| Camoufox | eigenes Modul, aber **nicht** im ersten Implementierungsumfang | WP3/WP4 (Teil von F). Grund: Chromium reicht für die ersten Google-Adapter; Camoufox hängt an offenen Entscheidungen (siehe §13). |
+| Camoufox | dünnes Integrationsmodul auf Basis einer gemeinsamen Bibliothek (E-5), **nicht** im ersten Implementierungsumfang | WP3/WP4 (Teil von F). Grund: Chromium reicht für die ersten Google-Adapter; die gemeinsame Bibliothek existiert noch nicht. |
+| Google-Module | drei Module statt `serp4j-engine-google`: `-common`, `-http`, `-browser` | WP3/WP4 (ein Modul nur mit `browser-api`). Grund: Review-Punkt A. Der direkte HTTP-Weg braucht `http-api`, der Browserweg `browser-api`; wer nur HTTP nutzt, soll keinen Browser-Port erhalten. Siehe [ADR-018](adr/ADR-018-google-zugriffswege.md). |
 
 ---
 
@@ -124,7 +133,9 @@ com.aresstack.serp4j.provider.brightdata       …
 com.aresstack.serp4j.provider.dataforseo       …
 com.aresstack.serp4j.browser                   BrowserRuntime, BrowserSession, NetworkObserver, …
 com.aresstack.serp4j.browser.playwright        PlaywrightBrowserRuntime, …
-com.aresstack.serp4j.engine.google             GoogleSearchProvider, GoogleAiModeProvider, internal.*
+com.aresstack.serp4j.engine.google.common      GoogleUrlBuilder, GoogleObstacleDetector, GoogleSerpHtmlParser (intern genutzt)
+com.aresstack.serp4j.engine.google.http        GoogleHttpSearchProvider, GoogleHttpSearchOptions
+com.aresstack.serp4j.engine.google.browser     GoogleBrowserSearchProvider, GoogleAiModeProvider
 com.aresstack.serp4j.testkit                   MockSearchProvider, ScriptedConversationalProvider, FakeHttpTransport, *ContractTest
 com.aresstack.serp4j.browser.testkit           FakeBrowserRuntime, BrowserRuntimeContractTest
 ```
@@ -164,7 +175,9 @@ graph TD
     dnode[serp4j-browser-playwright-driver-node]:::j8
     dgraal[serp4j-browser-playwright-driver-graal]:::j21
     camou[serp4j-browser-camoufox]:::later
-    google[serp4j-engine-google]:::j8
+    gcommon[serp4j-engine-google-common]:::j8
+    ghttp[serp4j-engine-google-http]:::j8
+    gbrowser[serp4j-engine-google-browser]:::j8
     tk[serp4j-testkit]:::j8
     btk[serp4j-browser-testkit]:::j8
 
@@ -177,7 +190,9 @@ graph TD
     d4s --> core & httpapi
     pw --> bapi
     camou --> pw
-    google --> core & bapi
+    gcommon --> core
+    ghttp --> core & httpapi & gcommon
+    gbrowser --> core & bapi & gcommon
     tk --> core & httpapi
     btk --> bapi
     dnode -. "Laufzeit, genau einer" .-> pw
@@ -189,7 +204,8 @@ Regeln, die der Build erzwingt (Modulgrenze) oder ein Architekturtest prüft (Ar
 1. Ports (`serp4j-core`, `serp4j-http-api`, `serp4j-browser-api`) haben **keine** ausgehenden Kanten.
 2. `serp4j-browser-api` kennt `serp4j-core` **nicht**. Der Browser-Port spricht nur über Browserbegriffe.
 3. Kein Adapter hängt an einem anderen Adapter, an `serp4j-orchestration` oder an `serp4j-json`.
-4. `serp4j-engine-google` hängt nie an Playwright. Die `BrowserRuntime` wird injiziert.
+4. Die Google-Module hängen nie an Playwright und nie an einem konkreten HTTP-Adapter. `BrowserRuntime` und
+   `HttpTransport` werden injiziert. `serp4j-engine-google-http` kennt den Browser-Port nicht.
 5. Innerhalb von `serp4j-core`: `core.model..` hängt an nichts außer JDK; `core.port..` und `core.error` nur an `core.model..`.
    Kein Paket des Cores verwendet `java.net`, `java.io.File` oder eigene Threads.
 6. Externe Typen (Gson, Netty, Playwright) erscheinen in keiner öffentlichen Signatur, mit Ausnahme von
@@ -207,7 +223,9 @@ Regeln, die der Build erzwingt (Modulgrenze) oder ein Architekturtest prüft (Ar
 | `serp4j-browser-playwright` | browser-api | playwright (ohne `driver`, `driver-bundle`) | – |
 | `…-driver-node` | – | – | playwright `driver`, `driver-bundle` |
 | `…-driver-graal` | – | – | `com.aresstack:playwright4j` |
-| `serp4j-engine-google` | core, browser-api | – | – |
+| `serp4j-engine-google-common` | core | jsoup (Java 8, ohne transitive Deps) | – |
+| `serp4j-engine-google-http` | core, http-api | engine-google-common | – |
+| `serp4j-engine-google-browser` | core, browser-api | engine-google-common | – |
 | `serp4j-testkit` | core, http-api | – (JUnit Jupiter `compileOnly`) | – |
 | `serp4j-browser-testkit` | browser-api | – (JUnit Jupiter `compileOnly`) | – |
 
@@ -229,8 +247,12 @@ implementation 'com.aresstack:serp4j-provider-brave'
 implementation 'com.aresstack:serp4j-provider-dataforseo'
 implementation 'com.aresstack:serp4j-http-ahc'
 
-// Google (Search + AI Mode) auf Java 8
-implementation 'com.aresstack:serp4j-engine-google'
+// Google AI Mode ohne Browser (DataForSEO, zustandslos)
+implementation 'com.aresstack:serp4j-provider-dataforseo'
+implementation 'com.aresstack:serp4j-http-ahc'
+
+// Google (Search + AI Mode) über den Browser, Java 8 – in 0.x nicht publiziert (E-3/E-4)
+implementation 'com.aresstack:serp4j-engine-google-browser'
 implementation 'com.aresstack:serp4j-browser-playwright'
 runtimeOnly    'com.aresstack:serp4j-browser-playwright-driver-node'
 ```
@@ -250,12 +272,13 @@ SearchResponse                                (final, Builder, withAnalysis(), w
 │   ├── List<SearchResultItem> results        (Seitenreihenfolge, ResultType-typisiert)
 │   └── List<SerpFeature>      features       (typisiert + GenericSerpFeature)
 ├── Optional<SearchMetadata>
-│   ├── ProviderId, SearchEngineId, SearchVertical      [Pflicht im Provider-Vertrag]
-│   ├── QueryInfo                                       [Pflicht im Provider-Vertrag]
+│   ├── Optional<ProviderId> provider                   [Pflicht bei Antwort eines Providers, leer bei zusammengeführter Antwort]
+│   ├── List<ProviderId> contributingProviders          [nie leer; alle beteiligten Provider, bei Einzelantwort genau einer]
+│   ├── Optional<SearchEngineId>, Optional<SearchVertical>  [Pflicht bei Einzelantwort; bei Merge nur, wenn eindeutig]
+│   ├── QueryInfo                                       [immer Pflicht]
 │   ├── SearchLocale?, DeviceType?, PageInfo?, ExecutionInfo?, ProviderUsage?
 │   ├── ConversationContext?                            (nur Dialogsuche)
 │   ├── boolean complete                                (false = Teilergebnis)
-│   ├── List<ProviderId> contributingProviders          (nur bei Orchestrierung > 1)
 │   ├── List<SearchWarning>
 │   ├── Optional<RawPayload>
 │   └── Extensions
@@ -273,6 +296,7 @@ SearchResponse                                (final, Builder, withAnalysis(), w
 | M5 | Herkunft bei zusammengeführten Ergebnissen (WP1: ein `Optional<ResultProvenance>`, WP2: Liste nötig) | `List<ResultProvenance> getProvenance()` auf jedem `SearchElement`; leer bei Antworten eines einzelnen Providers. Duplikate werden zusammengeführt und behalten alle Herkünfte. | [ADR-008](adr/ADR-008-orchestrator-statt-composite.md) |
 | M6 | KI-Antworten (WP1: `GeneratedAnswerFeature` mit `SourceReference`; WP2: Antwort-Feature, Zitate als `SearchResultItem`) | WP1 gilt. Zitate sind `SourceReference`s im Feature und verweisen per `matchingResult` auf ein Item, falls dieselbe URL auch als Treffer vorkommt. Zitate sind keine eigenständigen Treffer. | ADR-003 |
 | M7 | Ausführungsprotokoll in `SearchMetadata` oder `SearchOutcome`? (WP2 F4) | `SearchOutcome` (Application). Metadata enthält nur `contributingProviders`, `complete` und Warnungen. | ADR-008 |
+| M7a | Provider-Feld bei zusammengeführten Antworten (Review-Punkt B; Widerspruch WP1 „Pflicht" ↔ ADR-008 „keine Pseudo-ID") | `getProvider()` liefert `Optional<ProviderId>`. Antwort **eines** Providers: gesetzt (Provider-Vertrag, Contract-Test). Zusammengeführte Antwort: leer. `getContributingProviders()` ist nie leer und nennt alle Provider, deren Ergebnisse enthalten sind. `getEngine()`/`getVertical()` sind ebenfalls `Optional`: Pflicht bei Einzelantwort, bei Merge nur gesetzt, wenn alle Beteiligten denselben Wert haben. `QueryInfo` bleibt immer Pflicht. Antwortet bei `FALLBACK` oder `FAN_OUT` nur ein Provider erfolgreich, gilt die Antwort als Einzelantwort (Provider gesetzt). | ADR-008 |
 | M8 | Unbekannte SERP-Elemente (WP5 `UNKNOWN`, WP1 `GenericSerpFeature`) | `GenericSerpFeature` mit dem **originalen** Typ-Code als `SerpFeatureType` und dem Inhalt als `StructuredValue`. | [ADR-006](adr/ADR-006-erweiterungsmechanismus.md) |
 | M9 | Rohantwort: Name, Typ, Default (WP1 `RawPayload` byte[], WP5 `RawResponse` String, Default `ALWAYS`) | `RawPayload` (byte[] + Charset + Content-Type + gefilterte Header). Bibliotheks-Default `RawPayloadPolicy.NONE`; die AskAI-Bridge setzt `ALWAYS` und erhält so das heutige Verhalten. | ADR-006 |
 | M10 | Provider-spezifische Request-Optionen (WP1 Extensions vs. WP2 `ProviderRequestOptions`) | Request: typisierte `ProviderRequestOptions` je Provider (`BraveRequestOptions` …), abgelegt in `SearchRequest` je `ProviderId`. Response: `Extensions` mit `ExtensionKey<T>` + `StructuredValue` für Ungemapptes. | ADR-006 |
@@ -374,12 +398,14 @@ CAPTCHA/`/sorry/` → `BLOCKED`; `BrowserCapacityException` → `RATE_LIMITED`.
 
 Jeder Adapter:
 
-1. setzt in `SearchMetadata` mindestens Provider, Engine, Vertical und `QueryInfo`;
+1. setzt in `SearchMetadata` mindestens Provider, `contributingProviders = [Provider]`, Engine, Vertical und `QueryInfo`
+   (die Optionalität dieser Felder im Typ gilt nur für zusammengeführte Antworten);
 2. bildet alle Transport- und Parsingfehler auf eine Kategorie ab, `HttpTransportException` verlässt den Adapter nie;
 3. legt ungemappte Felder als `StructuredValue` in `Extensions` ab (per Option abschaltbar) und verwirft unbekannte
    SERP-Elemente nie;
 4. befüllt nie `SearchAnalysis`;
-5. besteht den Contract-Test aus dem Testkit.
+5. schließt nie injizierte Infrastruktur (Transport, Browser-Runtime, Scheduler, Credential-Provider), siehe §6.1;
+6. besteht den Contract-Test aus dem Testkit.
 
 ### 5.5 Provider-spezifische Präzisierungen
 
@@ -387,7 +413,9 @@ Jeder Adapter:
 |---|---|
 | Brave | Engine = `brave`. Offset ist Seitenindex 0–9, `count ≤ 20` → Capabilities `maxResultsPerRequest = 20`, `maxOffset`. Summarizer nicht automatisch (WP1 Q12). |
 | Bright Data | Engine pro Request (Google, Bing, DuckDuckGo, Yandex). Sync-Pfad hängt **`brd_json=1`** an, sofern Angelo das bestätigt (offene Entscheidung E-2). Polling über einen geteilten, injizierbaren Scheduler statt eines Threads pro Instanz. `DataFormat.MARKDOWN/SCREENSHOT` nur als RawPayload mit Warnung, nicht als strukturiertes Ergebnis. Async-Modus nur für Engines, die er wirklich kann (Capability). |
-| DataForSEO | Engine pro Request statt nur aus Konfiguration. `cost`/`time` → `ProviderUsage`/`ExecutionInfo`. Bedingung für `target_search_mode` wird gegen die API-Doku geprüft und korrigiert. Länder-Lookup für `location_code` optional im Provider-Modul; sonst Provider-Option. |
+| DataForSEO | Engine pro Request statt nur aus Konfiguration. `cost`/`time` → `ProviderUsage`/`ExecutionInfo`. Bedingung für `target_search_mode` wird gegen die API-Doku geprüft und korrigiert. Länder-Lookup für `location_code` optional im Provider-Modul; sonst Provider-Option. **AI Mode (E-8):** derselbe Provider bietet zusätzlich das Ziel `google/AI_MODE` über den eigenen Live-Endpunkt an, als **zustandslose** Suche (`SearchProvider`, kein Dialog). Der Endpunkt wird über das Vertical des Requests gewählt. |
+| AI Overview ≠ AI Mode | Ein Adapter klassifiziert KI-Antworten nach dem **tatsächlich ausgeführten Suchmodus**, nicht nach dem JSON-Elementtyp (DataForSEO nutzt teils dieselbe Struktur für beide). Vertical `WEB` → `GeneratedAnswerFeature` Typ `ai_overview`; Vertical `AI_MODE` → Typ `ai_mode_answer`; `SearchMetadata.vertical` hält den Modus fest. |
+| Google HTTP | `GoogleHttpSearchProvider`: `GET https://www.google.com/search?q=<url-kodiert>` (plus `hl`/`gl`/`start`/`num` aus dem Request), **nie** `udm=50`. Parsing des HTML in `engine-google-common`. Nachgeladene Responses wie `/async/folsrch` werden erst als Quelle genutzt, wenn Format und Verhalten durch Fixtures belegt sind (#6). Ob der Aufruf ohne Browserprofil und Cookies reproduzierbar funktioniert, klärt Spike S0 vor Paket G1. |
 
 ---
 
@@ -407,6 +435,31 @@ Jeder Adapter:
 - Browser-Voraussetzungen (WP3 Q10): Ein Browser-Provider deklariert seine benötigten `BrowserCapability`s und prüft sie
   beim `build()` gegen `BrowserRuntime#getInfo()` (fail fast). Die Registry kennt den Browser-Port nicht.
 
+### 6.1 Lifecycle und Ownership geteilter Infrastruktur
+
+Verbindlich nach Review-Punkt C, [ADR-017](adr/ADR-017-lifecycle-und-ownership.md). Muss vor den Paketen F und G
+umgesetzt und per Contract-Test geprüft sein.
+
+1. **Wer erzeugt, schließt.** Injizierte Infrastruktur (`HttpTransport`, `BrowserRuntime`, `CredentialProvider`,
+   `ScheduledExecutorService`, Executor) gehört dem Aufrufer, der sie übergeben hat. Ein Provider schließt sie nie.
+2. **Provider schließen nur, was sie selbst erzeugt haben:** offene `SearchSession`s, von ihnen geöffnete
+   `BrowserSession`s, laufende Polling-Aufgaben (abbrechen, nicht den Scheduler beenden), laufende Futures
+   (abschließen mit `CANCELLED`).
+3. **Provider beeinträchtigen sich nicht gegenseitig.** `GoogleBrowserSearchProvider.close()` lässt die Sitzungen von
+   `GoogleAiModeProvider` auf derselben Runtime unberührt; ein geschlossener Brave-Provider lässt den geteilten
+   Transport für DataForSEO offen. Contract-Test: zwei Provider auf derselben Fake-Infrastruktur, einer wird
+   geschlossen, der andere sucht weiter erfolgreich.
+4. **Selbst erzeugte Infrastruktur** (z. B. ein per `ServiceLoader` gefundener und vom Provider instanziierter
+   Transport) gehört dem Provider und wird von ihm geschlossen. Der Builder macht das sichtbar
+   (`transport(t)` = geliehen, ohne Angabe = eigen).
+5. **SPI-Weg:** Dienste aus `ProviderEnvironment#getService` gehören dem, der das Environment gebaut hat.
+6. **Registry:** `register()` überträgt die Ownership des *Providers* an die Registry, `registerShared()` nicht. Die
+   Registry schließt nie Infrastruktur.
+7. **Empfohlene Abbaureihenfolge beim Aufrufer:** Provider bzw. Registry → Browser-Runtimes → Transports → Executor.
+   Schließt der Eigentümer Infrastruktur zu früh, scheitern spätere Aufrufe typisiert (`UNAVAILABLE`, bei
+   Dialogsitzungen `SESSION_LOST`), nie mit einem Hänger.
+8. `close()` ist überall idempotent und threadsicher.
+
 ---
 
 ## 7. Browser-Architektur
@@ -419,20 +472,25 @@ Verbindlich ist [WP3](wp3-browser.md) (B-1 bis B-11) mit diesen Festlegungen:
   (Actor-Modell aus AskAI, als Kopie mit neuen Paketen, ohne Abhängigkeit zu AskAI).
 - **Isolation:** `IsolationLevel.CONTEXT` (Chromium) bzw. `PROCESS` (Camoufox). Jede Dialogsitzung erhält eine eigene
   ephemere Browsersitzung.
-- **Extraktion:** DOM-first über versionierte Skripte als Ressourcen (`google/serp-v1.js`, `google/ai-mode-v1.js`), Mapping in
-  Java. Netzwerkbeobachtung ist eine optionale `BrowserCapability`. Degradation wird als `SearchWarning` gemeldet,
-  vollständiges Scheitern als Fehler.
+- **Extraktion:** zwei gleichwertige Quellen, die je Engine per Spike gewählt werden: (1) DOM über versionierte Skripte
+  (`google/serp-v1.js`, `google/ai-mode-v1.js`), (2) beobachtete HTTP-Responses (z. B. `/async/folif` für AI-Mode-
+  Folgefragen, laut #7 im Praxistest mit Antworttext und Quell-URLs). Netzwerkbeobachtung bleibt eine optionale
+  `BrowserCapability`; ein Provider, der sie braucht, verlangt sie beim `build()`. Undokumentierte RPC-IDs
+  (`batchexecute`, `/async/bgasy`) werden nie als feste API vorausgesetzt. HTML-Parsing teilen sich HTTP- und
+  Browserweg über `engine-google-common`. Degradation wird als `SearchWarning` gemeldet, vollständiges Scheitern als
+  Fehler.
 - **Playwright-Adapter:** `serp4j-browser-playwright` in Java-8-Bytecode, ohne Treiber. Treiber über
   `-driver-node` (Java 8) **oder** `-driver-graal` (`playwright4j`, Java 21). Der Adapter prüft beim Start, dass genau ein
   Treiber vorhanden ist ([ADR-011](adr/ADR-011-playwright-treibermodule.md)).
 - **Betrieb:** In-Process als Standard, optional `RemotePlaywrightRuntime` über `BrowserType.connect(ws)`. Kein
   Sidecar, kein MCP-Server in Serp4J. Serp4J lädt nie implizit Browser herunter.
 - **Grenzen:** Keine CAPTCHA-Lösung, keine Umgehung von Schutzmaßnahmen, keine Google-Anmeldung. Hindernisse werden
-  typisiert gemeldet; `WAIT_FOR_HUMAN` nur im sichtbaren Modus ([ADR-016](adr/ADR-016-google-browser-adapter-grenzen.md)).
+  typisiert gemeldet; `WAIT_FOR_HUMAN` nur im sichtbaren Modus. Dieselben Grenzen gelten für den direkten HTTP-Weg
+  ([ADR-016](adr/ADR-016-google-browser-adapter-grenzen.md)).
 - **Such-Browser ≠ Research-Browser:** AskAIs Research-Browser bleibt in AskAI. Abhängigkeitsrichtung ausschließlich
   AskAI → Serp4J.
-- **Camoufox:** eigenes Modul, aber erst nach den offenen Entscheidungen E-5/E-6 (§13). Chromium reicht für den ersten
-  Google-Adapter.
+- **Camoufox:** gemeinsame Bibliothek für Argos, AskAI und Serp4J (E-5), Java 8 (E-6). Serp4J erhält nur ein dünnes
+  Integrationsmodul, sobald die Bibliothek existiert. Chromium reicht für den ersten Google-Adapter.
 - **Vor Paket G** laufen die Spikes S1–S4 aus WP3 §12 (Treibervergleich, Netzwerk unter BiDi, AI-Mode-Ablauf,
   Parallelität).
 
@@ -458,7 +516,11 @@ Verbindlich: [WP2 §11](wp2-architecture-ports.md) + [WP3 §7.3](wp3-browser.md)
 - **Typnamen** (Zusammenführung): `SearchSessionId` (WP1) statt `SessionId` (WP2); `ConversationTurn` und
   `SearchConversation` aus WP2.
 - **Browserbindung:** sticky, eine `BrowserSession` je `SearchSession`; nicht persistierbar, bis Spike S3 das Gegenteil
-  zeigt (`resumable = false`).
+  zeigt (`resumable = false`). Die `BrowserSession` gehört dem Dialog und wird mit ihm geschlossen; die `BrowserRuntime`
+  gehört dem Aufrufer (§6.1).
+- **Zustandslos ≠ Dialog:** Browserlose AI-Mode-Antworten (DataForSEO, später ggf. Bright Data) sind normale
+  `SearchProvider`-Ergebnisse mit Ziel `google/AI_MODE`. Sie ersetzen den `ConversationalSearchProvider` nicht, weil sie
+  keine Folgefragen im selben Kontext erlauben (E-8).
 - **Kapazität:** Der Browser blockiert höchstens `acquireTimeout`; der Provider meldet danach `RATE_LIMITED`
   (retryable). So bleiben WP2 (nicht blockierend) und WP3 (begrenztes Warten) vereinbar.
 - **Kein Composite für Sessions.** `SessionPlan` erlaubt `single` und `fallback` nur beim Öffnen.
@@ -505,11 +567,13 @@ Secret-Muster gescannt.
 | Request-Mapping (golden) | Provider-Module | erwartete URL/Body/Header als Datei | immer |
 | Response-Mapping | Provider-Module | echte, anonymisierte Fixtures aus `serp4j-testkit` | immer |
 | Provider-Vertrag | Provider-Module | `SearchProviderContractTest` + `FakeHttpTransport` | immer |
-| Dialog-Vertrag | `serp4j-engine-google`, Mocks | `ConversationalSearchProviderContractTest` | immer |
+| Dialog-Vertrag | `serp4j-engine-google-browser`, Mocks | `ConversationalSearchProviderContractTest` | immer |
 | Orchestrierung | `serp4j-orchestration` | `MockSearchProvider`/`ScriptedSearchProvider` mit Fehlerinjektion und Latenz | immer |
 | Transport-Adapter | `serp4j-http-*` | lokaler JDK-`HttpServer` | immer |
 | Browser-TCK | `serp4j-browser-playwright` | `BrowserRuntimeContractTest` aus `serp4j-browser-testkit` | eigener CI-Job (Linux, Chromium) |
-| Google-Extraktion | `serp4j-engine-google` | `FakeBrowserRuntime` + HTML-Fixtures; Mapping in Java getestet | immer |
+| Google-HTML-Parser | `serp4j-engine-google-common` | aufgezeichnete HTML-Fixtures (#6, #7) | immer |
+| Google HTTP | `serp4j-engine-google-http` | `FakeHttpTransport` + HTML-Fixtures | immer |
+| Google Browser | `serp4j-engine-google-browser` | `FakeBrowserRuntime` + HTML-/Netzwerk-Fixtures; Mapping in Java getestet | immer |
 | Live | Source-Set `liveTest` | echte Keys aus Umgebungsvariablen, `-Pserp4j.live=true`, optional `-Pserp4j.recordFixtures=true` | nur manuell |
 
 Regeln: Kein Test im Default-Build verlässt das Netzwerk. Test-Abhängigkeiten der Java-8-Module müssen auf JDK 8 laufen
@@ -523,7 +587,8 @@ Regeln: Kein Test im Default-Build verlässt das Netzwerk. Test-Abhängigkeiten 
 Verbindlich: [WP5 §5–6](wp5-migration.md), [ADR-014](adr/ADR-014-migration-charakterisieren-vor-verschieben.md).
 
 1. **Schritt 0 – Charakterisierung in AskAI** (rein additiv, vor Paket A): Fixtures echter Antworten und Fehler,
-   Golden-Tests der Request-Mapper. Kein Produktionscode in AskAI wird geändert. *Hängt an Entscheidung E-1.*
+   Golden-Tests der Request-Mapper. Kein Produktionscode in AskAI wird geändert. Nach E-1 zunächst mit den vorhandenen
+   DataForSEO-Fixtures; Brave- und Bright-Data-Fixtures kommen aus echten Recording-Läufen, nie aus erfundenen Daten.
 2. **Portierung** in den Paketen B–D: Enums, Validatoren, Request-Mapper und Ziel-URL-Logik werden übernommen
    (Paket umbenennt, Gson-Annotationen entfernt); Response-Mapper, Ergebnismodell, Registry, Orchestrierung, Transport
    und Credentials werden neu bzw. refaktoriert.
@@ -541,7 +606,7 @@ Bekannte Fehler im heutigen Bestand, die die Migration behebt (dokumentierte Par
 | Die Rohantwort erreicht AskAI nie, `offset` wird nicht durchgereicht | WP5 §2.3 | Bridge reicht beides durch, `RawPayloadPolicy.ALWAYS` |
 | URL-Deduplizierung verwirft die gesamte Query (`?id=1` = `?id=2`) | WP2 F8 | `UrlCanonicalizer` erhält die Query |
 | Composite verschluckt Fehler (`exceptionally → null`) und Herkunft | WP2, WP5 | `SearchOutcome` mit Versuchsprotokoll, Herkunftsliste je Element |
-| Bright Data sync ohne `brd_json=1` liefert vermutlich 0 Treffer | WP5 | Entscheidung E-2 |
+| Bright Data sync ohne `brd_json=1` liefert vermutlich 0 Treffer | WP5 | unbestätigt; erst mit echter Anfrage prüfen (E-2), bis dahin Verhalten unverändert |
 | DataForSEO `target_search_mode` hängt an der falschen Bedingung | WP5 | gegen API-Doku prüfen, Test |
 
 AskAI bindet Serp4J während der Entwicklung per Composite Build (`includeBuild '../Serp4J'`) ein, danach über
@@ -561,28 +626,28 @@ Release-Artefakte. Dafür bleibt Serp4J auf Gradle 8.14.x (läuft auf JDK 8, wie
 | Versionierung | SemVer, **Lockstep** für alle Module, BOM `serp4j-bom`; 0.x bis AskAI produktiv auf Serp4J läuft, dann 1.0.0 |
 | API-Stabilität | ab 1.0 `japicmp` gegen das letzte Release; `@Experimental` (Dialogsuche, Browser-Module, Google) ist ausgenommen |
 | Ziel | Maven Central über das Central Publisher Portal; Signatur über In-Memory-GPG aus GitHub-Secrets |
-| Werkzeug | Empfehlung `com.vanniktech.maven.publish`; falls für `playwright4j` bereits ein anderes Verfahren etabliert ist, wird dieses übernommen (E-7) |
+| Werkzeug | `com.gradleup.nmcp` mit Aggregation (`com.gradleup.nmcp.aggregation`, 0.1.5) wie in `playwright4j` und `win-directml-java` (E-7); Version beim Aufsetzen mit diesen Projekten abgleichen |
 | Release | Tag `vX.Y.Z` auf `main` → Workflow: Build, Tests (JDK 21 + 8), Publish, GitHub Release; Snapshots bei Push auf `main` |
 | Lizenz | MIT wie AskAI; Lizenz des aus Argos stammenden Camoufox-Codes vor Übernahme prüfen |
-| Publiziert | alle Module außer `build-logic`, `serp4j-examples` und vorerst `serp4j-engine-google` (E-4) |
+| Publiziert | alle Module außer `build-logic`, `serp4j-examples` und den Google-Modulen `serp4j-engine-google-common`, `-http`, `-browser` (E-3/E-4, vor 1.0 neu entscheiden) |
 
 ---
 
-## 13. Offene Entscheidungen für Angelo
+## 13. Entscheidungen von Angelo (2026-10-31)
 
-Diese Fragen kann nur Angelo beantworten. Sie sind **nicht** durch Annahmen ersetzt. Die Empfehlung gilt nur, wenn er
-zustimmt. Keine davon blockiert Paket A.
+Angelo hat die acht offenen Entscheidungen im Review vom 2026-10-31 getroffen. Sie gelten verbindlich; ADRs und
+Implementierungsplan sind angepasst.
 
-| # | Frage | Optionen | Empfehlung | Blockiert |
-|---|---|---|---|---|
-| **E-1** | Gibt es echte, gespeicherte Antworten von Brave, Bright Data und DataForSEO (Logs, Playground), die anonymisiert als Fixtures dienen dürfen? | (a) vorhandene Antworten · (b) je Provider ein bezahlter Recording-Aufruf · (c) nur API-Doku | (a), sonst (b). (c) würde Mapper gegen Annahmen bauen. | Schritt 0, Response-Mapper in B–D |
-| **E-2** | Liefert Bright Data in AskAI produktiv Treffer? Steht `brd_json=1` in der lokalen `brightdata.json`? | (a) ja, mit `brd_json=1` → Default machen · (b) nein, liefert 0 Treffer → Fehler bestätigt | Prüfen; Serp4J setzt `brd_json=1` im Sync-Pfad als Default, wenn (a) oder (b) | Paket C |
-| **E-3** | Google-Nutzungsbedingungen: Soll Serp4J browserbasierte Google-Adapter überhaupt anbieten? | (a) ja, publiziert und `@Experimental` · (b) im Repo, aber nicht publiziert · (c) gar nicht, nur Google über SERP-APIs | (b) für 0.x; Entscheidung über (a) vor 1.0. Bright Data und DataForSEO liefern Google (teils AI Mode) ohne Browser. | Paket G |
-| **E-4** | Wird `serp4j-engine-google` als Maven-Artefakt veröffentlicht? | folgt aus E-3 | folgt aus E-3 | Release |
-| **E-5** | Soll Camoufox-Provisionierung und -Start eine gemeinsame Bibliothek für Argos, AskAI und Serp4J werden? | (a) gemeinsame Bibliothek (z. B. `camoufox-java`) · (b) dritte Kopie in Serp4J | (a). Bis dahin baut Serp4J kein Camoufox-Modul; Chromium genügt. | Modul `serp4j-browser-camoufox` |
-| **E-6** | Java-Baseline des Camoufox-Moduls bzw. der gemeinsamen Bibliothek | (a) Java 8 (Backport: `record`, `HexFormat`, `Files.readString`) · (b) Java 11 · (c) Java 21 | (a). Der Backport ist klein, und Camoufox wird dann auch auf Java-8-Hosts mit Node-Treiber nutzbar. | wie E-5 |
-| **E-7** | Mit welchem Werkzeug wurden `playwright4j` und `win-directml-java` nach Maven Central veröffentlicht? | – | Dasselbe Verfahren übernehmen; sonst vanniktech-Plugin | Release-Workflow |
-| **E-8** | Sollen DataForSEOs bzw. Bright Datas AI-Mode-Endpunkte als **browserloser** Weg zu Google AI Mode priorisiert werden? (WP1 Q7) | (a) ja, vor dem Browser-Adapter · (b) später | (a), wenn E-3 nicht (a) ist. Rechtlich und betrieblich einfacher. Hinweis: das sind zustandslose Antworten, kein Dialog. | Planung G |
+| # | Frage | Entscheidung | Folge für die Architektur |
+|---|---|---|---|
+| **E-1** | Echte Fixtures? | **Teilweise vorhandene verwenden.** Für DataForSEO gibt es echte Playground-JSON-Antworten. Für Brave und Bright Data sind keine bestätigten echten Antworten bekannt. Fehlende Fixtures werden **nicht** durch erfundene Beispieldaten ersetzt. | Paket D nutzt die vorhandenen Fixtures. B und C brauchen vor ihren Response-Mappern echte Antworten, z. B. über einen Live-Recording-Lauf (`-Pserp4j.recordFixtures=true`) mit Angelos Keys. Request-Mapper und Golden-Tests sind davon unabhängig. |
+| **E-2** | `brd_json=1` als Default? | **Noch nicht entschieden.** Erst mit einer echten Anfrage prüfen, bis dahin kein pauschaler Default. | Paket C übernimmt das heutige Verhalten unverändert; `brd_json` bleibt per Option setzbar. Der Default wird erst nach dem Nachweis festgelegt. |
+| **E-3** | Browserbasierte Google-Adapter anbieten? | **Option B:** im Repository, in 0.x nicht veröffentlicht. | gilt nach Angelos rechtlicher Klarstellung für **alle** direkten Google-Zugriffe, also auch für den HTTP-Weg ([ADR-016](adr/ADR-016-google-browser-adapter-grenzen.md), [ADR-018](adr/ADR-018-google-zugriffswege.md)) |
+| **E-4** | Google-Module veröffentlichen? | **Nein.** Vor 1.0 erneut entscheiden. | `serp4j-engine-google-common`, `-http`, `-browser` haben das Publish-Flag aus |
+| **E-5** | Gemeinsame Camoufox-Bibliothek? | **Option A:** gemeinsame Bibliothek für Argos, AskAI und Serp4J, keine dritte Implementierung. | Serp4J baut nur ein dünnes Integrationsmodul, sobald die Bibliothek existiert |
+| **E-6** | Java-Baseline Camoufox | **Java 8.** Neuere APIs werden zurückportiert. | ADR-002 |
+| **E-7** | Publishing-Werkzeug | **`com.gradleup.nmcp`** (Aggregation, `com.gradleup.nmcp.aggregation` 0.1.5) wie in `playwright4j` und `win-directml-java` (laut Angelos Prüfung von deren `PUBLISHING.md` bzw. `build.gradle`). | [ADR-015](adr/ADR-015-release-und-publishing.md) |
+| **E-8** | Browserloser AI-Mode-Weg zuerst? | **Option A.** DataForSEO AI Mode zuerst als zustandsloser `SearchProvider`, danach Bright Data (Dataset-Workflow mit Trigger, Fortschritt, Snapshot) untersuchen. Echte Folgefragen bleiben beim `ConversationalSearchProvider`. | Paket D2 im Plan; AI Overview ≠ AI Mode (§5.5) |
 
 Weitere offene **technische** Fragen sind per Spike zu klären und gehören nicht zu Angelo: AI-Mode-Fortsetzbarkeit
 (S3), Netzwerkbeobachtung unter BiDi (S2), Treibergröße und Startzeit (S1), Parallelitäts-Defaults (S4).
@@ -593,10 +658,12 @@ Weitere offene **technische** Fragen sind per Spike zu klären und gehören nich
 
 | ID | Risiko | Wirkung | Gegenmaßnahme | Quelle |
 |---|---|---|---|---|
-| R1 | Google-Nutzungsbedingungen | rechtlich | E-3; keine Umgehungsfunktionen; SERP-APIs bevorzugen | WP3 R1 |
+| R1 | Google-Nutzungsbedingungen: maschinell erzeugte Suchanfragen ohne Erlaubnis sind unzulässig, **für HTTP und Browser gleichermaßen** | rechtlich | E-3/E-4: Google-Module nicht veröffentlichen; keine Umgehungsfunktionen; für Produktivbetrieb SERP-APIs (DataForSEO, Bright Data) | WP3 R1, Angelo |
 | R2 | Instabiles Google-DOM | Extraktion bricht still | versionierte Skripte, semantische Anker, Degradationswarnung, Fixture-Regression, Live-Smoke | WP3 R2 |
 | R3 | CAPTCHA, Rate-Limits | Ausfall | typisiert `BLOCKED`, Backoff, konservative Parallelität | WP3 R3 |
-| R4 | Keine echten Fixtures | Mapper gegen Annahmen | E-1 früh klären; Recording im Live-Test | WP1 Q9, WP5 F1 |
+| R4 | Keine echten Fixtures für Brave und Bright Data | Mapper gegen Annahmen | E-1: keine erfundenen Daten; Recording-Lauf vor den Response-Mappern von B und C | WP1 Q9, WP5 F1 |
+| R13 | Direkter Google-HTTP-Aufruf funktioniert ohne Browserkontext nicht dauerhaft (Cookies, Consent, Blockierung) | Quick Web Search fällt aus | Spike S0 vor G1; Fallback ist ein **anderer Provider** (Browser oder SERP-API), den der Aufrufer per `SearchPlan.fallback` wählt, nie ein stiller Wechsel | #6 |
+| R14 | Geteilte Infrastruktur wird von einem Provider geschlossen | Ausfall anderer Provider | Ownership-Regel §6.1, Contract-Test | Review-Punkt C |
 | R5 | Versionskopplung Playwright ↔ Treiber ↔ Camoufox | Start schlägt fehl | Kompatibilität im Version Catalog und in der BOM, Probe meldet `INCOMPATIBLE_DRIVER`, CI je Kombination | WP3 R5, WP4 §5 |
 | R6 | Playwright Java gibt Java 8 auf | Baseline-Bruch | Browsermodule getrennt anhebbar, ohne den Core zu berühren | WP3 R9 |
 | R7 | Modell zu groß für einfache Nutzer | Akzeptanz | Komfortzugriffe (`getOrganicResults()`), Mindestvertrag nur URL + Provider/Engine/Query | WP1 §6 |
@@ -620,5 +687,5 @@ Weitere offene **technische** Fragen sind per Spike zu klären und gehören nich
 | Stateful Search Sessions berücksichtigt | §8, ADR-009 |
 | Migration aus AskAI nachvollziehbar geplant | §11, WP5, ADR-014 |
 | Java-8-Kompatibilität des Core gewährleistet | §1, §12, ADR-002 |
-| wesentliche Entscheidungen begründet und dokumentiert | ADR-001 bis ADR-016 |
+| wesentliche Entscheidungen begründet und dokumentiert | ADR-001 bis ADR-018 |
 | priorisierter, parallelisierbarer Implementierungsplan | [implementation-plan.md](implementation-plan.md) |

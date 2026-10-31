@@ -1,6 +1,6 @@
 # ADR-009 – Dialogsuche als eigener Port
 
-**Status:** Vorgeschlagen · **Quellen:** Angelo Punkt 2; WP1 D10, §4.11; WP2 E10, E11, §11; WP3 B-8, §7.3
+**Status:** Angenommen (Angelo, 2026-10-31) · **Quellen:** Angelo Punkt 2; WP1 D10, §4.11; WP2 E10, E11, §11; WP3 B-8, §7.3
 
 ## Kontext
 Google AI Mode führt einen Dialog mit Folgefragen. Normale Provider dürfen dadurch nicht komplizierter werden.

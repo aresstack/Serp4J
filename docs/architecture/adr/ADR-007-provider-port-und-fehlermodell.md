@@ -1,6 +1,6 @@
 # ADR-007 – Asynchroner SearchProvider-Port, SearchContext, eine Exception mit Kategorie
 
-**Status:** Vorgeschlagen · **Quellen:** WP2 E2, E6, E9, §5–7; WP5 F8; WP3 §7.3
+**Status:** Angenommen (Angelo, 2026-10-31) · **Quellen:** WP2 E2, E6, E9, §5–7; WP5 F8; WP3 §7.3
 
 ## Kontext
 AskAIs Port ist asynchron (`CompletableFuture`). Das Modul hat eine einzige untypisierte Exception; die AskAI-Runtime eine

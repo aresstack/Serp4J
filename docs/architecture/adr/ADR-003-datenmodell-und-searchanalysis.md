@@ -1,6 +1,6 @@
 # ADR-003 – Dreiteiliges Datenmodell, SearchAnalysis-Typen im Core
 
-**Status:** Vorgeschlagen · **Quellen:** WP1 D1, D8, D10, Q1; WP2 §12; WP4 §3.2; Angelo Regel 4
+**Status:** Angenommen (Angelo, 2026-10-31) · **Quellen:** WP1 D1, D8, D10, Q1; WP2 §12; WP4 §3.2; Angelo Regel 4
 
 ## Kontext
 Vorgabe: `SearchResponse = SearchData + SearchMetadata + SearchAnalysis`, Analysis strikt getrennt von Suchdaten.

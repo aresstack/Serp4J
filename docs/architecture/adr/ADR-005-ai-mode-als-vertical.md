@@ -1,6 +1,6 @@
 # ADR-005 – Google AI Mode = Engine `google` + Vertical `AI_MODE`
 
-**Status:** Vorgeschlagen · **Quellen:** WP1 Q3, WP2 E3/F5, WP3 §7.1
+**Status:** Angenommen (Angelo, 2026-10-31) · **Quellen:** WP1 Q3, WP2 E3/F5, WP3 §7.1
 
 ## Kontext
 WP3 ließ offen, ob AI Mode eine eigene Engine (`GOOGLE_AI_MODE`) ist.

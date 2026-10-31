@@ -1,6 +1,6 @@
 # ADR-001 – Modulschnitt und Optionalität nur über Modulgrenzen
 
-**Status:** Vorgeschlagen · **Quellen:** WP4 §2–4, WP2 §2.3, WP3 §4
+**Status:** Angenommen (Angelo, 2026-10-31) · **Quellen:** WP4 §2–4, WP2 §2.3, WP3 §4
 
 ## Kontext
 Wer nur Cloud-Provider nutzt, soll weder Playwright noch Camoufox noch Netty erhalten. Gleichzeitig sollen Maven- und

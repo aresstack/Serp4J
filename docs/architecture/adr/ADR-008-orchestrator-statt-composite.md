@@ -1,6 +1,6 @@
 # ADR-008 – Orchestrator statt Composite-Provider, SearchOutcome
 
-**Status:** Vorgeschlagen · **Quellen:** WP2 E5, E7, §7.2, §9, F4, F8; WP5 §2.2; WP4 §3.1
+**Status:** Angenommen mit Nachbesserung (Angelo, 2026-10-31, Review-Punkt B) · **Quellen:** WP2 E5, E7, §7.2, §9, F4, F8; WP5 §2.2; WP4 §3.1
 
 ## Kontext
 AskAIs `CompositeWebSearchProvider` gibt sich als Provider aus (`COMPOSITE`/`MULTI`), verschluckt Fehler
@@ -19,8 +19,12 @@ Option B in `serp4j-orchestration`:
   `TOLERATE_PARTIAL`, `REQUIRE_ALL`; kein Fallback ohne ausdrückliche Anforderung.
 - `SearchOutcome`: gemergte Antwort, `List<ProviderAttempt>` (Status, Kategorie, Dauer, Trefferzahl, Skip-Grund),
   `isPartial()`, unveränderte Einzelantworten (inkl. ihrer `RawPayload`s).
-- `SearchMetadata` der gemergten Antwort trägt nur `contributingProviders`, `complete` und Warnungen; jedes Element
-  trägt `List<ResultProvenance>`.
+- **Metadaten bei mehreren Providern (Review-Punkt B):** `SearchMetadata.getProvider()` ist `Optional<ProviderId>`.
+  Antwort eines einzelnen Providers: gesetzt (Pflicht im Provider-Vertrag, Contract-Test). Zusammengeführte Antwort:
+  leer, keine Pseudo-ID. `getContributingProviders()` ist nie leer und nennt alle beteiligten Provider (bei
+  Einzelantwort genau einen). `getEngine()`/`getVertical()` sind bei Merge nur gesetzt, wenn alle Beteiligten denselben
+  Wert haben; `QueryInfo` bleibt immer Pflicht. Antwortet bei `FALLBACK`/`FAN_OUT` nur ein Provider erfolgreich, ist die
+  Antwort eine Einzelantwort. Jedes Element trägt `List<ResultProvenance>` (leer bei Einzelantwort).
 - `UrlDeduplicatingMerger`: Round-Robin nach Originalrang; Duplikate werden zusammengeführt (alle Herkünfte bleiben);
   Features werden nicht dedupliziert; Analysis wird nicht gemergt. `UrlCanonicalizer` erhält die Query und entfernt
   nur bekannte Tracking-Parameter und das Fragment.

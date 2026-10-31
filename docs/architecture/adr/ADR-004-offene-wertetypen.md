@@ -1,6 +1,6 @@
 # ADR-004 – Offene Wertetypen statt Enums, API-Konventionen
 
-**Status:** Vorgeschlagen · **Quellen:** WP1 D2, D7, §4.1; WP2 E4, §3.2
+**Status:** Angenommen (Angelo, 2026-10-31) · **Quellen:** WP1 D2, D7, §4.1; WP2 E4, §3.2
 
 ## Kontext
 AskAI nutzt geschlossene Enums (`SearchProviderId` mit `COMPOSITE`, `SearchEngine` mit `MULTI`). Eine Bibliothek muss

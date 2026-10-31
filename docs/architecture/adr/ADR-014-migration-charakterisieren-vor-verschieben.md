@@ -1,6 +1,6 @@
 # ADR-014 – Migration: charakterisieren, portieren, Parität, umschalten
 
-**Status:** Vorgeschlagen · **Quellen:** WP5 §5–7; WP4 §4.4
+**Status:** Angenommen (Angelo, 2026-10-31) · **Quellen:** WP5 §5–7; WP4 §4.4
 
 ## Kontext
 AskAI darf zu keinem Zeitpunkt Funktion verlieren. Serp4J soll keine ausgelagerte AskAI-Suche sein.

@@ -1,6 +1,6 @@
 # ADR-012 – HTTP-Transport- und Credential-Port; Konfiguration bleibt beim Host
 
-**Status:** Vorgeschlagen · **Quellen:** WP4 §3.2, §4.5; WP5 §2.2, F3, F4; WP2 §8.2
+**Status:** Angenommen (Angelo, 2026-10-31) · **Quellen:** WP4 §3.2, §4.5; WP5 §2.2, F3, F4; WP2 §8.2
 
 ## Kontext
 Heute erzeugt jeder Provider einen eigenen AsyncHttpClient; Config-DTOs tragen verschlüsselte Secrets und kennen

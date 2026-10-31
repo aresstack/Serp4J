@@ -1,6 +1,6 @@
 # ADR-010 – Browser-Port in eigenem Modul `serp4j-browser-api`
 
-**Status:** Vorgeschlagen · **Quellen:** Angelo Punkt 3; WP2 E12, §13, F2; WP3 B-1, B-2, Q1; WP4 §3.2
+**Status:** Angenommen (Angelo, 2026-10-31) · **Quellen:** Angelo Punkt 3; WP2 E12, §13, F2; WP3 B-1, B-2, Q1; WP4 §3.2
 
 ## Kontext
 Angelos Skizze zeigt `BrowserSession (Port)` unter `serp4j-core`. WP2, WP3 und WP4 empfehlen unabhängig voneinander ein
@@ -14,7 +14,10 @@ eigenes Modul. Angelos eigentliches Ziel ist erfüllt, solange Playwright nur ei
 
 ## Entscheidung
 Option B. Die Abhängigkeitsrichtung aus Angelos Skizze bleibt erhalten:
-`engine-google → browser-api ← browser-playwright → (Chromium | Camoufox)`, und `engine-google → core`.
+`engine-google-browser → browser-api ← browser-playwright → (Chromium | Camoufox)`, und `engine-google-browser → core`.
+
+**Angelo hat diese Abweichung im Review vom 2026-10-31 ausdrücklich bestätigt** („Verbesserung gegenüber meiner
+ursprünglichen Skizze").
 `ProviderEnvironment` im Core kennt den Browser nicht; Browser-Runtimes werden per Builder oder per
 `getService(BrowserRuntime.class)` injiziert.
 
