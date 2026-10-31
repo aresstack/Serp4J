@@ -38,6 +38,7 @@ Option D:
 - **S3** (vor G2): initialer AI-Mode-Transport (HTML vs. dynamische Responses), `/async/folif` für Folgefragen.
 
 ## Konsequenzen
-- Paket G wird in G1 (HTTP, nach A und T) und G2 (Browser, nach F und S) geteilt; G1 kann früher starten.
+- Das ursprüngliche Paket G wird in G1 (HTTP, nach A, T und Spike S0) und G2 (Browser, nach F, Spikes S1–S4 und G1)
+  geteilt; G1 kann früher starten.
 - AskAIs „Quick Web Search" nutzt später `google-http` mit `fallback` auf einen anderen Provider nach eigener Wahl; die
   Auswahl bleibt AskAI-Logik.

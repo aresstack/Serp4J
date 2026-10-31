@@ -43,7 +43,8 @@ graph LR
     E[E Testkit]
     T[T HTTP AHC]
     F[F Browser + Playwright]
-    S[S Spikes]
+    S0[S0 Spike Google-HTTP]
+    S14[S1–S4 Browser-Spikes]
     G1[G1 Google HTTP]
     G2[G2 Google Browser]
     D2[D2 DataForSEO AI Mode]
@@ -54,8 +55,8 @@ graph LR
     A --> B & C & D & E & T & F & J & H
     E --> B & C & D & H
     P0 --> B & C & D
-    A & T --> G1
-    F --> S --> G2
+    A & T --> S0 --> G1
+    F --> S14 --> G2
     G1 --> G2
     D --> D2
     B & C & D --> H
@@ -66,7 +67,8 @@ graph LR
 |---|---|---|
 | **1** | **A**; parallel dazu **0** (anderes Repo, rein additiv) | Freigabe, für 0 zusätzlich E-1 |
 | **2** | **E** zuerst bzw. im Gleichschritt mit **B, C, D**; außerdem **T**, **F**, **J**, Beginn **H** gegen Mocks | A gemergt |
-| **3** | **S0** und **G1** (nach T); **D2**; **S1–S4**, danach **G2**; Abschluss **H** mit echten Providern | T bzw. F gemergt |
+| **3a** | **S0** (nach A und T); parallel **D2** (nach D) und **S1–S4** (nach F) | T bzw. F gemergt |
+| **3b** | **G1** (nach S0); **G2** (nach S1–S4 und G1); Abschluss **H** mit echten Providern | S0 bzw. S1–S4 abgeschlossen |
 | **4** | **M**, Release **0.1.0** | B, C, D, H, T gemergt, Parität grün |
 
 Bis zu sieben Agenten können in Welle 2 gleichzeitig arbeiten, weil jedes Paket ein eigenes Modul besitzt.

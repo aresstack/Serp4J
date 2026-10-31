@@ -35,5 +35,6 @@ Option C, verbindlich für alle Module:
 ## Konsequenzen
 - Contract-Test im Testkit: zwei Provider auf derselben Fake-Infrastruktur; einer wird geschlossen, der andere sucht
   weiter; die Fake-Infrastruktur bleibt offen.
-- Muss vor den Paketen F und G umgesetzt sein; gilt bereits für B–D und T.
+- Gilt für alle Adapter mit injizierter Infrastruktur. Festgeschrieben in Paket A (Port-Javadocs), geprüft ab Paket E
+  (Contract-Test); B–D, T, F, G1 und G2 werden dagegen getestet.
 - AskAIs Hot-Reload kann Provider austauschen, ohne Browser oder Transports neu zu starten.

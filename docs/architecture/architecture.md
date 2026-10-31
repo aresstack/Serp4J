@@ -412,7 +412,7 @@ Jeder Adapter:
 | Provider | Festlegung |
 |---|---|
 | Brave | Engine = `brave`. Offset ist Seitenindex 0–9, `count ≤ 20` → Capabilities `maxResultsPerRequest = 20`, `maxOffset`. Summarizer nicht automatisch (WP1 Q12). |
-| Bright Data | Engine pro Request (Google, Bing, DuckDuckGo, Yandex). Sync-Pfad hängt **`brd_json=1`** an, sofern Angelo das bestätigt (offene Entscheidung E-2). Polling über einen geteilten, injizierbaren Scheduler statt eines Threads pro Instanz. `DataFormat.MARKDOWN/SCREENSHOT` nur als RawPayload mit Warnung, nicht als strukturiertes Ergebnis. Async-Modus nur für Engines, die er wirklich kann (Capability). |
+| Bright Data | Engine pro Request (Google, Bing, DuckDuckGo, Yandex). Sync-Pfad übernimmt das heutige Verhalten unverändert; `brd_json` ist lediglich als Option setzbar. Ein Default wird erst festgelegt, wenn eine echte Anfrage belegt, was Bright Data ohne und mit `brd_json=1` liefert (E-2). Polling über einen geteilten, injizierbaren Scheduler statt eines Threads pro Instanz. `DataFormat.MARKDOWN/SCREENSHOT` nur als RawPayload mit Warnung, nicht als strukturiertes Ergebnis. Async-Modus nur für Engines, die er wirklich kann (Capability). |
 | DataForSEO | Engine pro Request statt nur aus Konfiguration. `cost`/`time` → `ProviderUsage`/`ExecutionInfo`. Bedingung für `target_search_mode` wird gegen die API-Doku geprüft und korrigiert. Länder-Lookup für `location_code` optional im Provider-Modul; sonst Provider-Option. **AI Mode (E-8):** derselbe Provider bietet zusätzlich das Ziel `google/AI_MODE` über den eigenen Live-Endpunkt an, als **zustandslose** Suche (`SearchProvider`, kein Dialog). Der Endpunkt wird über das Vertical des Requests gewählt. |
 | AI Overview ≠ AI Mode | Ein Adapter klassifiziert KI-Antworten nach dem **tatsächlich ausgeführten Suchmodus**, nicht nach dem JSON-Elementtyp (DataForSEO nutzt teils dieselbe Struktur für beide). Vertical `WEB` → `GeneratedAnswerFeature` Typ `ai_overview`; Vertical `AI_MODE` → Typ `ai_mode_answer`; `SearchMetadata.vertical` hält den Modus fest. |
 | Google HTTP | `GoogleHttpSearchProvider`: `GET https://www.google.com/search?q=<url-kodiert>` (plus `hl`/`gl`/`start`/`num` aus dem Request), **nie** `udm=50`. Parsing des HTML in `engine-google-common`. Nachgeladene Responses wie `/async/folsrch` werden erst als Quelle genutzt, wenn Format und Verhalten durch Fixtures belegt sind (#6). Ob der Aufruf ohne Browserprofil und Cookies reproduzierbar funktioniert, klärt Spike S0 vor Paket G1. |
@@ -437,8 +437,10 @@ Jeder Adapter:
 
 ### 6.1 Lifecycle und Ownership geteilter Infrastruktur
 
-Verbindlich nach Review-Punkt C, [ADR-017](adr/ADR-017-lifecycle-und-ownership.md). Muss vor den Paketen F und G
-umgesetzt und per Contract-Test geprüft sein.
+Verbindlich nach Review-Punkt C, [ADR-017](adr/ADR-017-lifecycle-und-ownership.md). Die Regel gilt für **alle**
+Adapter mit injizierter Infrastruktur (Cloud-Provider mit `HttpTransport`, Browser-Provider mit `BrowserRuntime`,
+Polling mit Scheduler). Sie wird in Paket A in den Port-Javadocs festgeschrieben und in Paket E als Contract-Test
+umgesetzt, sodass B–D, T, F, G1 und G2 von Anfang an dagegen geprüft werden.
 
 1. **Wer erzeugt, schließt.** Injizierte Infrastruktur (`HttpTransport`, `BrowserRuntime`, `CredentialProvider`,
    `ScheduledExecutorService`, Executor) gehört dem Aufrufer, der sie übergeben hat. Ein Provider schließt sie nie.
@@ -491,8 +493,9 @@ Verbindlich ist [WP3](wp3-browser.md) (B-1 bis B-11) mit diesen Festlegungen:
   AskAI → Serp4J.
 - **Camoufox:** gemeinsame Bibliothek für Argos, AskAI und Serp4J (E-5), Java 8 (E-6). Serp4J erhält nur ein dünnes
   Integrationsmodul, sobald die Bibliothek existiert. Chromium reicht für den ersten Google-Adapter.
-- **Vor Paket G** laufen die Spikes S1–S4 aus WP3 §12 (Treibervergleich, Netzwerk unter BiDi, AI-Mode-Ablauf,
-  Parallelität).
+- **Spikes (ADR-018):** **S0** (direkter `GET /search` ohne Browserprofil und Cookies) braucht A und T und muss vor
+  **G1** abgeschlossen sein. **S1–S4** aus WP3 §12 (Treibervergleich, Netzwerk unter BiDi, AI-Mode-Ablauf,
+  Parallelität) brauchen F und sind die Voraussetzung für **G2**.
 
 ---
 
