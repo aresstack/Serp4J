@@ -15,6 +15,7 @@ Entscheidungen in den [ADRs](docs/architecture/adr), die Reihenfolge der Arbeits
 |---|---|---|---|
 | `serp4j-core` | 8 | Domänenmodell (`SearchRequest`, `SearchResponse` = `SearchData` + `SearchMetadata` + `SearchAnalysis`, `SerpFeature`-Hierarchie mit Visitor, `Extensions`, `RawPayload`), Ports (`SearchProvider`, `ConversationalSearchProvider`, `SearchAnalyzer`, `CredentialProvider`, `SearchProviderFactory`), Capabilities, Fehlermodell | keine |
 | `serp4j-http-api` | 8 | `HttpTransport`-Port, `HttpRequest`/`HttpResponse`/`HttpHeaders`, `RequestAuthentication`, `UrlQueryBuilder` | keine |
+| `serp4j-http-ahc` | 8 | `AhcHttpTransport`: `HttpTransport` auf async-http-client 2.x, geteilter Client, Redirects ohne Credential-Weitergabe an fremde Hosts, Warteschlange statt Ablehnung bei Verbindungslimit | `serp4j-http-api`, async-http-client 2.16 (Netty) |
 | `serp4j-bom` | – | Bill of Materials über alle publizierten Module (Lockstep-Version) | – |
 
 Die weiteren Module (`serp4j-orchestration`, `serp4j-json`, `serp4j-mapping`, `serp4j-http-*`, `serp4j-provider-*`,
