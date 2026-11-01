@@ -2,7 +2,11 @@ package com.aresstack.serp4j.provider.dataforseo;
 
 import com.aresstack.serp4j.core.error.SearchErrorCategory;
 import com.aresstack.serp4j.core.error.SearchProviderException;
+import com.aresstack.serp4j.core.model.DeviceType;
+import com.aresstack.serp4j.core.model.RequirementLevel;
 import com.aresstack.serp4j.core.model.SearchFeature;
+import com.aresstack.serp4j.core.model.metadata.SearchWarning;
+import com.aresstack.serp4j.core.port.capability.CapabilityViolation;
 import com.aresstack.serp4j.core.model.SearchRequest;
 import com.aresstack.serp4j.core.model.SearchResponse;
 import com.aresstack.serp4j.core.model.id.ProviderId;
@@ -28,7 +32,9 @@ import com.aresstack.serp4j.http.RequestAuthentication;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -132,6 +138,22 @@ public final class DataForSeoSearchProvider implements SearchProvider {
         if (!check.getRequiredViolations().isEmpty()) {
             return failed(fail(SearchErrorCategory.UNSUPPORTED, "unsupported: " + check.getRequiredViolations()));
         }
+        if (request.hasProviderOptions(id)
+                && !request.getProviderOptions(id, DataForSeoOptions.class).isPresent()) {
+            return failed(fail(SearchErrorCategory.INVALID_REQUEST, "provider options for " + id
+                    + " must be DataForSeoOptions"));
+        }
+        final List<SearchWarning> warnings = new ArrayList<SearchWarning>();
+        for (CapabilityViolation v : check.getOptionalViolations()) {
+            warnings.add(SearchWarning.of(SearchWarning.FEATURE_IGNORED, v.getMessage(), id));
+        }
+        if (request.getDevice().isPresent() && request.getDevice().get() == DeviceType.TABLET) {
+            if (request.getRequirementLevel(SearchFeature.DEVICE) == RequirementLevel.REQUIRED) {
+                return failed(fail(SearchErrorCategory.UNSUPPORTED, "DataForSEO has no tablet device"));
+            }
+            warnings.add(SearchWarning.of(SearchWarning.FEATURE_IGNORED,
+                    "DataForSEO has no tablet device; searched as mobile", id));
+        }
         if (context.getCancellation().isCancelled()) {
             return failed(fail(SearchErrorCategory.CANCELLED, "search was cancelled"));
         }
@@ -173,7 +195,7 @@ public final class DataForSeoSearchProvider implements SearchProvider {
                     future.completeExceptionally(responseMapper.errorFor(http));
                     return;
                 }
-                future.complete(responseMapper.map(http, request, engine, startedAt, clock.instant()));
+                future.complete(responseMapper.map(http, request, engine, startedAt, clock.instant(), warnings));
             } catch (SearchProviderException e) {
                 future.completeExceptionally(e);
             } catch (RuntimeException e) {

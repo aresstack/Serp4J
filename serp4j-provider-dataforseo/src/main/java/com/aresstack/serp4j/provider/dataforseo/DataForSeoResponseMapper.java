@@ -2,6 +2,7 @@ package com.aresstack.serp4j.provider.dataforseo;
 
 import com.aresstack.serp4j.core.error.SearchErrorCategory;
 import com.aresstack.serp4j.core.error.SearchProviderException;
+import com.aresstack.serp4j.core.model.DeviceType;
 import com.aresstack.serp4j.core.model.SearchRequest;
 import com.aresstack.serp4j.core.model.SearchResponse;
 import com.aresstack.serp4j.core.model.data.ResultProvenance;
@@ -87,7 +88,7 @@ final class DataForSeoResponseMapper {
     }
 
     SearchResponse map(HttpResponse http, SearchRequest request, SearchEngineId searchEngine, Instant startedAt,
-                       Instant finishedAt) {
+                       Instant finishedAt, List<SearchWarning> requestWarnings) {
         StructuredValue root = parse(http);
         int status = statusCode(root).orElse(-1);
         if (status < 0) {
@@ -123,8 +124,10 @@ final class DataForSeoResponseMapper {
             metadata.locale(request.getLocale().get());
         }
         if (request.getDevice().isPresent()) {
-            metadata.device(request.getDevice().get());
+            // DataForSEO knows desktop and mobile only; a tablet request is searched (and labelled) as mobile.
+            metadata.device(request.getDevice().get() == DeviceType.DESKTOP ? DeviceType.DESKTOP : DeviceType.MOBILE);
         }
+        metadata.warnings(requestWarnings);
         ExecutionInfo.Builder execution = mapped.getMetadata().toExecutionInfo()
                 .map(ExecutionInfo::toBuilder).orElse(ExecutionInfo.builder());
         execution.startedAt(startedAt).duration(Duration.between(startedAt, finishedAt)).attempts(1);

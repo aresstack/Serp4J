@@ -282,6 +282,34 @@ class DataForSeoSearchProviderTest {
     }
 
     @Test
+    void tabletIsMobileWithWarningOrUnsupportedWhenRequired() throws Exception {
+        reply("google-organic-live-advanced.json");
+        SearchResponse response = search(SearchRequest.builder("q").device(DeviceType.TABLET).build());
+        assertThat(response.getMetadata().get().getDevice()).contains(DeviceType.MOBILE);
+        assertThat(response.getMetadata().get().getWarnings()).extracting(SearchWarning::getCode)
+                .contains(SearchWarning.FEATURE_IGNORED);
+        assertThat(failure(SearchRequest.builder("q").device(DeviceType.TABLET)
+                .require(com.aresstack.serp4j.core.model.SearchFeature.DEVICE).build()).getCategory())
+                .isEqualTo(SearchErrorCategory.UNSUPPORTED);
+    }
+
+    @Test
+    void ignoredOptionalFeatureIsWarned() throws Exception {
+        reply("google-organic-live-advanced.json");
+        SearchResponse response = search(SearchRequest.builder("q")
+                .safeSearch(com.aresstack.serp4j.core.model.SafeSearch.values()[0]).build());
+        assertThat(response.getMetadata().get().getWarnings()).extracting(SearchWarning::getCode)
+                .contains(SearchWarning.FEATURE_IGNORED);
+    }
+
+    @Test
+    void foreignOptionsTypeIsInvalidRequest() {
+        SearchRequest request = SearchRequest.builder("q").providerOptions(() -> ID).build();
+        assertThat(failure(request).getCategory()).isEqualTo(SearchErrorCategory.INVALID_REQUEST);
+        assertThat(http.getRequestCount()).isZero();
+    }
+
+    @Test
     void timestampAndDurationParsing() {
         assertThat(DataForSeoResponseMapper.parseTimestamp("2019-11-15 12:57:46 +00:00")).isNotNull();
         assertThat(DataForSeoResponseMapper.parseSeconds("0.0874 sec.").get().toMillis()).isEqualTo(87);
