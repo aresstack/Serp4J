@@ -3,10 +3,10 @@ package com.aresstack.serp4j.http;
 import org.junit.jupiter.api.Test;
 
 import java.util.Base64;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
 class RequestAuthenticationTest {
 
@@ -95,7 +95,7 @@ class RequestAuthenticationTest {
                 .param("q", "serp4j java 8 & more")
                 .param("count", 20)
                 .param("safe", true)
-                .paramIfPresent("country", Optional.<String>empty())
+                .paramIfPresent("country", null)
                 .paramIfText("lang", " ")
                 .param("umlaut", "ä~_-.")
                 .build();
@@ -110,6 +110,37 @@ class RequestAuthenticationTest {
                 .isEqualTo("https://e.example/search?q=test#section");
         assertThat(UrlQueryBuilder.of("https://e.example/s?a=1#f").param("b", "2").build())
                 .isEqualTo("https://e.example/s?a=1&b=2#f");
+    }
+
+    /** Finding #4: optional parameters are nullable, never {@code Optional} (architecture.md §3, ADR-004). */
+    @Test
+    void paramIfPresentOmitsNullAndAddsNonNullValues() {
+        String url = UrlQueryBuilder.of("https://api.example/search")
+                .paramIfPresent("country", null)
+                .paramIfPresent("lang", "de")
+                .paramIfPresent("empty", "")
+                .build();
+
+        assertThat(url).isEqualTo("https://api.example/search?lang=de&empty=");
+        assertThat(UrlQueryBuilder.of("https://e.example/").paramIfPresent("a", null).build())
+                .isEqualTo("https://e.example/");
+    }
+
+    /** Finding #10 (header injection): a secret with CR/LF is rejected without leaking the secret. */
+    @Test
+    void bearerTokenWithLineBreakIsRejectedWithoutLeakingTheSecret() {
+        String secret = "abc\n";
+        TrackingSecret token = new TrackingSecret(secret);
+        HttpRequest.Builder request = HttpRequest.get("https://e.example");
+
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> RequestAuthentication.bearer(token).apply(request))
+                .withMessageContaining("Authorization")
+                .withMessageNotContaining("abc")
+                .withMessageNotContaining(secret)
+                .withMessageNotContaining("Bearer abc");
+        assertThat(token.wasWiped()).isTrue();
+        assertThat(request.build().getHeaders().contains("Authorization")).isFalse();
     }
 
     @Test

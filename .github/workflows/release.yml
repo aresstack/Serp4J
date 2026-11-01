@@ -1,7 +1,7 @@
 # Serp4J Release (ADR-015, WP4 §9): Tag vX.Y.Z auf main → Build und Tests (JDK 21 + JDK 8), signiertes
 # Bündel an das Central Publisher Portal (Freigabe dort von Hand, publishingType USER_MANAGED), GitHub Release
-# mit dem Abschnitt aus CHANGELOG.md. Ein Tag, dessen Commit nicht in main enthalten ist, wird abgewiesen.
-# Ablauf und Secrets: PUBLISHING.md.
+# mit dem Abschnitt aus CHANGELOG.md. Ein Tag, dessen Commit nicht in main enthalten ist, wird abgewiesen; das Bündel
+# wird vor dem Portal-Upload als Workflow-Artefakt gesichert. Ablauf und Secrets: PUBLISHING.md.
 name: Release
 
 on:
@@ -76,15 +76,20 @@ jobs:
       - name: Build, Tests (JDK 21 und JDK 8), Javadoc
         run: ./gradlew build -Pversion=${{ steps.version.outputs.version }} --stacktrace
 
-      - name: Signiertes Bündel an das Central Portal übertragen
-        run: ./gradlew publishAggregationToCentralPortal -Pversion=${{ steps.version.outputs.version }} --stacktrace
+      - name: Signiertes Bündel erzeugen (kein Upload)
+        run: ./gradlew zipAggregation -Pversion=${{ steps.version.outputs.version }} --stacktrace
 
+      # Vor dem Portal-Upload sichern: scheitert der Upload, bleibt das Bündel für einen manuellen Upload erhalten.
       - name: Bündel als Workflow-Artefakt sichern
         uses: actions/upload-artifact@v4
         with:
           name: central-bundle-${{ steps.version.outputs.version }}
           path: build/nmcp/zip/aggregation.zip
           retention-days: 30
+          if-no-files-found: error
+
+      - name: Signiertes Bündel an das Central Portal übertragen
+        run: ./gradlew publishAggregationToCentralPortal -Pversion=${{ steps.version.outputs.version }} --stacktrace
 
       - name: GitHub Release anlegen
         env:

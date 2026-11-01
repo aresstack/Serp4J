@@ -46,6 +46,14 @@ public final class SearchWarning {
         return builder(code, message).provider(provider).build();
     }
 
+    /** Returns a builder pre-filled with this instance's values. */
+    public Builder toBuilder() {
+        Builder builder = new Builder(code, message);
+        builder.provider = provider;
+        builder.details = details;
+        return builder;
+    }
+
     public String getCode() {
         return code;
     }

@@ -29,7 +29,9 @@ public interface CancellationSignal {
 
     /**
      * Registers a callback that runs exactly once when the signal is cancelled – immediately and on the calling
-     * thread if it already is. Callbacks must be quick and must not throw.
+     * thread if it already is. Callbacks must be quick and must not throw: a callback that throws does not stop the
+     * other callbacks from running, but its exception (the first one thrown) reaches the party that cancels, see
+     * {@link CancellationSource#cancel()}.
      */
     void onCancel(Runnable callback);
 }

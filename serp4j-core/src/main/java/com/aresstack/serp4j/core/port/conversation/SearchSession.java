@@ -13,6 +13,9 @@ import java.util.concurrent.CompletableFuture;
  * A stateful conversation with a search engine's AI surface (ADR-009, WP2 §11): the initial search followed by
  * follow-up questions that keep the engine-side context. Created by
  * {@link ConversationalSearchProvider#openSession}; owned and closed by the caller.
+ *
+ * <p>Implementations must be thread-safe; {@link #send}, {@link #getState()}, {@link #snapshot()} and
+ * {@link #close()} may be called concurrently (a concurrent send fails with {@code SESSION_BUSY}).</p>
  */
 @Experimental("conversational search stabilises with the first Google AI Mode adapter (Paket G)")
 public interface SearchSession extends AutoCloseable {
@@ -54,6 +57,10 @@ public interface SearchSession extends AutoCloseable {
     /**
      * Releases the session's resources and completes a running turn with {@code CANCELLED}. Idempotent. Closes only
      * what the session owns (ADR-017): never the provider or shared infrastructure.
+     *
+     * <p>Thread-safe: may be called from any thread, concurrently with running calls and with a second
+     * {@code close()}; the first call wins, concurrent calls return after the resources are released or at once
+     * (ADR-017 rule 8).</p>
      */
     @Override
     void close();

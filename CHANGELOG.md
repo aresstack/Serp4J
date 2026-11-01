@@ -9,6 +9,15 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
 
 ### Added
 
+- `serp4j-mapping` (Java 8, nur `serp4j-core`): Response-Mapping in zwei Ebenen (ADR-019) – deklarative, versionierte
+  Mapping-Definitionen mit strikter Validierung (`MappingDefinitions`), kleine Pfadsprache (`TreePath`), Sektionen
+  `items`/`features`/`elements` mit Diskriminator, `fieldsByType`, Positionsmodi, Pflichtfeldern, Defaults und
+  Konvertern (`ValueConverters`); Custom Mapper (`ItemMapper`, `FeatureMapper`, `MetadataMapper`) in einer
+  `CustomMapperRegistry`, die an genau eine Definition gebunden ist; `MappingEngine` erhält nicht konsumierte Daten
+  blattgenau in `Extensions.unmapped`, unbekannte Typen als `GenericSerpFeature`, und wirft nie wegen einer Antwort;
+  Prüfbausteine `MappingDefinitionVerifier` und `MappingSnapshot` für Fixture-Tests. Formatreferenz:
+  `docs/mapping/mapping-definition-format.md`.
+- `serp4j-json` (Teil J1): `JsonTrees` (JSON-Text ↔ `StructuredValue`, exakte Zahlen, strikt), einzige Stelle mit Gson.
 - Gradle-Multi-Project: Wrapper 8.14.3, Convention-Plugins in `build-logic` (`serp4j.java-library`, `serp4j.java8`,
   `serp4j.java21`, `serp4j.published`, `serp4j.provider`), Version Catalog, `serp4j-bom`, Publishing über
   `com.gradleup.nmcp` mit signierten Sources- und Javadoc-JARs (ADR-015).

@@ -1,5 +1,7 @@
 package com.aresstack.serp4j.core.model.metadata;
 
+import com.aresstack.serp4j.core.model.DeviceType;
+import com.aresstack.serp4j.core.model.SearchLocale;
 import com.aresstack.serp4j.core.model.ext.RawPayload;
 import com.aresstack.serp4j.core.model.id.ProviderId;
 import com.aresstack.serp4j.core.model.id.SearchEngineId;
@@ -130,5 +132,115 @@ class SearchMetadataContractTest {
 
         assertThat(metadata.toBuilder().build()).isEqualTo(metadata).hasSameHashCodeAs(metadata);
         assertThat(metadata.toString()).doesNotContain("RawPayload{");
+    }
+
+    /** Finding #1: effectively used locale and device (architecture.md §4, WP1 §4.8). */
+    @Nested
+    @DisplayName("effective locale and device")
+    class LocaleAndDevice {
+
+        private final SearchLocale germany = SearchLocale.of("DE", "de");
+
+        @Test
+        void localeAndDeviceAreEmptyByDefault() {
+            SearchMetadata metadata = SearchMetadata.builder(QUERY).provider(BRAVE).build();
+
+            assertThat(metadata.getLocale()).isEmpty();
+            assertThat(metadata.getDevice()).isEmpty();
+        }
+
+        @Test
+        void builderSetsLocaleAndDeviceAndToBuilderKeepsThem() {
+            SearchMetadata metadata = SearchMetadata
+                    .forProvider(BRAVE, SearchEngineId.BRAVE, SearchVertical.WEB, QUERY)
+                    .locale(germany)
+                    .device(DeviceType.MOBILE)
+                    .build();
+
+            assertThat(metadata.getLocale()).contains(germany);
+            assertThat(metadata.getDevice()).contains(DeviceType.MOBILE);
+            SearchMetadata copy = metadata.toBuilder().build();
+            assertThat(copy).isEqualTo(metadata).hasSameHashCodeAs(metadata);
+            assertThat(copy.getLocale()).contains(germany);
+            assertThat(copy.getDevice()).contains(DeviceType.MOBILE);
+            SearchMetadata cleared = metadata.toBuilder().locale(null).device(null).build();
+            assertThat(cleared.getLocale()).isEmpty();
+            assertThat(cleared.getDevice()).isEmpty();
+            assertThat(metadata.toString()).contains("locale=").contains("device=MOBILE");
+        }
+
+        @Test
+        void differentLocaleOrDeviceBreaksEquality() {
+            SearchMetadata.Builder base = SearchMetadata.builder(QUERY).provider(BRAVE)
+                    .locale(germany).device(DeviceType.DESKTOP);
+            SearchMetadata metadata = base.build();
+
+            assertThat(base.locale(SearchLocale.of("US", "en")).build()).isNotEqualTo(metadata);
+            assertThat(base.locale(germany).device(DeviceType.TABLET).build()).isNotEqualTo(metadata);
+            assertThat(base.device(DeviceType.DESKTOP).build()).isEqualTo(metadata);
+            assertThat(SearchMetadata.builder(QUERY).provider(BRAVE).build()).isNotEqualTo(metadata);
+        }
+
+        @Test
+        void forMergedDerivesNothingAndLetsTheMergerSetAgreedValues() {
+            SearchMetadata merged = SearchMetadata.forMerged(Arrays.asList(DATAFORSEO, BRAVE), QUERY).build();
+            assertThat(merged.getLocale()).as("merger decides; nothing derived").isEmpty();
+            assertThat(merged.getDevice()).isEmpty();
+
+            SearchMetadata agreed = SearchMetadata.forMerged(Arrays.asList(DATAFORSEO, BRAVE), QUERY)
+                    .locale(germany).device(DeviceType.DESKTOP).build();
+            assertThat(agreed.getLocale()).contains(germany);
+            assertThat(agreed.getDevice()).contains(DeviceType.DESKTOP);
+            assertThat(agreed.isMergedResponse()).isTrue();
+        }
+    }
+
+    /** Finding #13: equality must also distinguish, not only be reflexive. */
+    @Nested
+    @DisplayName("inequality")
+    class Inequality {
+
+        private SearchMetadata.Builder base() {
+            return SearchMetadata.forProvider(BRAVE, SearchEngineId.BRAVE, SearchVertical.WEB, QUERY)
+                    .rawPayload(RawPayload.ofText("application/json", "{\"a\":1}"))
+                    .locale(SearchLocale.of("DE", "de"));
+        }
+
+        @Test
+        void equalWhenBuiltTheSame() {
+            assertThat(base().build()).isEqualTo(base().build()).hasSameHashCodeAs(base().build());
+        }
+
+        @Test
+        void differentProviderIsNotEqual() {
+            SearchMetadata other = SearchMetadata
+                    .forProvider(DATAFORSEO, SearchEngineId.BRAVE, SearchVertical.WEB, QUERY)
+                    .rawPayload(RawPayload.ofText("application/json", "{\"a\":1}"))
+                    .locale(SearchLocale.of("DE", "de")).build();
+            assertThat(other).isNotEqualTo(base().build());
+        }
+
+        @Test
+        void incompleteIsNotEqualToComplete() {
+            assertThat(base().complete(false).build()).isNotEqualTo(base().build());
+        }
+
+        @Test
+        void differentRawPayloadIsNotEqual() {
+            assertThat(base().rawPayload(RawPayload.ofText("application/json", "{\"a\":2}")).build())
+                    .isNotEqualTo(base().build());
+            assertThat(base().rawPayload(null).build()).isNotEqualTo(base().build());
+        }
+
+        @Test
+        void differentLocaleIsNotEqual() {
+            assertThat(base().locale(SearchLocale.of("US", "en")).build()).isNotEqualTo(base().build());
+            assertThat(base().locale(null).build()).isNotEqualTo(base().build());
+        }
+
+        @Test
+        void notEqualToNullOrOtherType() {
+            assertThat(base().build()).isNotEqualTo(null).isNotEqualTo(QUERY);
+        }
     }
 }

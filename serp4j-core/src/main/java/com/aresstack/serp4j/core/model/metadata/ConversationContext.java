@@ -1,49 +1,77 @@
 package com.aresstack.serp4j.core.model.metadata;
 
 import com.aresstack.serp4j.core.internal.Preconditions;
+import com.aresstack.serp4j.core.model.id.ElementId;
 import com.aresstack.serp4j.core.model.id.SearchSessionId;
 
 import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Conversation state a response belongs to (ADR-009): the session, the 1-based turn number and, if the provider
- * exposes one, its own conversation token. Present only on responses of a conversational search.
+ * Conversation state a response belongs to (ADR-009, WP1 §4.11): the session, the 0-based turn index, the
+ * provider's own conversation token if it exposes one, and a reference to the answer element of this turn.
+ * Present only on responses of a conversational search.
  */
 public final class ConversationContext {
 
     private final SearchSessionId sessionId;
-    private final int turnNumber;
+    private final int turnIndex;
     private final String providerConversationId;
+    private final ElementId answerElement;
 
-    private ConversationContext(SearchSessionId sessionId, int turnNumber, String providerConversationId) {
-        this.sessionId = sessionId;
-        this.turnNumber = turnNumber;
-        this.providerConversationId = providerConversationId;
+    private ConversationContext(Builder builder) {
+        this.sessionId = builder.sessionId;
+        this.turnIndex = builder.turnIndex;
+        this.providerConversationId = builder.providerConversationId;
+        this.answerElement = builder.answerElement;
     }
 
-    public static ConversationContext of(SearchSessionId sessionId, int turnNumber) {
-        return of(sessionId, turnNumber, null);
+    /**
+     * @param turnIndex 0-based index of the turn within the session ({@code 0} = initial search)
+     * @throws IllegalArgumentException if {@code turnIndex < 0}
+     */
+    public static Builder builder(SearchSessionId sessionId, int turnIndex) {
+        return new Builder(sessionId, turnIndex);
     }
 
-    public static ConversationContext of(SearchSessionId sessionId, int turnNumber, String providerConversationId) {
-        return new ConversationContext(Preconditions.requireNonNull(sessionId, "sessionId"),
-                Preconditions.requirePositive(turnNumber, "turnNumber"),
-                Preconditions.trimToNull(providerConversationId));
+    /** Shorthand for {@code builder(sessionId, turnIndex).build()}. */
+    public static ConversationContext of(SearchSessionId sessionId, int turnIndex) {
+        return builder(sessionId, turnIndex).build();
+    }
+
+    /** Shorthand for {@code builder(sessionId, turnIndex).providerConversationId(providerConversationId).build()}. */
+    public static ConversationContext of(SearchSessionId sessionId, int turnIndex, String providerConversationId) {
+        return builder(sessionId, turnIndex).providerConversationId(providerConversationId).build();
     }
 
     public SearchSessionId getSessionId() {
         return sessionId;
     }
 
-    /** 1-based number of the turn within the session. */
-    public int getTurnNumber() {
-        return turnNumber;
+    /**
+     * 0-based index of the turn within the session, the same value as {@code ConversationTurn.getIndex()};
+     * {@code 0} is the initial search, every follow-up question increments it.
+     */
+    public int getTurnIndex() {
+        return turnIndex;
     }
 
     /** The provider's own conversation identifier; treat as opaque and never log it as a secret-bearing value. */
     public Optional<String> getProviderConversationId() {
         return Optional.ofNullable(providerConversationId);
+    }
+
+    /** Reference to the {@code GeneratedAnswerFeature} of this turn within the response's {@code SearchData}. */
+    public Optional<ElementId> getAnswerElement() {
+        return Optional.ofNullable(answerElement);
+    }
+
+    /** Returns a builder pre-populated with all values of this instance. */
+    public Builder toBuilder() {
+        Builder builder = new Builder(sessionId, turnIndex);
+        builder.providerConversationId = providerConversationId;
+        builder.answerElement = answerElement;
+        return builder;
     }
 
     @Override
@@ -56,17 +84,47 @@ public final class ConversationContext {
         }
         ConversationContext that = (ConversationContext) o;
         return sessionId.equals(that.sessionId)
-                && turnNumber == that.turnNumber
-                && Objects.equals(providerConversationId, that.providerConversationId);
+                && turnIndex == that.turnIndex
+                && Objects.equals(providerConversationId, that.providerConversationId)
+                && Objects.equals(answerElement, that.answerElement);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(sessionId, turnNumber, providerConversationId);
+        return Objects.hash(sessionId, turnIndex, providerConversationId, answerElement);
     }
 
     @Override
     public String toString() {
-        return "ConversationContext{sessionId=" + sessionId + ", turnNumber=" + turnNumber + '}';
+        return "ConversationContext{sessionId=" + sessionId + ", turnIndex=" + turnIndex
+                + ", answerElement=" + answerElement + '}';
+    }
+
+    /** Builder for {@link ConversationContext}. */
+    public static final class Builder {
+        private final SearchSessionId sessionId;
+        private final int turnIndex;
+        private String providerConversationId;
+        private ElementId answerElement;
+
+        private Builder(SearchSessionId sessionId, int turnIndex) {
+            this.sessionId = Preconditions.requireNonNull(sessionId, "sessionId");
+            this.turnIndex = Preconditions.requireNonNegative(turnIndex, "turnIndex");
+        }
+
+        /** Blank values are treated as absent; surrounding whitespace is removed. */
+        public Builder providerConversationId(String providerConversationId) {
+            this.providerConversationId = Preconditions.trimToNull(providerConversationId);
+            return this;
+        }
+
+        public Builder answerElement(ElementId answerElement) {
+            this.answerElement = answerElement;
+            return this;
+        }
+
+        public ConversationContext build() {
+            return new ConversationContext(this);
+        }
     }
 }

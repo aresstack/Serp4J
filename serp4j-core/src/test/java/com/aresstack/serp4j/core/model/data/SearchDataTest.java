@@ -94,6 +94,31 @@ class SearchDataTest {
     }
 
     @Test
+    void equalDataAreEqualAndDifferentResultsOrFeaturesAreNot() {
+        SerpFeature related = RelatedQueriesFeature.builder(ElementId.of("r")).query("more").build();
+        SearchData data = SearchData.builder().result(item("a", ResultType.ORGANIC)).feature(related).build();
+        SearchData same = SearchData.builder().result(item("a", ResultType.ORGANIC)).feature(related).build();
+
+        assertThat(data).isEqualTo(same);
+        assertThat(data.hashCode()).isEqualTo(same.hashCode());
+        assertThat(data).isNotEqualTo(SearchData.builder().result(item("b", ResultType.ORGANIC)).feature(related)
+                .build());
+        assertThat(data).isNotEqualTo(SearchData.builder().result(item("a", ResultType.PAID)).feature(related)
+                .build());
+        assertThat(data).isNotEqualTo(SearchData.builder().result(item("a", ResultType.ORGANIC)).build());
+        assertThat(data).isNotEqualTo(SearchData.builder().result(item("a", ResultType.ORGANIC))
+                .feature(RelatedQueriesFeature.builder(ElementId.of("r")).query("less").build()).build());
+        assertThat(data).isNotEqualTo(SearchData.builder().feature(related).build());
+        assertThat(data).isNotEqualTo(SearchData.empty());
+        assertThat(SearchData.builder().result(item("a", ResultType.ORGANIC)).result(item("b", ResultType.ORGANIC))
+                .build()).as("page order is part of the value")
+                .isNotEqualTo(SearchData.builder().result(item("b", ResultType.ORGANIC))
+                        .result(item("a", ResultType.ORGANIC)).build());
+        assertThat(data).isNotEqualTo(null);
+        assertThat(data).isNotEqualTo(related);
+    }
+
+    @Test
     void openValueTypesNormaliseCodes() {
         assertThat(ResultType.of(" Organic ")).isEqualTo(ResultType.ORGANIC);
         assertThatIllegalArgumentException().isThrownBy(() -> ResultType.of("with space"));

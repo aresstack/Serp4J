@@ -24,6 +24,15 @@ public final class RateLimitInfo {
         return new Builder();
     }
 
+    /** Returns a builder pre-filled with this instance's values. */
+    public Builder toBuilder() {
+        Builder builder = new Builder();
+        builder.limit = limit;
+        builder.remaining = remaining;
+        builder.resetAt = resetAt;
+        return builder;
+    }
+
     public OptionalLong getLimit() {
         return limit == null ? OptionalLong.empty() : OptionalLong.of(limit);
     }

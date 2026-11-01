@@ -17,9 +17,15 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -148,6 +154,40 @@ public abstract class SearchProviderContract {
             provider.close();
             provider.close();
             assertThat(sharedInfrastructure.getCloseCalls()).isZero();
+        }
+
+        /** ADR-017 rule 8: close() is thread-safe; two concurrent calls neither fail nor touch borrowed resources. */
+        @Test
+        void concurrentCloseCallsDoNotFail() throws Exception {
+            final int callers = 4;
+            final CountDownLatch start = new CountDownLatch(1);
+            ExecutorService executor = Executors.newFixedThreadPool(callers);
+            try {
+                List<Future<?>> closes = new ArrayList<Future<?>>();
+                for (int i = 0; i < callers; i++) {
+                    closes.add(executor.submit(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                start.await();
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                                throw new IllegalStateException(e);
+                            }
+                            provider.close();
+                        }
+                    }));
+                }
+                start.countDown();
+                for (Future<?> close : closes) {
+                    close.get(10, TimeUnit.SECONDS); // propagates any exception thrown by a concurrent close()
+                }
+            } finally {
+                executor.shutdownNow();
+            }
+            assertThat(sharedInfrastructure.isClosed()).isFalse();
+            assertThat(sharedInfrastructure.getCloseCalls()).isZero();
+            assertCategory(provider.search(supportedRequest(), context()), SearchErrorCategory.CANCELLED);
         }
 
         @Test

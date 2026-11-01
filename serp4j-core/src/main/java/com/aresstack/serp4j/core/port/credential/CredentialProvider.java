@@ -2,7 +2,9 @@ package com.aresstack.serp4j.core.port.credential;
 
 import com.aresstack.serp4j.core.internal.Preconditions;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,9 +37,13 @@ public interface CredentialProvider {
         };
     }
 
-    /** Asks the given providers in order and returns the first secret found. */
+    /**
+     * Asks the given providers in order and returns the first secret found. The array is copied; changing it after
+     * this call does not affect the chain.
+     */
     static CredentialProvider chain(CredentialProvider... providers) {
-        final List<CredentialProvider> chain = Arrays.asList(Preconditions.requireNonNull(providers, "providers"));
+        final List<CredentialProvider> chain = Collections.unmodifiableList(
+                new ArrayList<CredentialProvider>(Arrays.asList(Preconditions.requireNonNull(providers, "providers"))));
         for (CredentialProvider provider : chain) {
             Preconditions.requireNonNull(provider, "provider");
         }

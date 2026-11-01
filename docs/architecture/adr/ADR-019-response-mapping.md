@@ -3,7 +3,7 @@
 **Status:** Angenommen (Angelo, 2026-10-31, nach Prüfung von Commit e6f7ab7) ·
 **Quellen:** Angelos Mapping-Vorschlag (Vorbild WD4J: Gson `@JsonAdapter`, polymorphe Adapter, `GsonMapperFactory`);
 WP1 §5 (Elementtypen je Provider), ADR-006 (Extensions, `StructuredValue`, `GenericSerpFeature`), E-1 (echte Fixtures);
-Prototyp [`spikes/mapping-prototype`](../../../spikes/mapping-prototype/README.md)
+Prototyp `spikes/mapping-prototype` (mit Paket MP entfernt, Szenarien als Tests in `serp4j-mapping`)
 
 ## Kontext
 Jeder Provider liefert dieselbe Information in anderer Struktur: Brave verschachtelt nach Ergebnisart (`web.results[]`),
@@ -119,6 +119,32 @@ Diese Grenze wird nicht durch eine Ausdruckssprache in der Konfiguration verscho
   direkt.
 - `Extensions.unmapped` wird größer als bei handgeschriebenen Mappern, weil jedes nicht konsumierte Feld erhalten
   bleibt; `RawPayloadPolicy` bleibt davon unberührt.
-- Der Prototyp unter `spikes/mapping-prototype` bleibt Referenz für die Semantik und wird beim Bau von MP gelöscht
-  oder als Dokumentationsbeispiel nach `serp4j-examples` übernommen; er ist kein Produktivcode.
+- Der Prototyp unter `spikes/mapping-prototype` war Referenz für die Semantik; mit Paket MP ist er gelöscht, seine drei
+  Strukturen sind synthetische Testszenarien in `serp4j-mapping/src/test/resources/scenarios`.
 - Eigenes Abnahmekriterium in architecture.md §15.
+
+## Umsetzung (Paket MP, 2026-10-31)
+Umgesetzt in `serp4j-mapping` und `serp4j-json` (J1); Formatreferenz: [`docs/mapping/mapping-definition-format.md`](../../mapping/mapping-definition-format.md).
+Präzisierungen gegenüber dem Text oben, jeweils im Sinne der Entscheidung:
+
+1. **Engine an eine Definition gebunden.** Statt `MappingEngine.map(tree, definition, registry)` gilt
+   `MappingEngine.builder(definition).customMappers(registry).build().map(tree)`. `build()` lehnt eine Registry ab, die
+   für eine andere Definition erzeugt wurde, und prüft die Konverternamen. Damit ist „Registry je Definition“ nicht nur
+   Konvention, sondern erzwungen. Regressionstest: `CustomMapperIsolationTest` (zwei Definitionen mit gleicher
+   Sektions-Id `serp` und gleichem Feature-Typ `knowledge_panel`).
+2. **Contract-Test in zwei Teilen.** Die Prüflogik (Pfadabdeckung je Typ, „unbekannter Typ überlebt“, Golden-Snapshot)
+   liegt JUnit-frei in `com.aresstack.serp4j.mapping.verify`. Die JUnit-Klasse `MappingDefinitionContractTest` in
+   `serp4j-testkit` folgt nach Paket E als kleiner Folge-PR (mit Paket E abgestimmt, damit sich die parallelen Pakete
+   nicht überschneiden).
+3. **Deklarative Feature-Ziele** gibt es für `knowledge_panel`, `featured_snippet`, `answer_box`/`calculator`/`weather`
+   und `related_searches`; alle anderen Feature-Typen werden ohne Custom Mapper `GenericSerpFeature` mit vollem Inhalt.
+   Fehlen einem deklarativen Feature Pflichtwerte, bleibt es generisch erhalten (Warnung) statt verworfen.
+4. **Unmapped-Rest blattgenau.** Konsumiert wird je gelesenem Blatt (konkreter Ort), nicht je erstem Schlüssel; liest
+   eine Definition `thumbnail.src`, bleibt `thumbnail.height` erhalten. `null`-Felder und leere Container fallen im Rest
+   weg. Übersprungene Elemente stehen in den Details ihrer Warnung, `skipWhen`-Elemente im Wurzel-Rest.
+5. **Extensions-Namensraum** einer Definition ist ihr Feld `namespace`; Extension-Ziele mit anderem Namensraum werden
+   beim Laden abgelehnt.
+6. **Offen:** Das Abnahmekriterium „Beispieldefinition gegen eine echte DataForSEO-Fixture“ (implementation-plan.md,
+   MP) ist noch nicht erfüllt, weil in den Repositories keine echte DataForSEO-Antwort liegt. Die Tests nutzen nur
+   synthetische, als solche gekennzeichnete Szenarien.
+
