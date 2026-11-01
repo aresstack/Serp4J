@@ -185,23 +185,34 @@ class MappingEngineTest {
     }
 
     @Test
+    void credits_compare_numerically_like_provider_usage() {
+        MappedMetadata a = MappedMetadata.builder().credits(new BigDecimal("2.5")).build();
+        MappedMetadata b = MappedMetadata.builder().credits(new BigDecimal("2.50")).build();
+        assertThat(a).isEqualTo(b).hasSameHashCodeAs(b);
+        assertThat(a).isNotEqualTo(MappedMetadata.builder().credits(new BigDecimal("2.6")).build());
+        assertThat(a).isNotEqualTo(MappedMetadata.builder().build());
+        assertThatThrownBy(() -> MappedMetadata.builder().credits(new BigDecimal("-1")))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void metadata_mapper_and_transfer_to_search_metadata() {
         MappingDefinition d = MappingDefinitions.from(JsonTrees.read("{\"id\":\"t\",\"version\":1,\"namespace\":\"t\","
-                + "\"metadata\":{\"originalQuery\":\"q\",\"providerRequestId\":\"id\",\"creditsUsed\":\"credits\"}}"));
+                + "\"metadata\":{\"originalQuery\":\"q\",\"providerRequestId\":\"id\",\"credits\":\"credits\"}}"));
         MappingEngine engine = MappingEngine.builder(d)
                 .customMappers(CustomMapperRegistry.builder(d)
                         .metadataMapper((root, m, ctx) -> m.cost(root.get("price.amount").flatMap(StructuredValue::asNumber).orElse(null))
                                 .currency(root.text("price.currency").orElse(null)))
                         .build())
                 .build();
-        MappingResult r = engine.map(JsonTrees.read("{\"q\":\"java\",\"id\":\"r-1\",\"credits\":3,"
+        MappingResult r = engine.map(JsonTrees.read("{\"q\":\"java\",\"id\":\"r-1\",\"credits\":2.5,"
                 + "\"price\":{\"amount\":0.01,\"currency\":\"eur\"},\"extra\":1}"));
 
         SearchMetadata metadata = r.applyTo(SearchMetadata.forProvider(ProviderId.of("test"), SearchEngineId.of("google"),
                 SearchVertical.WEB, r.getMetadata().toQueryInfo("fallback"))).build();
         assertThat(metadata.getQuery().getOriginalQuery()).isEqualTo("java");
         assertThat(metadata.getExecution().get().getProviderRequestId()).hasValue("r-1");
-        assertThat(metadata.getUsage().get().getCreditsUsed()).hasValue(3L);
+        assertThat(metadata.getUsage().get().getCredits()).hasValue(new BigDecimal("2.5"));
         assertThat(metadata.getUsage().get().getCost().get().getCurrency()).isEqualTo("EUR");
         assertThat(metadata.getExtensions().getUnmapped("t")).hasValue(JsonTrees.read("{\"extra\":1}"));
     }
