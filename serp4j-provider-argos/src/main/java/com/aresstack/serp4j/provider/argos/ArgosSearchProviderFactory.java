@@ -24,7 +24,8 @@ import java.util.OptionalInt;
  *   <li>{@code port}: loopback port of the sidecar; the token then comes from the credential {@code token}
  *       ({@link ProviderConfiguration#credentialKey(String)}), the endpoint is
  *       {@code http://127.0.0.1:<port>/mcp/browser/<token>}.</li>
- *   <li>{@code timeout} (optional, ISO-8601, default {@code PT90S}), {@code engines} (optional, comma separated,
+ *   <li>{@code timeout} (optional, ISO-8601, default {@code PT90S}), {@code initializeTimeout} (optional, ISO-8601, default
+ *       {@code PT30S}, budget of the shared MCP initialization), {@code engines} (optional, comma separated,
  *       default {@code duckduckgo,bing}), {@code maxResults} (optional, default 50), {@code displayName}.</li>
  * </ul>
  *
@@ -38,6 +39,7 @@ public final class ArgosSearchProviderFactory implements SearchProviderFactory {
     public static final String PORT = "port";
     public static final String TOKEN_CREDENTIAL = "token";
     public static final String TIMEOUT = "timeout";
+    public static final String INITIALIZE_TIMEOUT = "initializeTimeout";
     public static final String ENGINES = "engines";
     public static final String MAX_RESULTS = "maxResults";
     public static final String DISPLAY_NAME = "displayName";
@@ -60,6 +62,10 @@ public final class ArgosSearchProviderFactory implements SearchProviderFactory {
         Optional<Duration> timeout = configuration.getDuration(TIMEOUT);
         if (timeout.isPresent()) {
             search.timeout(timeout.get());
+        }
+        Optional<Duration> initializeTimeout = configuration.getDuration(INITIALIZE_TIMEOUT);
+        if (initializeTimeout.isPresent()) {
+            search.initializeTimeout(initializeTimeout.get());
         }
         ArgosSearchProvider.Builder provider = ArgosSearchProvider.builder(configuration.getId(), search.build())
                 .ownsSearch(true)

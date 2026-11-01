@@ -46,6 +46,9 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
     /** Default upper bound for one search; browser searches across several engines are slow. */
     public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(90);
 
+    /** Default budget of the shared MCP initialization ({@code initialize} + {@code notifications/initialized}). */
+    public static final Duration DEFAULT_INITIALIZE_TIMEOUT = Duration.ofSeconds(30);
+
     static final String SESSION_HEADER = "Mcp-Session-Id";
     private static final String ACCEPT = "application/json, text/event-stream";
 
@@ -54,11 +57,13 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
     private final String token;
     private final HttpTransport transport;
     private final Duration defaultTimeout;
+    private final Duration initializeTimeout;
     private final AtomicLong ids = new AtomicLong();
     private final AtomicBoolean closed = new AtomicBoolean();
     private final Set<Call> running = Collections.newSetFromMap(new ConcurrentHashMap<Call, Boolean>());
     private final Object sessionLock = new Object();
     private CompletableFuture<Optional<String>> session;
+    private Call initCall;
 
     private McpArgosWebSearch(Builder builder) {
         this.endpoint = builder.endpoint;
@@ -71,6 +76,7 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
                 ? path.substring(redactedPrefix.length()) : null;
         this.transport = builder.transport;
         this.defaultTimeout = builder.timeout;
+        this.initializeTimeout = builder.initializeTimeout;
     }
 
     /**
@@ -151,7 +157,7 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
 
     private CompletableFuture<String> callTool(final String query, final long deadline, final boolean mayRetry,
                                              final Call call) {
-        final CompletableFuture<Optional<String>> current = session(deadline);
+        final CompletableFuture<Optional<String>> current = session();
         return current.thenCompose(new Function<Optional<String>, CompletableFuture<String>>() {
             @Override
             public CompletableFuture<String> apply(Optional<String> sessionId) {
@@ -184,10 +190,13 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
         }).thenCompose(Function.<CompletableFuture<String>>identity());
     }
 
-    private CompletableFuture<Optional<String>> session(final long deadline) {
+    private CompletableFuture<Optional<String>> session() {
         synchronized (sessionLock) {
             if (session == null || session.isCompletedExceptionally()) {
-                session = initialize(deadline);
+                // Own budget, independent of whichever search happens to trigger it (each search keeps its own
+                // deadline via its timer); registered so that close() can abort it.
+                initCall = new Call();
+                session = initialize(System.nanoTime() + initializeTimeout.toNanos(), initCall);
             }
             return session;
         }
@@ -201,7 +210,7 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
         }
     }
 
-    private CompletableFuture<Optional<String>> initialize(final long deadline) {
+    private CompletableFuture<Optional<String>> initialize(final long deadline, final Call initCall) {
         StructuredValue params = StructuredValue.objectBuilder()
                 .put("protocolVersion", PROTOCOL_VERSION)
                 .put("capabilities", StructuredValue.ofObject(Collections.<String, StructuredValue>emptyMap()))
@@ -209,7 +218,7 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
                         .put("name", "serp4j-provider-argos").put("version", "1").build())
                 .build();
         final long id = ids.incrementAndGet();
-        return post(message("initialize", params, id), Optional.<String>empty(), deadline, null)
+        return post(message("initialize", params, id), Optional.<String>empty(), deadline, initCall)
                 .thenCompose(new Function<HttpResponse, CompletableFuture<Optional<String>>>() {
                     @Override
                     public CompletableFuture<Optional<String>> apply(HttpResponse response) {
@@ -217,7 +226,7 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
                         final Optional<String> sessionId = response.getHeaders().getFirst(SESSION_HEADER);
                         StructuredValue notification = StructuredValue.objectBuilder()
                                 .put("jsonrpc", "2.0").put("method", "notifications/initialized").build();
-                        return post(notification, sessionId, deadline, null)
+                        return post(notification, sessionId, deadline, initCall)
                                 .thenApply(new Function<HttpResponse, Optional<String>>() {
                                     @Override
                                     public Optional<String> apply(HttpResponse ack) {
@@ -426,8 +435,15 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
     @Override
     public void close() {
         if (closed.compareAndSet(false, true)) {
+            Call pendingInit;
             synchronized (sessionLock) {
                 session = null;
+                pendingInit = initCall;
+                initCall = null;
+            }
+            if (pendingInit != null) {
+                pendingInit.result.completeExceptionally(closedFailure());
+                pendingInit.abort();
             }
             for (Call call : running) {
                 call.result.completeExceptionally(closedFailure());
@@ -444,6 +460,7 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
         private final String endpoint;
         private final HttpTransport transport;
         private Duration timeout = DEFAULT_TIMEOUT;
+        private Duration initializeTimeout = DEFAULT_INITIALIZE_TIMEOUT;
 
         private Builder(String endpoint, HttpTransport transport) {
             if (endpoint == null || endpoint.trim().isEmpty()) {
@@ -458,6 +475,15 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
             }
             this.endpoint = trimmed;
             this.transport = transport;
+        }
+
+        /** Budget of the shared MCP initialization, independent of the deadlines of single searches. */
+        public Builder initializeTimeout(Duration initializeTimeout) {
+            if (initializeTimeout == null || initializeTimeout.isNegative() || initializeTimeout.isZero()) {
+                throw new IllegalArgumentException("initializeTimeout must be positive but was " + initializeTimeout);
+            }
+            this.initializeTimeout = initializeTimeout;
+            return this;
         }
 
         public Builder timeout(Duration timeout) {

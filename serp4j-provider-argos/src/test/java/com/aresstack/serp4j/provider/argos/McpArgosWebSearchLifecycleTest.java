@@ -87,4 +87,37 @@ class McpArgosWebSearchLifecycleTest {
         assertThat(transport.getRunningCount()).as("shared initialization keeps running").isEqualTo(1);
         adapter.close();
     }
+
+    @Test
+    void aShortFirstDeadlineDoesNotShortenTheSharedInitializationForALaterCaller() {
+        FakeHttpTransport transport = FakeHttpTransport.create();
+        transport.on(rpc("tools/call")).reply(FakeHttpStep.json(200,
+                ScriptedTransport.toolResult(0, "1: Synthetic \u2014 https://example.invalid/a\n", false)));
+        transport.on(RequestMatcher.any()).reply(
+                FakeHttpStep.json(200, ScriptedTransport.initResult(0)).after(Duration.ofMillis(300)));
+        McpArgosWebSearch adapter = McpArgosWebSearch.builder(ENDPOINT, transport).build();
+
+        CompletableFuture<ArgosSearchOutput> shortCall = adapter.search("short", Duration.ofMillis(100));
+        CompletableFuture<ArgosSearchOutput> longCall = adapter.search("long", Duration.ofSeconds(5));
+
+        assertThatThrownBy(shortCall::join)
+                .satisfies(e -> assertThat(((HttpTransportException) e.getCause()).getKind())
+                        .isEqualTo(HttpTransportException.Kind.TIMEOUT));
+        assertThat(longCall.join().getItems()).hasSize(1);
+        adapter.close();
+    }
+
+    @Test
+    void closeAbortsARunningSharedInitialization() throws Exception {
+        FakeHttpTransport transport = FakeHttpTransport.create();
+        transport.on(RequestMatcher.any()).reply(FakeHttpStep.hang());
+        McpArgosWebSearch adapter = McpArgosWebSearch.builder(ENDPOINT, transport).build();
+        CompletableFuture<ArgosSearchOutput> search = adapter.search("q", Duration.ofMinutes(1));
+        awaitRunning(transport, 1);
+
+        adapter.close();
+
+        assertThatThrownBy(search::join).isInstanceOf(CompletionException.class);
+        assertThat(transport.getRunningCount()).as("initialize request is cancelled").isZero();
+    }
 }
