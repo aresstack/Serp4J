@@ -1,0 +1,63 @@
+{
+  "type": "search",
+  "query": {
+    "original": "serp4j brave search",
+    "altered": "serp4j brave search api",
+    "is_navigational": false,
+    "is_news_breaking": false,
+    "is_geolocal": false,
+    "bad_results": false,
+    "country": "de",
+    "more_results_available": true,
+    "spellcheck_off": false
+  },
+  "web": {
+    "type": "search",
+    "family_friendly": true,
+    "results": [
+      {
+        "type": "search_result",
+        "subtype": "generic",
+        "title": "Example <strong>Search</strong> API",
+        "url": "https://www.example.com/docs/search",
+        "description": "Synthetic description with <strong>highlight</strong>.",
+        "language": "en",
+        "family_friendly": true,
+        "page_age": "2026-10-01T08:00:00",
+        "age": "October 1, 2026",
+        "profile": { "name": "Example", "url": "https://www.example.com", "long_name": "example.com" },
+        "thumbnail": { "src": "https://imgs.example.net/thumb.jpg" },
+        "extra_snippets": ["First synthetic extra snippet.", "Second synthetic extra snippet."],
+        "meta_url": { "scheme": "https", "netloc": "example.com", "hostname": "www.example.com" },
+        "is_source_local": false
+      },
+      {
+        "type": "search_result",
+        "subtype": "generic",
+        "title": "Second synthetic result",
+        "url": "https://example.org/page",
+        "description": "Another synthetic description."
+      }
+    ]
+  },
+  "news": {
+    "type": "news",
+    "results": [
+      { "title": "Synthetic news item", "url": "https://news.example.com/a", "description": "News text.", "age": "2 hours ago" }
+    ]
+  },
+  "infobox": {
+    "type": "graph",
+    "results": [
+      { "type": "infobox", "title": "Example Entity", "long_desc": "Synthetic entity description.", "url": "https://www.example.com" }
+    ]
+  },
+  "faq": {
+    "type": "faq",
+    "results": [
+      { "question": "What is a synthetic fixture?", "answer": "Hand-written test data.", "title": "FAQ", "url": "https://example.org/faq" }
+    ]
+  },
+  "summarizer": { "type": "summarizer", "key": "synthetic-summary-key" },
+  "mixed": { "type": "mixed", "main": [ { "type": "web", "index": 0, "all": false } ] }
+}

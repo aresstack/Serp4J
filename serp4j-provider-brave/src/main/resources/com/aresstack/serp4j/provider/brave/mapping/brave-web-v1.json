@@ -1,0 +1,90 @@
+{
+  "id": "brave-web",
+  "version": 1,
+  "namespace": "brave",
+  "description": "Brave Search API GET /res/v1/web/search (written against the Brave API reference of 2026-11-01).",
+  "metadata": {
+    "originalQuery": "$.query.original",
+    "effectiveQuery": "$.query.altered",
+    "hasMore": "$.query.more_results_available",
+    "brave:isNavigational": "$.query.is_navigational",
+    "brave:isNewsBreaking": "$.query.is_news_breaking",
+    "brave:isGeolocal": "$.query.is_geolocal",
+    "brave:badResults": "$.query.bad_results",
+    "brave:country": "$.query.country",
+    "brave:summarizerKey": "$.summarizer.key",
+    "brave:richCallbackKey": "$.rich.hint.callback_key"
+  },
+  "sections": [
+    {
+      "id": "web", "kind": "items", "path": "$.web.results[*]", "type": "organic", "position": "index",
+      "fields": {
+        "url": "url",
+        "title": { "from": "title", "convert": "stripHtml" },
+        "snippet": { "from": "description", "convert": "stripHtml" },
+        "additionalSnippets": "extra_snippets",
+        "domain": { "from": "url", "convert": "host" },
+        "siteName": "profile.name",
+        "language": "language",
+        "publishedDate": "page_age",
+        "thumbnail": "thumbnail.src",
+        "brave:age": "age",
+        "brave:subtype": "subtype",
+        "brave:familyFriendly": "family_friendly"
+      }
+    },
+    {
+      "id": "news", "kind": "items", "path": "$.news.results[*]", "type": "news", "position": "index",
+      "fields": {
+        "url": "url",
+        "title": { "from": "title", "convert": "stripHtml" },
+        "snippet": { "from": "description", "convert": "stripHtml" },
+        "domain": { "from": "url", "convert": "host" },
+        "publishedDate": "page_age",
+        "thumbnail": "thumbnail.src",
+        "brave:age": "age"
+      }
+    },
+    {
+      "id": "videos", "kind": "items", "path": "$.videos.results[*]", "type": "video", "position": "index",
+      "fields": {
+        "url": "url",
+        "title": { "from": "title", "convert": "stripHtml" },
+        "snippet": { "from": "description", "convert": "stripHtml" },
+        "domain": { "from": "url", "convert": "host" },
+        "publishedDate": "page_age",
+        "thumbnail": "thumbnail.src",
+        "brave:age": "age"
+      }
+    },
+    {
+      "id": "discussions", "kind": "items", "path": "$.discussions.results[*]", "type": "discussion",
+      "position": "index",
+      "fields": {
+        "url": "url",
+        "title": { "from": "title", "convert": "stripHtml" },
+        "snippet": { "from": "description", "convert": "stripHtml" },
+        "domain": { "from": "url", "convert": "host" },
+        "brave:age": "age"
+      }
+    },
+    {
+      "id": "infobox", "kind": "features", "path": "$.infobox.results[*]", "type": "knowledge_panel",
+      "position": "index",
+      "fields": {
+        "title": "title",
+        "description": ["long_desc", "description"],
+        "websiteUrl": "url"
+      }
+    },
+    {
+      "id": "faq", "kind": "features", "path": "$.faq.results[*]", "type": "faq", "position": "index",
+      "fields": { "title": "question" }
+    },
+    {
+      "id": "locations", "kind": "features", "path": "$.locations.results[*]", "type": "local_pack",
+      "position": "index",
+      "fields": { "title": "title" }
+    }
+  ]
+}
