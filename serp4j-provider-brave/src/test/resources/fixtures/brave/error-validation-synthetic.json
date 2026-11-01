@@ -1,0 +1,11 @@
+{
+  "type": "ErrorResponse",
+  "error": {
+    "id": "00000000-0000-0000-0000-000000000002",
+    "status": 422,
+    "code": "VALIDATION",
+    "detail": "Synthetic: unable to validate request parameter(s).",
+    "meta": {}
+  },
+  "time": 1761984000
+}

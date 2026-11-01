@@ -9,6 +9,19 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
 
 ### Added
 
+- `serp4j-provider-brave` (Paket B, Java 8): `BraveSearchProvider` für `GET /res/v1/web/search`, Ziel `brave/web`,
+  gegen die Brave-API-Referenz vom 2026-11-01. Request: `q` (≤ 600 Zeichen/75 Wörter), `count` ≤ 20, `offset` als
+  Seitenindex 0–9 (Request-Offset muss ein Vielfaches des Limits sein), `country`/`search_lang`/`ui_lang` mit
+  Instanz-Defaults, `safesearch`, `freshness` (`pd`/`pw`/`pm`/`py` oder Datumsbereich), `X-Loc-*` aus
+  `GeoLocation`, Brave-spezifisches über `BraveRequestOptions` (`spellcheck`, `extra_snippets`, `result_filter`,
+  `goggles`, `units`, `summary` …). Token nur im sensiblen Header `X-Subscription-Token`, je Suche aus dem
+  `CredentialProvider` (`brave.api-key`). Antwort über die Mapping-Definition `brave-web-v1` (ADR-019): `web`,
+  `news`, `videos`, `discussions` als Items, `infobox` als Knowledge Panel, `faq` und `locations` als Features;
+  `query.altered` → `SpellCorrection`, `query.more_results_available` → `PageInfo.hasMore`, Rest in
+  `Extensions.getUnmapped("brave")`. Fehler: `QUOTA_LIMITED` → `QUOTA_EXHAUSTED`, `RATE_LIMITED`/429 →
+  `RATE_LIMITED` (mit `Retry-After`), 422 → `INVALID_REQUEST`, 401/403 → `AUTHENTICATION`, 5xx → `UNAVAILABLE`.
+  `BraveSearchProviderFactory` per `ServiceLoader`. Tests laufen gegen **synthetische** Fixtures (als solche
+  gekennzeichnet); `liveTest` zeichnet mit `-Pserp4j.recordFixtures=true` eine echte Antwort auf (E-1).
 - `serp4j-testkit`: `MappingDefinitionContractTest` (ADR-019) – Definition lädt, jeder Pfad trifft in einer Fixture,
   „unbekannter Typ überlebt“, Golden-Output je Fixture (`SERP4J_UPDATE_GOLDEN=1`); nur aufgezeichnete Fixtures (E-1).
   `serp4j-mapping` ist `compileOnly`.
