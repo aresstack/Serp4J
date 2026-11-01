@@ -9,6 +9,16 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
 
 ### Added
 
+- `serp4j-provider-argos` (Java 8, eigenes Gradle-Subprojekt, keine Abhängigkeit auf AskAI): die Browser-Websuche von
+  AskAI/Argos als SERP-Provider (Typ `argos`, `ProviderKind.BROWSER`) nach Ports & Adapters. Port `ArgosWebSearch`;
+  Adapter `McpArgosWebSearch` ruft das Tool `web_search` des AskAI-Browser-Sidecars (`browser-mcp-server-java21`) per
+  MCP Streamable HTTP über den `HttpTransport`-Port auf (JSON- und SSE-Antworten, Session-Neuaufbau nach Sidecar-Neustart,
+  Token im Pfad wird in Meldungen geschwärzt); `ArgosSearchOutputParser` liest das Textformat des Tools;
+  `ArgosSearchProvider` bildet Treffer, Engine (aus dem Host des liefernden Versuchs), Engine-Versuche und manuelle
+  Challenges (`BLOCKED`, nie umgangen) auf das Domain-Modell ab; Plugin-Registrierung über `ServiceLoader`
+  (`ArgosSearchProviderFactory`, Properties `endpoint` oder `port` + Credential `token`). Den Sidecar startet weiter der
+  Host. Cancellation, `close()` und Deadline (auch beim Warten auf die gemeinsame MCP-Initialisierung) brechen den
+  laufenden HTTP-Aufruf ab (ADR-017); `SearchProviderContractTest` läuft. Testdaten sind ausschließlich synthetisch und als solche gekennzeichnet (E-1).
 - `serp4j-testkit`: `MappingDefinitionContractTest` (ADR-019) – Definition lädt, jeder Pfad trifft in einer Fixture,
   „unbekannter Typ überlebt“, Golden-Output je Fixture (`SERP4J_UPDATE_GOLDEN=1`); nur aufgezeichnete Fixtures (E-1).
   `serp4j-mapping` ist `compileOnly`.
