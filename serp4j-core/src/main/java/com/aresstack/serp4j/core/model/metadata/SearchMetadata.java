@@ -1,6 +1,8 @@
 package com.aresstack.serp4j.core.model.metadata;
 
 import com.aresstack.serp4j.core.internal.Preconditions;
+import com.aresstack.serp4j.core.model.DeviceType;
+import com.aresstack.serp4j.core.model.SearchLocale;
 import com.aresstack.serp4j.core.model.ext.Extensions;
 import com.aresstack.serp4j.core.model.ext.RawPayload;
 import com.aresstack.serp4j.core.model.id.ProviderId;
@@ -17,8 +19,13 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Metadata of a search response (ADR-003): who answered, what was asked, paging, execution, usage, warnings and
- * the optional raw payload.
+ * Metadata of a search response (ADR-003): who answered, what was asked, the locale and device that were
+ * effectively used, paging, execution, usage, warnings and the optional raw payload.
+ *
+ * <p><strong>Effective locale and device (WP1 §4.8).</strong> {@link #getLocale()} and {@link #getDevice()} hold
+ * what the provider actually searched with: the provider's echo when it reports one, otherwise the values of the
+ * request. Both are optional; a merged response (ADR-008) carries them only when every contribution agrees, the
+ * merger sets them and leaves them empty when the contributions differ.</p>
  *
  * <p><strong>Provider contract (ADR-008, core contract B).</strong> {@link #getProvider()}, {@link #getEngine()}
  * and {@link #getVertical()} are optional because a merged response has no single source. The invariants are
@@ -38,6 +45,8 @@ public final class SearchMetadata {
     private final SearchVertical vertical;
     private final List<ProviderId> contributingProviders;
     private final QueryInfo query;
+    private final SearchLocale locale;
+    private final DeviceType device;
     private final PageInfo page;
     private final ExecutionInfo execution;
     private final ProviderUsage usage;
@@ -53,6 +62,8 @@ public final class SearchMetadata {
         this.vertical = builder.vertical;
         this.contributingProviders = contributingProviders;
         this.query = builder.query;
+        this.locale = builder.locale;
+        this.device = builder.device;
         this.page = builder.page;
         this.execution = builder.execution;
         this.usage = builder.usage;
@@ -73,7 +84,11 @@ public final class SearchMetadata {
         return builder(query).provider(provider).engine(engine).vertical(vertical);
     }
 
-    /** Builder for a merged response (ADR-008); {@code contributingProviders} must not be empty. */
+    /**
+     * Builder for a merged response (ADR-008); {@code contributingProviders} must not be empty. Nothing is derived
+     * from the contributions here: the merger sets {@link Builder#locale(SearchLocale)} and
+     * {@link Builder#device(DeviceType)} only when all contributions agree and leaves them empty otherwise.
+     */
     public static Builder forMerged(Collection<ProviderId> contributingProviders, QueryInfo query) {
         return builder(query).contributingProviders(contributingProviders);
     }
@@ -115,6 +130,22 @@ public final class SearchMetadata {
 
     public QueryInfo getQuery() {
         return query;
+    }
+
+    /**
+     * The locale that was effectively used: the provider's echo, otherwise the request's locale; empty when
+     * unknown or, in a merged response, when the contributions differ.
+     */
+    public Optional<SearchLocale> getLocale() {
+        return Optional.ofNullable(locale);
+    }
+
+    /**
+     * The device that was effectively used: the provider's echo, otherwise the request's device; empty when
+     * unknown or, in a merged response, when the contributions differ.
+     */
+    public Optional<DeviceType> getDevice() {
+        return Optional.ofNullable(device);
     }
 
     public Optional<PageInfo> getPage() {
@@ -161,6 +192,8 @@ public final class SearchMetadata {
         builder.engine = engine;
         builder.vertical = vertical;
         builder.contributingProviders.addAll(contributingProviders);
+        builder.locale = locale;
+        builder.device = device;
         builder.page = page;
         builder.execution = execution;
         builder.usage = usage;
@@ -186,6 +219,8 @@ public final class SearchMetadata {
                 && Objects.equals(vertical, that.vertical)
                 && contributingProviders.equals(that.contributingProviders)
                 && query.equals(that.query)
+                && Objects.equals(locale, that.locale)
+                && device == that.device
                 && Objects.equals(page, that.page)
                 && Objects.equals(execution, that.execution)
                 && Objects.equals(usage, that.usage)
@@ -198,14 +233,15 @@ public final class SearchMetadata {
 
     @Override
     public int hashCode() {
-        return Objects.hash(provider, engine, vertical, contributingProviders, query, page, execution, usage,
-                complete, warnings, rawPayload, conversation, extensions);
+        return Objects.hash(provider, engine, vertical, contributingProviders, query, locale, device, page,
+                execution, usage, complete, warnings, rawPayload, conversation, extensions);
     }
 
     @Override
     public String toString() {
         return "SearchMetadata{provider=" + provider + ", engine=" + engine + ", vertical=" + vertical
                 + ", contributingProviders=" + contributingProviders + ", query=" + query
+                + ", locale=" + locale + ", device=" + device
                 + ", complete=" + complete + ", warnings=" + warnings.size()
                 + ", rawPayload=" + (rawPayload != null) + '}';
     }
@@ -217,6 +253,8 @@ public final class SearchMetadata {
         private SearchVertical vertical;
         private final List<ProviderId> contributingProviders = new ArrayList<ProviderId>();
         private final QueryInfo query;
+        private SearchLocale locale;
+        private DeviceType device;
         private PageInfo page;
         private ExecutionInfo execution;
         private ProviderUsage usage;
@@ -265,6 +303,18 @@ public final class SearchMetadata {
 
         public Builder contributingProvider(ProviderId provider) {
             contributingProviders.add(Preconditions.requireNonNull(provider, "provider"));
+            return this;
+        }
+
+        /** The effectively used locale (provider echo, otherwise the request's); {@code null} when unknown. */
+        public Builder locale(SearchLocale locale) {
+            this.locale = locale;
+            return this;
+        }
+
+        /** The effectively used device (provider echo, otherwise the request's); {@code null} when unknown. */
+        public Builder device(DeviceType device) {
+            this.device = device;
             return this;
         }
 

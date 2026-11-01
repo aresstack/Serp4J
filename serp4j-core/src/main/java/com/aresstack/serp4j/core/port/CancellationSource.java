@@ -42,7 +42,14 @@ public final class CancellationSource {
         }
     }
 
-    /** Cancels the signal and runs all registered callbacks once; later calls are no-ops. */
+    /**
+     * Cancels the signal and runs all registered callbacks once; later calls are no-ops. Every callback runs even
+     * if an earlier one throws; the first {@link RuntimeException} or {@link Error} thrown by a callback is rethrown
+     * to the caller after all callbacks have run, later ones are dropped. The signal is cancelled either way.
+     *
+     * @throws RuntimeException the first unchecked exception a callback threw
+     * @throws Error the first error a callback threw
+     */
     public void cancel() {
         List<Runnable> toRun;
         synchronized (lock) {
@@ -53,18 +60,21 @@ public final class CancellationSource {
             toRun = new ArrayList<Runnable>(callbacks);
             callbacks.clear();
         }
-        RuntimeException first = null;
+        Throwable first = null;
         for (Runnable callback : toRun) {
             try {
                 callback.run();
-            } catch (RuntimeException e) {
+            } catch (RuntimeException | Error e) {
                 if (first == null) {
                     first = e;
                 }
             }
         }
-        if (first != null) {
-            throw first;
+        if (first instanceof RuntimeException) {
+            throw (RuntimeException) first;
+        }
+        if (first instanceof Error) {
+            throw (Error) first;
         }
     }
 

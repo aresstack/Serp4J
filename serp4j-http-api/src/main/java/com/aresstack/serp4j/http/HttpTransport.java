@@ -28,6 +28,10 @@ public interface HttpTransport extends AutoCloseable {
     /**
      * Releases connections and threads; running requests fail with {@link HttpTransportException.Kind#CANCELLED}.
      * Idempotent. Called only by the owner of the transport, never by a provider it was injected into.
+     *
+     * <p>Thread-safe: may be called from any thread, concurrently with running calls and with a second
+     * {@code close()}; the first call wins, concurrent calls return after the resources are released or at once
+     * (ADR-017 rule 8).</p>
      */
     @Override
     void close();
