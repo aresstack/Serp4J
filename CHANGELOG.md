@@ -32,9 +32,29 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
   Credential-Header aus Rohantworten.
 - `SearchCapabilities.check` prüft per `require()` verlangte Features auch dann, wenn der Request keine zugehörige
   Option setzt.
+- Nachtrag A.1 (Review-Nachlese zu Paket A): `SearchMetadata.getLocale()`/`getDevice()` (effektiv verwendetes Locale
+  und Gerät, architecture.md §4, WP1 §4.8); `ExecutionInfo.getProviderReportedDuration()`/`getSourceUrl()`/
+  `getProviderTimestamp()` (WP1 §4.8); `ConversationContext` mit 0-basiertem `getTurnIndex()` und
+  `getAnswerElement()` (ADR-009, WP1 §4.11; `getTurnNumber()` entfällt); `toBuilder()` für `RawPayload`,
+  `ExecutionInfo`, `ProviderUsage`, `RateLimitInfo`, `SearchWarning`, `ResultProvenance`, `AnalysisProvenance`,
+  `EntityMention`, `Topic`, `Fact`, `ConversationalCapabilities`; `UrlQueryBuilder.paramIfPresent(String, String)`
+  ersetzt die `Optional`-Überladung; `HttpHeaders` weist Namen, die kein RFC-7230-Token sind, und Werte mit CR/LF/NUL
+  zurück; Thread-Sicherheit von `close()` in den Port-Javadocs (ADR-017 Regel 8); Tests für alle bisher ungetesteten
+  Wertklassen. Angleichung an WP1: `ProviderUsage.getCredits()` (`Optional<BigDecimal>`, ersetzt `getCreditsUsed()`),
+  `ResultProvenance.builder(provider, engine)` mit Pflicht-Engine, `ExecutionInfo` ohne `cached`.
 - `serp4j-http-ahc` (Java 8, Paket T): `AhcHttpTransport` und `AhcHttpTransportOptions` auf async-http-client 2.16.
   `create(...)` besitzt seinen Client, `wrap(client, ...)` leiht ihn nur (ADR-017). Jede Serverantwort ist eine
   `HttpResponse`; Transportfehler werden nach `HttpTransportException.Kind` klassifiziert, ohne Bodies, Header-Werte
   oder unmaskierte URLs in Meldungen und Ursachen. Default-User-Agent `Serp4J/<version>`. Redirects übernimmt der
-  Transport selbst und entfernt beim Wechsel des Origins alle sensitiven Header und Credential-Query-Parameter. Requests über dem
-  Verbindungslimit warten, statt wie bei AHC mit `TooManyConnectionsException` zu scheitern.
+  Transport selbst und entfernt beim Wechsel des Origins alle sensitiven Header und Credential-Query-Parameter.
+  Requests über dem Verbindungslimit warten, statt wie bei AHC mit `TooManyConnectionsException` zu scheitern.
+
+### Fixed
+
+- `RawPayload`: `hashCode` passt zu `equals` bei unterschiedlich geschriebenen Header-Namen; Header-Namen mit
+  umgebendem Leerraum umgehen den Sensitiv-Filter nicht mehr.
+- `CredentialProvider.chain(...)` kopiert das übergebene Array; `StaticCredentialProvider` ist threadsicher
+  (`close()` gegen `resolve()`/`getKeys()`, `getKeys()` liefert einen Schnappschuss);
+  `CancellationSource.cancel()` führt alle Callbacks aus, auch wenn eines einen `Error` wirft.
+- CI: der Release-Workflow sichert das Central-Bündel vor dem Portal-Upload als Workflow-Artefakt; der Snapshot-Job
+  läuft nur mit vollständigen Secrets inklusive Signing-Key, ein leerer Signing-Key gilt als nicht gesetzt.
