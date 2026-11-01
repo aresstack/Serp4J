@@ -209,15 +209,19 @@ public final class ArgosSearchProvider implements SearchProvider {
         for (String challenge : output.getChallenges()) {
             warnings.add(SearchWarning.of(WARNING_MANUAL_CHALLENGE, challenge, id));
         }
+        boolean complete = !(output.getItems().isEmpty() && anyFailedAttempt);
         Instant now = clock.instant();
         SearchMetadata.Builder metadata = SearchMetadata
                 .forProvider(id, engine, SearchVertical.WEB, QueryInfo.of(request.getQuery()))
                 .execution(ExecutionInfo.builder().startedAt(startedAt)
                         .duration(now.isBefore(startedAt) ? Duration.ZERO : Duration.between(startedAt, now))
                         .attempts(1).build())
-                .complete(!(output.getItems().isEmpty() && anyFailedAttempt))
+                .complete(complete)
                 .warnings(warnings);
-        if (request.getRawPayloadPolicy() == RawPayloadPolicy.ALWAYS && !output.getRawText().isEmpty()) {
+        RawPayloadPolicy policy = request.getRawPayloadPolicy();
+        boolean keepRaw = policy == RawPayloadPolicy.ALWAYS
+                || (policy == RawPayloadPolicy.ON_ERROR && (!complete || deliveringEngines.size() > 1));
+        if (keepRaw && !output.getRawText().isEmpty()) {
             metadata.rawPayload(RawPayload.ofText("text/plain; charset=UTF-8", output.getRawText()));
         }
         return SearchResponse.of(data.build(), metadata.build());

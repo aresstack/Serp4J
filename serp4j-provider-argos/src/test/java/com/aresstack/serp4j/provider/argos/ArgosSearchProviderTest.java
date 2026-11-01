@@ -113,6 +113,11 @@ class ArgosSearchProviderTest {
         assertThat(response.getData().getResults()).isEmpty();
         assertThat(response.getMetadata().get().isComplete()).isFalse();
         assertThat(response.getMetadata().get().getEngine()).contains(SearchEngineId.BING);
+        assertThat(response.getMetadata().get().getRawPayload()).isEmpty();
+
+        SearchResponse onError = provider.search(SearchRequest.builder("q")
+                .rawPayloadPolicy(RawPayloadPolicy.ON_ERROR).build(), SearchContext.defaults()).join();
+        assertThat(onError.getMetadata().get().getRawPayload()).isPresent();
     }
 
     @Test

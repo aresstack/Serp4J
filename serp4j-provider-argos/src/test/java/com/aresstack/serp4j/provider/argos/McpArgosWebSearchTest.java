@@ -52,11 +52,11 @@ class McpArgosWebSearchTest {
         assertThat(call.getUrl()).isEqualTo(ENDPOINT);
         assertThat(call.getHeaders().getFirst("Mcp-Session-Id")).contains("sess-1");
         assertThat(call.getHeaders().getFirst("Accept").get()).contains("text/event-stream");
-        assertThat(call.getTimeout()).contains(Duration.ofSeconds(5));
+        assertThat(call.getTimeout().get()).isPositive().isLessThanOrEqualTo(Duration.ofSeconds(5));
         assertThat(ScriptedTransport.body(call).path("params", "name").get().asText()).contains("web_search");
         assertThat(ScriptedTransport.body(call).path("params", "arguments", "query").get().asText())
                 .contains("synthetic query");
-        assertThat(transport.requests.get(3).getTimeout()).contains(McpArgosWebSearch.DEFAULT_TIMEOUT);
+        assertThat(transport.requests.get(3).getTimeout().get()).isLessThanOrEqualTo(McpArgosWebSearch.DEFAULT_TIMEOUT);
     }
 
     @Test
@@ -138,6 +138,40 @@ class McpArgosWebSearchTest {
                     assertThat(cause.getHttpStatus()).isEqualTo(403);
                     assertThat(cause.getMessage()).doesNotContain("s3cr3t");
                 });
+    }
+
+    @Test
+    void transportFailuresDoNotLeakTheToken() {
+        ScriptedTransport transport = new ScriptedTransport(request -> {
+            throw new com.aresstack.serp4j.http.HttpTransportException(
+                    com.aresstack.serp4j.http.HttpTransportException.Kind.CONNECT,
+                    "connection refused: POST " + request.getUrl());
+        });
+
+        assertThatThrownBy(() -> McpArgosWebSearch.builder(ENDPOINT, transport).build().search("q", null).join())
+                .satisfies(e -> {
+                    Throwable cause = e.getCause();
+                    assertThat(cause).isInstanceOf(com.aresstack.serp4j.http.HttpTransportException.class);
+                    assertThat(cause.getMessage()).doesNotContain("s3cr3t").contains("/mcp/browser/***");
+                    assertThat(cause.getCause()).isNull();
+                });
+    }
+
+    @Test
+    void anExhaustedBudgetFailsWithTimeout() {
+        ScriptedTransport transport = new ScriptedTransport(request -> {
+            try {
+                Thread.sleep(30);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return sidecar(request);
+        });
+
+        assertThatThrownBy(() -> McpArgosWebSearch.builder(ENDPOINT, transport).build()
+                .search("q", Duration.ofMillis(40)).join())
+                .satisfies(e -> assertThat(((com.aresstack.serp4j.http.HttpTransportException) e.getCause())
+                        .getKind()).isEqualTo(com.aresstack.serp4j.http.HttpTransportException.Kind.TIMEOUT));
     }
 
     @Test

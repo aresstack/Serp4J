@@ -4,6 +4,7 @@ import com.aresstack.serp4j.core.model.ext.StructuredValue;
 import com.aresstack.serp4j.http.HttpRequest;
 import com.aresstack.serp4j.http.HttpResponse;
 import com.aresstack.serp4j.http.HttpTransport;
+import com.aresstack.serp4j.http.HttpTransportException;
 import com.aresstack.serp4j.json.JsonTrees;
 
 import java.time.Duration;
@@ -45,6 +46,7 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
 
     private final String endpoint;
     private final String redactedEndpoint;
+    private final String token;
     private final HttpTransport transport;
     private final Duration defaultTimeout;
     private final AtomicLong ids = new AtomicLong();
@@ -55,6 +57,12 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
     private McpArgosWebSearch(Builder builder) {
         this.endpoint = builder.endpoint;
         this.redactedEndpoint = redact(builder.endpoint);
+        String redactedPrefix = redactedEndpoint.endsWith("***")
+                ? redactedEndpoint.substring(0, redactedEndpoint.length() - 3) : null;
+        String path = builder.endpoint.indexOf('?') >= 0
+                ? builder.endpoint.substring(0, builder.endpoint.indexOf('?')) : builder.endpoint;
+        this.token = redactedPrefix != null && path.startsWith(redactedPrefix)
+                ? path.substring(redactedPrefix.length()) : null;
         this.transport = builder.transport;
         this.defaultTimeout = builder.timeout;
     }
@@ -76,7 +84,8 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
             throw new IllegalStateException("Argos web search is closed");
         }
         final Duration effective = timeout != null ? timeout : defaultTimeout;
-        return callTool(query, effective, true).thenApply(new Function<String, ArgosSearchOutput>() {
+        final long deadlineNanos = System.nanoTime() + effective.toNanos();
+        return callTool(query, deadlineNanos, true).thenApply(new Function<String, ArgosSearchOutput>() {
             @Override
             public ArgosSearchOutput apply(String text) {
                 return ArgosSearchOutputParser.parse(text);
@@ -84,8 +93,8 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
         });
     }
 
-    private CompletableFuture<String> callTool(final String query, final Duration timeout, final boolean mayRetry) {
-        final CompletableFuture<Optional<String>> current = session(timeout);
+    private CompletableFuture<String> callTool(final String query, final long deadline, final boolean mayRetry) {
+        final CompletableFuture<Optional<String>> current = session(deadline);
         return current.thenCompose(new Function<Optional<String>, CompletableFuture<String>>() {
             @Override
             public CompletableFuture<String> apply(Optional<String> sessionId) {
@@ -93,7 +102,7 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
                         .put("name", TOOL_NAME)
                         .put("arguments", StructuredValue.objectBuilder().put("query", query).build())
                         .build();
-                return rpc("tools/call", params, sessionId, timeout).thenApply(new Function<StructuredValue, String>() {
+                return rpc("tools/call", params, sessionId, deadline).thenApply(new Function<StructuredValue, String>() {
                     @Override
                     public String apply(StructuredValue result) {
                         return toolText(result);
@@ -109,7 +118,7 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
                 Throwable cause = unwrap(error);
                 if (mayRetry && isSessionLost(cause)) {
                     resetSession(current);
-                    return callTool(query, timeout, false);
+                    return callTool(query, deadline, false);
                 }
                 CompletableFuture<String> failed = new CompletableFuture<String>();
                 failed.completeExceptionally(cause);
@@ -118,10 +127,10 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
         }).thenCompose(Function.<CompletableFuture<String>>identity());
     }
 
-    private CompletableFuture<Optional<String>> session(final Duration timeout) {
+    private CompletableFuture<Optional<String>> session(final long deadline) {
         synchronized (sessionLock) {
             if (session == null || session.isCompletedExceptionally()) {
-                session = initialize(timeout);
+                session = initialize(deadline);
             }
             return session;
         }
@@ -135,7 +144,7 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
         }
     }
 
-    private CompletableFuture<Optional<String>> initialize(final Duration timeout) {
+    private CompletableFuture<Optional<String>> initialize(final long deadline) {
         StructuredValue params = StructuredValue.objectBuilder()
                 .put("protocolVersion", PROTOCOL_VERSION)
                 .put("capabilities", StructuredValue.ofObject(Collections.<String, StructuredValue>emptyMap()))
@@ -143,7 +152,7 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
                         .put("name", "serp4j-provider-argos").put("version", "1").build())
                 .build();
         final long id = ids.incrementAndGet();
-        return post(message("initialize", params, id), Optional.<String>empty(), timeout)
+        return post(message("initialize", params, id), Optional.<String>empty(), deadline)
                 .thenCompose(new Function<HttpResponse, CompletableFuture<Optional<String>>>() {
                     @Override
                     public CompletableFuture<Optional<String>> apply(HttpResponse response) {
@@ -151,7 +160,7 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
                         final Optional<String> sessionId = response.getHeaders().getFirst(SESSION_HEADER);
                         StructuredValue notification = StructuredValue.objectBuilder()
                                 .put("jsonrpc", "2.0").put("method", "notifications/initialized").build();
-                        return post(notification, sessionId, timeout)
+                        return post(notification, sessionId, deadline)
                                 .thenApply(new Function<HttpResponse, Optional<String>>() {
                                     @Override
                                     public Optional<String> apply(HttpResponse ack) {
@@ -166,9 +175,9 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
     }
 
     private CompletableFuture<StructuredValue> rpc(final String method, StructuredValue params,
-                                                   Optional<String> sessionId, Duration timeout) {
+                                                   Optional<String> sessionId, long deadline) {
         final long id = ids.incrementAndGet();
-        return post(message(method, params, id), sessionId, timeout)
+        return post(message(method, params, id), sessionId, deadline)
                 .thenApply(new Function<HttpResponse, StructuredValue>() {
                     @Override
                     public StructuredValue apply(HttpResponse response) {
@@ -178,7 +187,15 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
     }
 
     private CompletableFuture<HttpResponse> post(StructuredValue message, Optional<String> sessionId,
-                                                 Duration timeout) {
+                                                 long deadline) {
+        long remaining = deadline - System.nanoTime();
+        if (remaining <= 0) {
+            CompletableFuture<HttpResponse> expired = new CompletableFuture<HttpResponse>();
+            expired.completeExceptionally(new HttpTransportException(HttpTransportException.Kind.TIMEOUT,
+                    "Argos web search exceeded its time budget (" + redactedEndpoint + ")"));
+            return expired;
+        }
+        Duration timeout = Duration.ofNanos(remaining);
         HttpRequest.Builder request = HttpRequest.post(endpoint)
                 .setHeader("Accept", ACCEPT)
                 .jsonBody(JsonTrees.write(message))
@@ -186,7 +203,46 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
         if (sessionId.isPresent()) {
             request.setHeader(SESSION_HEADER, sessionId.get());
         }
-        return transport.execute(request.build());
+        CompletableFuture<HttpResponse> sanitized = new CompletableFuture<HttpResponse>();
+        CompletableFuture<HttpResponse> call;
+        try {
+            call = transport.execute(request.build());
+        } catch (RuntimeException e) {
+            sanitized.completeExceptionally(sanitize(e));
+            return sanitized;
+        }
+        call.whenComplete((response, error) -> {
+            if (error != null) {
+                sanitized.completeExceptionally(sanitize(unwrap(error)));
+            } else {
+                sanitized.complete(response);
+            }
+        });
+        return sanitized;
+    }
+
+    /**
+     * Transport messages may contain the endpoint path and thus the token; the failure is replaced by one with a
+     * scrubbed message and without cause chain.
+     */
+    private Throwable sanitize(Throwable error) {
+        String message = scrub(String.valueOf(error.getMessage()));
+        if (error instanceof HttpTransportException) {
+            return new HttpTransportException(((HttpTransportException) error).getKind(), message);
+        }
+        if (error instanceof IllegalStateException) {
+            return new IllegalStateException(message);
+        }
+        return new HttpTransportException(HttpTransportException.Kind.UNKNOWN,
+                error.getClass().getSimpleName() + ": " + message);
+    }
+
+    String scrub(String text) {
+        String result = text.replace(endpoint, redactedEndpoint);
+        if (token != null && !token.isEmpty()) {
+            result = result.replace(token, "***");
+        }
+        return result;
     }
 
     private static StructuredValue message(String method, StructuredValue params, long id) {
