@@ -21,6 +21,11 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
   Prüfbausteine `MappingDefinitionVerifier` und `MappingSnapshot` für Fixture-Tests. Formatreferenz:
   `docs/mapping/mapping-definition-format.md`.
 - `serp4j-json` (Teil J1): `JsonTrees` (JSON-Text ↔ `StructuredValue`, exakte Zahlen, strikt), einzige Stelle mit Gson.
+- `serp4j-json` (Teil J2, ADR-013): `Serp4jJson` liest und schreibt `SearchResponse`, `SearchConversation` und
+  `SessionHandle` als versioniertes JSON (`formatVersion` 1, `type`-Diskriminator). Fehlende, nicht ganzzahlige oder
+  unbekannte Versionen werden mit `UnsupportedFormatVersionException` abgelehnt; unbekannte Felder werden toleriert;
+  `RawPayload` wird nur mit `includeRawPayload(true)` geschrieben; ungültige Dokumente melden
+  `Serp4jJsonException` mit JSON-Pfad.
 - Paket F, Browser (ADR-010, ADR-011, ADR-017, WP3):
   - `serp4j-browser-api` (Java 8, keine Abhängigkeiten, kennt den Core nicht): `BrowserRuntime` mit `getInfo()`,
     `probe()` und `openSession(...)`; `BrowserSession` mit `navigate`, `await` (`WaitCondition`), `evaluate`
