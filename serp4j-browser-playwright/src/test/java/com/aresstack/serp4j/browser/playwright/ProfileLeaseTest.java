@@ -6,9 +6,13 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFilePermissions;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class ProfileLeaseTest {
 
@@ -29,6 +33,38 @@ class ProfileLeaseTest {
         first.release();
         ProfileLease again = ProfileLease.acquire(root, "google-de");
         again.release();
+    }
+
+    @Test
+    void a_relative_profile_root_such_as_the_working_directory_works() throws Exception {
+        String key = "serp4j-lease-test-" + System.nanoTime();
+        ProfileLease lease = ProfileLease.acquire(Paths.get(""), key);
+        try {
+            assertThat(lease.getDirectory()).isEqualTo(Paths.get("").toAbsolutePath().resolve(key));
+        } finally {
+            lease.release();
+            Files.deleteIfExists(lease.getDirectory().resolve(ProfileLease.LOCK_FILE));
+            Files.deleteIfExists(lease.getDirectory());
+        }
+        assertThatThrownBy(() -> ProfileLease.acquire(Paths.get("."), ".."))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void profile_directory_and_cookie_snapshot_are_private_to_the_owner() throws Exception {
+        assumeTrue(Files.getFileAttributeView(root, PosixFileAttributeView.class) != null, "POSIX only");
+        ProfileLease lease = ProfileLease.acquire(root, "private");
+        try {
+            assertThat(PosixFilePermissions.toString(Files.getPosixFilePermissions(lease.getDirectory())))
+                    .isEqualTo("rwx------");
+            Path file = lease.getDirectory().resolve("snapshot.tmp");
+            Files.write(file, new byte[] {1});
+            PrivateFiles.createPrivateFile(file);
+            assertThat(PosixFilePermissions.toString(Files.getPosixFilePermissions(file))).isEqualTo("rw-------");
+            assertThat(Files.size(file)).isZero();
+        } finally {
+            lease.release();
+        }
     }
 
     @Test

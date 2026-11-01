@@ -6,6 +6,7 @@ import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.PlaywrightException;
 import com.microsoft.playwright.Request;
 import com.microsoft.playwright.Response;
+import com.microsoft.playwright.options.Sizes;
 
 import java.time.Instant;
 import java.util.ArrayDeque;
@@ -21,6 +22,11 @@ import java.util.function.Consumer;
  * Network observation of one session. Owner-thread only: the Playwright listeners run on the owner thread during
  * a Playwright call or the idle pump and only record the request; bodies are fetched later by {@link #drain()},
  * outside of event callbacks, so that a callback never issues a Playwright call itself.
+ *
+ * <p>The listeners are installed when the session's context is created, and the requests in flight are tracked for
+ * the whole session, so that a capture started while a matching request is already running counts it as in flight.
+ * A request whose response has a content type the capture does not want stops counting as soon as the response
+ * headers arrive and never counts as activity.
  */
 final class NetworkTracker {
 
@@ -39,12 +45,23 @@ final class NetworkTracker {
         boolean matchesRequest(Request request) {
             return filter.matchesRequest(request.method(), request.url(), request.resourceType());
         }
+
+        /** Whether the capture filters by content type, which is only known once the response headers are in. */
+        boolean filtersContentType() {
+            return !filter.getContentTypes().isEmpty();
+        }
     }
+
+    /** Marker for a request whose response headers have not arrived yet. */
+    private static final String PENDING = new String("pending");
 
     private final List<Capture> captures = new ArrayList<Capture>();
     private final Deque<Request> finished = new ArrayDeque<Request>();
+    /** Requests of the session in flight, with the content type of their response once known. */
+    private final Map<Request, String> active = new IdentityHashMap<Request, String>();
     private boolean listening;
 
+    /** Owner thread: installs the listeners; called right after the context is created, before any request. */
     void ensureListening(BrowserContext context) {
         if (listening) {
             return;
@@ -54,6 +71,12 @@ final class NetworkTracker {
             @Override
             public void accept(Request request) {
                 started(request);
+            }
+        });
+        context.onResponse(new Consumer<Response>() {
+            @Override
+            public void accept(Response response) {
+                responded(response);
             }
         });
         context.onRequestFinished(new Consumer<Request>() {
@@ -71,26 +94,57 @@ final class NetworkTracker {
     }
 
     private void started(Request request) {
-        if (captures.isEmpty()) {
-            return;
-        }
+        active.put(request, PENDING);
         long now = System.nanoTime();
         for (Capture capture : captures) {
             if (capture.matchesRequest(request)) {
                 capture.inflight.put(request, Boolean.TRUE);
-                capture.lastActivity = now;
+                if (!capture.filtersContentType()) {
+                    capture.lastActivity = now;
+                }
             }
         }
     }
 
-    private void ended(Request request, boolean success) {
-        if (captures.isEmpty()) {
+    /** Response headers are part of the event (no driver call): drop requests of an unwanted content type. */
+    private void responded(Response response) {
+        Request request = response.request();
+        if (!active.containsKey(request)) {
             return;
         }
+        String contentType = contentType(response);
+        active.put(request, contentType == null ? "" : contentType);
+        long now = System.nanoTime();
+        for (Capture capture : captures) {
+            if (!capture.inflight.containsKey(request) || !capture.filtersContentType()) {
+                continue;
+            }
+            if (capture.filter.matchesContentType(contentType)) {
+                capture.lastActivity = now;
+            } else {
+                capture.inflight.remove(request);
+            }
+        }
+    }
+
+    private static String contentType(Response response) {
+        try {
+            Map<String, String> headers = response.headers();
+            return headers == null ? null : headers.get("content-type");
+        } catch (PlaywrightException e) {
+            return null;
+        }
+    }
+
+    private void ended(Request request, boolean success) {
+        active.remove(request);
         long now = System.nanoTime();
         boolean wanted = false;
         for (Capture capture : captures) {
-            if (capture.inflight.remove(request) != null || capture.matchesRequest(request)) {
+            // every active request matching a capture is in its in-flight set; one that left it early had an
+            // unwanted content type
+            boolean counted = capture.inflight.remove(request) != null;
+            if (counted || (!capture.filtersContentType() && capture.matchesRequest(request))) {
                 capture.lastActivity = now;
                 wanted = true;
             }
@@ -100,9 +154,21 @@ final class NetworkTracker {
         }
     }
 
+    /** Owner thread: starts a capture that counts the matching requests already in flight. */
     Capture start(NetworkFilter filter) {
         drain();
         Capture capture = new Capture(filter);
+        for (Map.Entry<Request, String> request : active.entrySet()) {
+            if (!capture.matchesRequest(request.getKey())) {
+                continue;
+            }
+            String contentType = request.getValue();
+            if (contentType != PENDING && capture.filtersContentType()
+                    && !filter.matchesContentType(contentType.isEmpty() ? null : contentType)) {
+                continue;
+            }
+            capture.inflight.put(request.getKey(), Boolean.TRUE);
+        }
         captures.add(capture);
         return capture;
     }
@@ -139,6 +205,7 @@ final class NetworkTracker {
                 continue;
             }
             String contentType = headers.get("content-type");
+            Long transferred = null;
             byte[] body = null;
             boolean bodyLoaded = false;
             for (Capture capture : targets) {
@@ -148,18 +215,55 @@ final class NetworkTracker {
                 ObservedExchange.Builder builder = ObservedExchange.builder(request.method(), request.url(),
                         response.status(), Instant.now()).resourceType(request.resourceType()).responseHeaders(headers);
                 if (capture.filter.isCaptureBody()) {
-                    if (!bodyLoaded) {
-                        bodyLoaded = true;
-                        try {
-                            body = response.body();
-                        } catch (PlaywrightException e) {
-                            body = null;
-                        }
+                    if (transferred == null) {
+                        transferred = transferredBodySize(request, headers);
                     }
-                    builder.body(body, capture.filter.getMaxBodyBytes());
+                    int max = capture.filter.getMaxBodyBytes();
+                    if (transferred > max) {
+                        // never load a body that is known to exceed the limit (driver and JVM would hold it whole)
+                        builder.bodyOmitted();
+                    } else {
+                        if (!bodyLoaded) {
+                            bodyLoaded = true;
+                            try {
+                                body = response.body();
+                            } catch (PlaywrightException e) {
+                                body = null;
+                            }
+                        }
+                        builder.body(body, max);
+                    }
                 }
                 capture.exchanges.add(builder.build());
             }
+        }
+    }
+
+    /**
+     * Size of the response body as transferred (after content encoding), from the request's size information or the
+     * {@code content-length} header; {@code -1} when unknown. The decoded body is at least as large, so a transferred
+     * size above the limit means the body exceeds it.
+     */
+    static long transferredBodySize(Request request, Map<String, String> headers) {
+        try {
+            Sizes sizes = request.sizes();
+            if (sizes != null && sizes.responseBodySize > 0) {
+                return sizes.responseBodySize;
+            }
+        } catch (PlaywrightException | UnsupportedOperationException e) {
+            // fall back to the header
+        }
+        return declaredLength(headers.get("content-length"));
+    }
+
+    static long declaredLength(String header) {
+        if (header == null) {
+            return -1L;
+        }
+        try {
+            return Long.parseLong(header.trim());
+        } catch (NumberFormatException e) {
+            return -1L;
         }
     }
 
@@ -174,6 +278,7 @@ final class NetworkTracker {
             stop(capture);
         }
         finished.clear();
+        active.clear();
     }
 
     boolean hasCaptures() {

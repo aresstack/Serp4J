@@ -36,13 +36,15 @@ final class ProfileLease {
      * @throws BrowserProfileInUseException if another session holds the profile
      */
     static ProfileLease acquire(Path root, String profileKey) {
-        Path directory = root.resolve(profileKey).normalize();
-        if (!directory.getParent().equals(root.normalize())) {
+        Path base = root.toAbsolutePath().normalize();
+        Path directory = base.resolve(profileKey).normalize();
+        if (directory.getParent() == null || !directory.getParent().equals(base)) {
             throw new IllegalArgumentException("profile key escapes the profile directory: " + profileKey);
         }
         FileChannel channel = null;
         try {
             Files.createDirectories(directory);
+            PrivateFiles.restrictDirectory(directory);
             channel = FileChannel.open(directory.resolve(LOCK_FILE), StandardOpenOption.CREATE,
                     StandardOpenOption.WRITE);
             FileLock lock;

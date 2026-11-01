@@ -1,24 +1,35 @@
 package com.aresstack.serp4j.browser.playwright;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Locale;
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 /**
- * Liveness of locally launched browser processes through {@code java.lang.ProcessHandle} (Java 9+), called
- * reflectively so the adapter stays Java 8 bytecode. Not every driver notices promptly that its browser died (the
- * GraalJS driver may wait for a reply on a dead pipe until the call times out); the process state is the reliable
- * signal. On Java 8 nothing is tracked and detection relies on the driver's disconnect event alone.
+ * Browser processes a worker launched, through {@code java.lang.ProcessHandle} (Java 9+), called reflectively so the
+ * adapter stays Java 8 bytecode.
+ *
+ * <p><b>Ownership.</b> A process counts as the worker's only if it is provably its own: every Chromium-family browser
+ * is launched with a unique {@link #newMarker() marker switch}, and the worker owns the descendants of this JVM whose
+ * command line carries that marker, plus their ancestors up to this JVM (the Node driver process; with the GraalJS
+ * driver the browser is a direct child of the JVM). Processes of other components, even other Playwright clients
+ * launched at the same moment, never carry the marker. Descendants of an owned process are its own children and are
+ * resolved only at kill time.
+ *
+ * <p><b>Identity.</b> Owned processes are kept as {@code ProcessHandle} objects, which carry the process start time:
+ * {@code isAlive} and {@code destroyForcibly} of a handle never act on a later process that reused the pid.
+ *
+ * <p>Where command lines are not visible (Java 8, Windows, other browsers than Chromium) nothing is owned: hard kill
+ * then only interrupts the owner thread, and crash detection relies on the driver's disconnect event.
  */
 final class BrowserProcesses {
 
+    private static final String MARKER_PREFIX = "--serp4j-owner=";
     private static final Class<?> HANDLE = load();
 
     private BrowserProcesses() {
@@ -32,68 +43,84 @@ final class BrowserProcesses {
         }
     }
 
-    /** Pids and command lines of all live descendants of this JVM; empty when not supported. */
-    static Map<Long, String> descendants() {
-        if (HANDLE == null) {
-            return Collections.emptyMap();
+    /** A fresh marker switch for one browser launch; Chromium ignores unknown switches. */
+    static String newMarker() {
+        return MARKER_PREFIX + UUID.randomUUID();
+    }
+
+    /**
+     * Live descendants of this JVM whose command line contains the marker: the browser processes of one launch.
+     *
+     * @return process handles, empty when not supported
+     */
+    static List<Object> marked(String marker) {
+        if (HANDLE == null || marker == null) {
+            return Collections.emptyList();
         }
         try {
             Object current = HANDLE.getMethod("current").invoke(null);
-            Stream<?> stream = (Stream<?>) HANDLE.getMethod("descendants").invoke(current);
-            Map<Long, String> result = new LinkedHashMap<Long, String>();
-            Iterator<?> iterator = stream.iterator();
+            Iterator<?> iterator = ((Stream<?>) HANDLE.getMethod("descendants").invoke(current)).iterator();
+            List<Object> result = new ArrayList<Object>();
             while (iterator.hasNext()) {
                 Object handle = iterator.next();
-                result.put((Long) HANDLE.getMethod("pid").invoke(handle), command(handle));
+                if (commandLine(handle).contains(marker)) {
+                    result.add(handle);
+                }
             }
             return result;
         } catch (ReflectiveOperationException | RuntimeException e) {
-            return Collections.emptyMap();
+            return Collections.emptyList();
         }
     }
 
-    /**
-     * Browser and Playwright driver processes that appeared since {@code before}: the processes a worker owns and
-     * may hard-kill. Launches inside the adapter are serialised, so only processes the application starts at the
-     * same moment could be attributed wrongly; the command filter keeps those out.
-     */
-    static Set<Long> ownedSince(Map<Long, String> before) {
-        Set<Long> result = new LinkedHashSet<Long>();
-        for (Map.Entry<Long, String> process : descendants().entrySet()) {
-            String command = process.getValue().toLowerCase(Locale.ROOT);
-            if (!before.containsKey(process.getKey()) && (isBrowser(command) || command.contains("playwright"))) {
-                result.add(process.getKey());
+    /** The processes between this JVM and the given ones (exclusive): the driver process of the Node driver. */
+    static List<Object> ancestorsBelowJvm(Collection<Object> handles) {
+        if (HANDLE == null || handles.isEmpty()) {
+            return Collections.emptyList();
+        }
+        try {
+            Object current = HANDLE.getMethod("current").invoke(null);
+            Method parent = HANDLE.getMethod("parent");
+            List<Object> result = new ArrayList<Object>();
+            for (Object handle : handles) {
+                Optional<?> next = (Optional<?>) parent.invoke(handle);
+                while (next.isPresent() && !next.get().equals(current) && !handles.contains(next.get())) {
+                    if (!result.contains(next.get())) {
+                        result.add(next.get());
+                    }
+                    next = (Optional<?>) parent.invoke(next.get());
+                }
+                if (!next.isPresent()) {
+                    // not below this JVM after all; claim nothing on this path
+                    return Collections.emptyList();
+                }
             }
+            return result;
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            return Collections.emptyList();
         }
-        return Collections.unmodifiableSet(result);
-    }
-
-    private static boolean isBrowser(String command) {
-        return command.contains("chrom") || command.contains("headless_shell") || command.contains("msedge")
-                || command.contains("firefox") || command.contains("webkit");
     }
 
     /**
-     * Forcibly ends the processes and all their descendants (hard kill after a close timeout, WP3 §6.3 rule 2).
+     * Forcibly ends the processes and their current descendants (hard kill after a close timeout, WP3 §6.3 rule 2).
+     * A handle whose process has ended is skipped, also when its pid has been reused since.
      *
      * @return number of processes that were still alive and got killed
      */
-    static int killTrees(Set<Long> pids) {
-        if (HANDLE == null || pids.isEmpty()) {
+    static int killTrees(Collection<Object> handles) {
+        if (HANDLE == null || handles.isEmpty()) {
             return 0;
         }
         int killed = 0;
         try {
-            Method of = HANDLE.getMethod("of", long.class);
             Method descendants = HANDLE.getMethod("descendants");
             Method destroy = HANDLE.getMethod("destroyForcibly");
             Method isAlive = HANDLE.getMethod("isAlive");
-            for (Long pid : pids) {
-                Optional<?> handle = (Optional<?>) of.invoke(null, pid);
-                if (!handle.isPresent() || !(Boolean) isAlive.invoke(handle.get())) {
+            for (Object handle : new ArrayList<Object>(handles)) {
+                if (!(Boolean) isAlive.invoke(handle)) {
                     continue;
                 }
-                Iterator<?> children = ((Stream<?>) descendants.invoke(handle.get())).iterator();
+                Iterator<?> children = ((Stream<?>) descendants.invoke(handle)).iterator();
                 while (children.hasNext()) {
                     Object child = children.next();
                     if ((Boolean) isAlive.invoke(child)) {
@@ -101,7 +128,7 @@ final class BrowserProcesses {
                         killed++;
                     }
                 }
-                destroy.invoke(handle.get());
+                destroy.invoke(handle);
                 killed++;
             }
         } catch (ReflectiveOperationException | RuntimeException e) {
@@ -115,9 +142,9 @@ final class BrowserProcesses {
      *
      * @return whether they all ended (also {@code true} when nothing is known)
      */
-    static boolean awaitExit(Set<Long> pids, long timeoutMillis) {
+    static boolean awaitExit(Collection<Object> handles, long timeoutMillis) {
         long deadline = System.nanoTime() + timeoutMillis * 1_000_000L;
-        while (anyAliveKnown(pids)) {
+        while (!handles.isEmpty() && HANDLE != null && anyAlive(handles)) {
             if (System.nanoTime() >= deadline) {
                 return false;
             }
@@ -131,36 +158,15 @@ final class BrowserProcesses {
         return true;
     }
 
-    private static boolean anyAliveKnown(Set<Long> pids) {
-        return !pids.isEmpty() && HANDLE != null && anyAlive(pids);
-    }
-
-    /**
-     * Browser processes that appeared since {@code before}. Concurrent launches in the same JVM may add processes of
-     * other browsers; that only makes {@link #anyAlive} more conservative, never wrong about a live browser.
-     */
-    static Set<Long> startedSince(Map<Long, String> before) {
-        Set<Long> result = new LinkedHashSet<Long>();
-        for (Map.Entry<Long, String> process : descendants().entrySet()) {
-            String command = process.getValue().toLowerCase(Locale.ROOT);
-            if (isBrowser(command) && !before.containsKey(process.getKey())) {
-                result.add(process.getKey());
-            }
-        }
-        return Collections.unmodifiableSet(result);
-    }
-
     /** Whether any of the processes is alive; {@code true} for an empty set (nothing known, nothing concluded). */
-    static boolean anyAlive(Set<Long> pids) {
-        if (pids.isEmpty() || HANDLE == null) {
+    static boolean anyAlive(Collection<Object> handles) {
+        if (handles.isEmpty() || HANDLE == null) {
             return true;
         }
         try {
-            Method of = HANDLE.getMethod("of", long.class);
             Method isAlive = HANDLE.getMethod("isAlive");
-            for (Long pid : pids) {
-                Optional<?> handle = (Optional<?>) of.invoke(null, pid);
-                if (handle.isPresent() && (Boolean) isAlive.invoke(handle.get())) {
+            for (Object handle : handles) {
+                if ((Boolean) isAlive.invoke(handle)) {
                     return true;
                 }
             }
@@ -170,14 +176,10 @@ final class BrowserProcesses {
         }
     }
 
-    private static String command(Object handle) throws ReflectiveOperationException {
+    private static String commandLine(Object handle) throws ReflectiveOperationException {
         Object info = HANDLE.getMethod("info").invoke(handle);
         Class<?> infoType = Class.forName("java.lang.ProcessHandle$Info");
         Optional<?> line = (Optional<?>) infoType.getMethod("commandLine").invoke(info);
-        if (line.isPresent()) {
-            return line.get().toString();
-        }
-        Optional<?> executable = (Optional<?>) infoType.getMethod("command").invoke(info);
-        return executable.isPresent() ? executable.get().toString() : "";
+        return line.isPresent() ? line.get().toString() : "";
     }
 }

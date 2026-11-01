@@ -21,9 +21,21 @@ class ErrorsTest {
     }
 
     @Test
-    void messages_are_shortened_to_their_first_line() {
-        BrowserException e = Errors.map(new PlaywrightException("first line\nsecond line"), "navigation");
-        assertThat(e.getMessage()).isEqualTo("navigation failed: first line");
+    void messages_never_carry_the_driver_text() {
+        PlaywrightException raw = new PlaywrightException("Error: TypeError: token=s3cr3t is not a function\nat x");
+        BrowserException e = Errors.map(raw, "script s");
+        assertThat(e.getMessage()).isEqualTo("script s failed (TypeError)").doesNotContain("s3cr3t");
+        assertThat(e.getCause()).isSameAs(raw);
+        assertThat(Errors.map(new PlaywrightException("page.goto: net::ERR_NAME_NOT_RESOLVED at https://x/?k=v"),
+                "navigation").getMessage()).isEqualTo("navigation failed (net::ERR_NAME_NOT_RESOLVED)");
+        assertThat(Errors.map(new PlaywrightException("cookie=abc"), "click").getMessage()).isEqualTo("click failed");
+    }
+
+    @Test
+    void urls_in_messages_lose_credentials_query_and_fragment() {
+        assertThat(Errors.describeUrl("https://user:pw@example.org:8443/a/b?key=secret#frag"))
+                .isEqualTo("https://example.org:8443/a/b");
+        assertThat(Errors.describeUrl("not a url")).isEqualTo("<url>");
     }
 
     @Test

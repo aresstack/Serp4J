@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -49,7 +50,10 @@ final class ProfileCookies {
             }
             Path target = directory.resolve(FILE);
             Path temp = directory.resolve(FILE + ".tmp");
-            Files.write(temp, out.toString().getBytes(StandardCharsets.UTF_8));
+            // owner-only before the first byte is written: the file holds authentication cookies
+            PrivateFiles.createPrivateFile(temp);
+            Files.write(temp, out.toString().getBytes(StandardCharsets.UTF_8), StandardOpenOption.WRITE,
+                    StandardOpenOption.TRUNCATE_EXISTING);
             Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
         } catch (IOException | RuntimeException e) {
             LOG.log(Level.WARNING, "could not save the cookies of browser profile " + directory, e);

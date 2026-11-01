@@ -119,7 +119,8 @@ public final class ObservedExchange {
     }
 
     /**
-     * @return whether the body was cut at {@link NetworkFilter#getMaxBodyBytes()}
+     * @return whether the body was larger than {@link NetworkFilter#getMaxBodyBytes()}: either cut at that limit, or
+     *         left out entirely ({@link #getBody()} empty) when the runtime knew its size beforehand and did not load it
      */
     public boolean isBodyTruncated() {
         return bodyTruncated;
@@ -234,6 +235,18 @@ public final class ObservedExchange {
                 this.bodyTruncated = body.length > maxBytes;
                 this.body = bodyTruncated ? Arrays.copyOf(body, maxBytes) : body.clone();
             }
+            return this;
+        }
+
+        /**
+         * Marks the body as too large to capture without loading it: {@link #getBody()} stays empty and
+         * {@link #isBodyTruncated()} is {@code true}.
+         *
+         * @return this builder
+         */
+        public Builder bodyOmitted() {
+            this.body = null;
+            this.bodyTruncated = true;
             return this;
         }
 

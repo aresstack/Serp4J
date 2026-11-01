@@ -15,10 +15,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -58,12 +56,10 @@ final class Worker {
     private final List<Runnable> deferred = new ArrayList<Runnable>();
     private volatile Thread owner;
     private volatile boolean disconnected;
-    /** Locally launched browser processes; empty for a remote browser or on Java 8. */
-    private Set<Long> browserPids = Collections.<Long>emptySet();
-    /** Browser and driver processes this worker started; killed forcibly when closing times out. */
-    private final Set<Long> ownedPids = Collections.synchronizedSet(new LinkedHashSet<Long>());
-    /** Serialises process snapshots around launches, so that new processes are attributed to the right worker. */
-    private static final Object LAUNCH_LOCK = new Object();
+    /** Main process of the locally launched browser (see {@link BrowserProcesses}); empty when not known. */
+    private List<Object> browserProcesses = Collections.emptyList();
+    /** Browser and driver processes this worker provably started; killed forcibly when closing times out. */
+    private final List<Object> ownedProcesses = Collections.synchronizedList(new ArrayList<Object>());
     private static final long HARD_KILL_JOIN_MILLIS = 2_000L;
     private volatile String browserVersion;
     private Playwright playwright;
@@ -144,14 +140,14 @@ final class Worker {
         Map<String, String> env = new LinkedHashMap<String, String>();
         env.put("PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD", "1");
         env.putAll(config.driverEnvironment);
-        synchronized (LAUNCH_LOCK) {
-            Map<Long, String> before = BrowserProcesses.descendants();
-            try {
-                launch(env);
-            } finally {
-                ownedPids.addAll(BrowserProcesses.ownedSince(before));
-            }
-            browserPids = BrowserProcesses.startedSince(before);
+        String marker = config.isRemote() ? null : marker();
+        try {
+            launch(env, marker);
+        } finally {
+            List<Object> browserMain = BrowserProcesses.marked(marker);
+            ownedProcesses.addAll(BrowserProcesses.ancestorsBelowJvm(browserMain));
+            ownedProcesses.addAll(browserMain);
+            browserProcesses = browserMain;
         }
         browser.onDisconnected(new Consumer<Browser>() {
             @Override
@@ -162,7 +158,20 @@ final class Worker {
         browserVersion = browser.version();
     }
 
-    private void launch(Map<String, String> env) {
+    /** A marker switch for Chromium-family browsers, which ignore unknown switches; others are not marked. */
+    private String marker() {
+        return config.browserType == PlaywrightBrowserType.CHROMIUM ? BrowserProcesses.newMarker() : null;
+    }
+
+    private List<String> launchArgs(String marker) {
+        List<String> args = new ArrayList<String>(config.launchArgs);
+        if (marker != null) {
+            args.add(marker);
+        }
+        return args;
+    }
+
+    private void launch(Map<String, String> env, String marker) {
         playwright = Playwright.create(new Playwright.CreateOptions().setEnv(env));
         BrowserType type = browserType();
         if (config.isRemote()) {
@@ -172,8 +181,9 @@ final class Worker {
             BrowserType.LaunchOptions options = new BrowserType.LaunchOptions()
                     .setHeadless(config.headless)
                     .setTimeout(config.startTimeout.toMillis());
-            if (!config.launchArgs.isEmpty()) {
-                options.setArgs(new ArrayList<String>(config.launchArgs));
+            List<String> args = launchArgs(marker);
+            if (!args.isEmpty()) {
+                options.setArgs(args);
             }
             if (config.channel != null) {
                 options.setChannel(config.channel);
@@ -201,15 +211,17 @@ final class Worker {
      * with {@link com.aresstack.serp4j.browser.ProfileMode#persistentExclusive(String)}. Its processes are owned by
      * this worker for the hard kill.
      */
-    BrowserContext launchPersistent(Path userDataDir, BrowserSessionOptions options, Set<Long> processes) {
+    BrowserContext launchPersistent(Path userDataDir, BrowserSessionOptions options, List<Object> processes) {
         checkOwner();
         BrowserType.LaunchPersistentContextOptions launch = new BrowserType.LaunchPersistentContextOptions()
                 .setHeadless(config.headless)
                 .setTimeout(config.startTimeout.toMillis())
                 .setAcceptDownloads(false)
                 .setServiceWorkers(ServiceWorkerPolicy.BLOCK);
-        if (!config.launchArgs.isEmpty()) {
-            launch.setArgs(new ArrayList<String>(config.launchArgs));
+        String marker = marker();
+        List<String> args = launchArgs(marker);
+        if (!args.isEmpty()) {
+            launch.setArgs(args);
         }
         if (config.channel != null) {
             launch.setChannel(config.channel);
@@ -220,16 +232,18 @@ final class Worker {
         if (options.getLocale().isPresent()) {
             launch.setLocale(options.getLocale().get().toLanguageTag());
         }
-        synchronized (LAUNCH_LOCK) {
-            Map<Long, String> before = BrowserProcesses.descendants();
-            try {
-                return browserType().launchPersistentContext(userDataDir, launch);
-            } finally {
-                Set<Long> started = BrowserProcesses.ownedSince(before);
-                ownedPids.addAll(started);
-                processes.addAll(started);
-            }
+        try {
+            return browserType().launchPersistentContext(userDataDir, launch);
+        } finally {
+            List<Object> started = BrowserProcesses.marked(marker);
+            ownedProcesses.addAll(started);
+            processes.addAll(started);
         }
+    }
+
+    /** A persistent session's browser has ended or been killed: the worker no longer owns its processes. */
+    void forgetProcesses(List<Object> processes) {
+        ownedProcesses.removeAll(processes);
     }
 
     /**
@@ -241,7 +255,7 @@ final class Worker {
     }
 
     boolean checkBrowserProcessGone() {
-        if (!disconnected && !BrowserProcesses.anyAlive(browserPids)) {
+        if (!disconnected && !BrowserProcesses.anyAlive(browserProcesses)) {
             disconnected = true;
         }
         return disconnected;
@@ -514,11 +528,11 @@ final class Worker {
      * worker started (WP3 §6.3 rule 2, R12), then give the owner thread a moment to notice.
      */
     private void hardKill(long timeoutMillis) {
-        Set<Long> pids;
-        synchronized (ownedPids) {
-            pids = new LinkedHashSet<Long>(ownedPids);
+        List<Object> processes;
+        synchronized (ownedProcesses) {
+            processes = new ArrayList<Object>(ownedProcesses);
         }
-        int killed = BrowserProcesses.killTrees(pids);
+        int killed = BrowserProcesses.killTrees(processes);
         LOG.warning("browser worker " + name + " did not close within " + timeoutMillis + " ms; killed " + killed
                 + " browser/driver processes");
         Thread thread = owner;

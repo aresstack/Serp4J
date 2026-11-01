@@ -1,8 +1,5 @@
 package com.aresstack.serp4j.browser.playwright;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
-import java.nio.file.Path;
 import com.aresstack.serp4j.browser.PageObstacleException;
 import com.aresstack.serp4j.browser.PageObstacle;
 import com.aresstack.serp4j.browser.ObstaclePolicy;
@@ -50,6 +47,7 @@ import com.microsoft.playwright.options.WaitUntilState;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -94,7 +92,7 @@ final class PlaywrightSession implements BrowserSession {
     private final Path profileRoot;
     private ProfileLease lease;
     /** Browser processes of a persistent session; the lease is held until they have ended. */
-    private final Set<Long> profileProcesses = new LinkedHashSet<Long>();
+    private final List<Object> profileProcesses = new ArrayList<Object>();
 
     PlaywrightSession(Worker worker, PlaywrightBrowserRuntime runtime, BrowserSessionOptions options, boolean headless,
                       Path profileRoot) {
@@ -141,6 +139,10 @@ final class PlaywrightSession implements BrowserSession {
             context = browser.newContext(contextOptions);
         }
         try {
+            if (runtime.getInfo().supports(BrowserCapability.NETWORK_OBSERVATION)) {
+                // before the first request, so that captures see requests already in flight when they start
+                network.ensureListening(context);
+            }
             context.setDefaultTimeout(options.getDefaultTimeout().toMillis());
             final UrlPolicy policy = options.getUrlPolicy();
             if (!policy.isAllowAllHosts()) {
@@ -336,7 +338,7 @@ final class PlaywrightSession implements BrowserSession {
         if (request == null) {
             throw new NullPointerException("request must not be null");
         }
-        return run("navigation to " + request.getUrl(), new Worker.Task<NavigationResult>() {
+        return run("navigation to " + Errors.describeUrl(request.getUrl()), new Worker.Task<NavigationResult>() {
             @Override
             public NavigationResult run() {
                 if (options.getMaxNavigations().isPresent()
@@ -540,8 +542,8 @@ final class PlaywrightSession implements BrowserSession {
                     if (crashed || worker.checkBrowserProcessGone() || !worker.browser().isConnected() || Errors.isGone(e)) {
                         throw e;
                     }
-                    throw new ScriptEvaluationException(script.getId(), "script " + script.getId() + " failed: "
-                            + Errors.firstLine(e), e);
+                    throw new ScriptEvaluationException(script.getId(), "script " + script.getId() + " failed in the page"
+                            + Errors.diagnostic(e), e);
                 }
                 try {
                     return BrowserValue.fromJava(result);
@@ -844,6 +846,7 @@ final class PlaywrightSession implements BrowserSession {
                         worker.closeTimeoutMillis()))) {
                     BrowserProcesses.killTrees(profileProcesses);
                 }
+                worker.forgetProcesses(profileProcesses);
                 lease.release();
             }
             runtime.release();
