@@ -496,6 +496,103 @@ class AhcHttpTransportTest {
     }
 
     @Test
+    void blockingContinuationDoesNotDelayOtherDeadlines() throws Exception {
+        server.on("/slow", exchange -> {
+            server.release.await(20, TimeUnit.SECONDS);
+            LocalHttpServer.respond(exchange, 200, "text/plain", "late");
+        });
+        java.util.concurrent.CountDownLatch unblock = new java.util.concurrent.CountDownLatch(1);
+        try (AhcHttpTransport single = AhcHttpTransport.create(AhcHttpTransportOptions.builder()
+                .maxConnections(1).maxConnectionsPerHost(1).build())) {
+            single.execute(HttpRequest.get(server.url("/slow")).build());
+            awaitRequests(1);
+            single.execute(HttpRequest.get(server.url("/slow")).timeout(Duration.ofMillis(200)).build())
+                    .whenComplete((response, failure) -> {
+                        try {
+                            unblock.await(10, TimeUnit.SECONDS);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                    });
+            long start = System.nanoTime();
+            HttpTransportException failure = failureOf(single.execute(HttpRequest.get(server.url("/slow"))
+                    .timeout(Duration.ofMillis(500)).build()));
+
+            assertThat(failure.getKind()).isEqualTo(Kind.TIMEOUT);
+            assertThat(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)).isLessThan(3_000);
+        } finally {
+            unblock.countDown();
+        }
+    }
+
+    @Test
+    void closeCancelsActiveAndQueuedRequestsWithoutSendingQueuedOnes() throws Exception {
+        server.on("/slow", exchange -> {
+            server.release.await(20, TimeUnit.SECONDS);
+            LocalHttpServer.respond(exchange, 200, "text/plain", "late");
+        });
+        AhcHttpTransport single = AhcHttpTransport.create(AhcHttpTransportOptions.builder()
+                .maxConnections(1).maxConnectionsPerHost(1).build());
+        CompletableFuture<HttpResponse> active = single.execute(HttpRequest.get(server.url("/slow")).build());
+        awaitRequests(1);
+        List<CompletableFuture<HttpResponse>> queued = new ArrayList<CompletableFuture<HttpResponse>>();
+        for (int i = 0; i < 5; i++) {
+            queued.add(single.execute(HttpRequest.post(server.url("/slow")).jsonBody("{}").build()));
+        }
+
+        single.close();
+
+        assertThat(failureOf(active).getKind()).isEqualTo(Kind.CANCELLED);
+        for (CompletableFuture<HttpResponse> future : queued) {
+            assertThat(failureOf(future).getKind()).isEqualTo(Kind.CANCELLED);
+        }
+        Thread.sleep(200);
+        assertThat(server.requests()).hasSize(1);
+    }
+
+    @Test
+    void crossOriginRedirectDoesNotRestoreASensitiveContentType() throws Exception {
+        try (LocalHttpServer other = new LocalHttpServer()) {
+            other.on("/landing", exchange -> LocalHttpServer.respond(exchange, 200, "text/plain", "ok"));
+            server.on("/start", exchange -> LocalHttpServer.redirect(exchange, 307, other.url("/landing")));
+
+            HttpRequest request = HttpRequest.post(server.url("/start"))
+                    .body("payload".getBytes(StandardCharsets.UTF_8), "text/plain")
+                    .setSensitiveHeader("Content-Type", "application/x-" + SECRET)
+                    .build();
+            transport.execute(request).get(10, TimeUnit.SECONDS);
+
+            LocalHttpServer.Recorded seen = other.lastRequest();
+            assertThat(seen.method).isEqualTo("POST");
+            assertThat(seen.bodyText()).isEqualTo("payload");
+            assertThat(String.valueOf(seen.header("Content-Type"))).doesNotContain(SECRET);
+        }
+    }
+
+    @Test
+    void wrapRespectsTheBorrowedClientsConnectionLimits() throws Exception {
+        server.on("/limited", exchange -> {
+            Thread.sleep(30);
+            LocalHttpServer.respond(exchange, 200, "text/plain", "ok");
+        });
+        try (AsyncHttpClient hostClient = new DefaultAsyncHttpClient(
+                new org.asynchttpclient.DefaultAsyncHttpClientConfig.Builder().setMaxConnectionsPerHost(1).build())) {
+            AhcHttpTransport borrowed = AhcHttpTransport.wrap(hostClient, AhcHttpTransportOptions.defaults());
+            List<CompletableFuture<HttpResponse>> futures = new ArrayList<CompletableFuture<HttpResponse>>();
+            for (int i = 0; i < 8; i++) {
+                futures.add(borrowed.execute(HttpRequest.get(server.url("/limited")).build()));
+            }
+            for (CompletableFuture<HttpResponse> future : futures) {
+                assertThat(future.get(20, TimeUnit.SECONDS).getStatus()).isEqualTo(200);
+            }
+            borrowed.close();
+        }
+        assertThat(AhcHttpTransport.capped(20, -1)).isEqualTo(20);
+        assertThat(AhcHttpTransport.capped(20, 3)).isEqualTo(3);
+        assertThat(AhcHttpTransport.capped(2, 3)).isEqualTo(2);
+    }
+
+    @Test
     void rejectsNullRequestSynchronously() {
         assertThatThrownBy(() -> transport.execute(null)).isInstanceOf(NullPointerException.class);
     }

@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -79,12 +81,23 @@ public final class AhcHttpTransport implements HttpTransport {
     private final ConnectionAdmission admission;
     /** Enforces the whole-exchange deadline, including time spent waiting for admission. Owned by this transport. */
     private final ScheduledThreadPoolExecutor deadlines;
+    /**
+     * Completes futures for timeouts, so callers' synchronous continuations never run on (and block) the deadline
+     * thread. Owned by this transport.
+     */
+    private final ExecutorService completions;
 
-    private AhcHttpTransport(AsyncHttpClient client, boolean ownsClient, AhcHttpTransportOptions options) {
+    private AhcHttpTransport(AsyncHttpClient client, boolean ownsClient, AhcHttpTransportOptions options,
+                             int maxConnections, int maxConnectionsPerHost) {
         this.client = client;
         this.ownsClient = ownsClient;
         this.options = options;
-        this.admission = new ConnectionAdmission(options.getMaxConnections(), options.getMaxConnectionsPerHost());
+        this.admission = new ConnectionAdmission(maxConnections, maxConnectionsPerHost);
+        this.completions = Executors.newCachedThreadPool(runnable -> {
+            Thread thread = new Thread(runnable, "serp4j-http-ahc-completion");
+            thread.setDaemon(true);
+            return thread;
+        });
         this.deadlines = new ScheduledThreadPoolExecutor(1, runnable -> {
             Thread thread = new Thread(runnable, "serp4j-http-ahc-deadlines");
             thread.setDaemon(true);
@@ -114,16 +127,33 @@ public final class AhcHttpTransport implements HttpTransport {
                 .setUserAgent(options.getUserAgent())
                 .setThreadPoolName("serp4j-http-ahc")
                 .build();
-        return new AhcHttpTransport(new DefaultAsyncHttpClient(config), true, options);
+        return new AhcHttpTransport(new DefaultAsyncHttpClient(config), true, options, options.getMaxConnections(),
+                options.getMaxConnectionsPerHost());
     }
 
     /**
      * A transport on a client the caller created and keeps owning: {@link #close()} leaves {@code client} open.
      * Only the request-level settings of {@code options} apply (see {@link AhcHttpTransportOptions}); redirects are
      * handled by this transport whatever the client is configured to do.
+     *
+     * <p>Connection limits: the transport queues at most as many requests in flight as both {@code options} and the
+     * client's own {@code maxConnections}/{@code maxConnectionsPerHost} allow, so its own requests never run into
+     * the client's limits. Connections that other users of the same client hold are outside its view; when they
+     * exhaust the client's pool, the client rejects the request and the transport reports it as
+     * {@link HttpTransportException.Kind#IO}. Give the transport a client of its own, or one with unlimited
+     * connections, to rule that out.</p>
      */
     public static AhcHttpTransport wrap(AsyncHttpClient client, AhcHttpTransportOptions options) {
-        return new AhcHttpTransport(requireNonNull(client, "client"), false, requireNonNull(options, "options"));
+        requireNonNull(client, "client");
+        requireNonNull(options, "options");
+        return new AhcHttpTransport(client, false, options,
+                capped(options.getMaxConnections(), client.getConfig().getMaxConnections()),
+                capped(options.getMaxConnectionsPerHost(), client.getConfig().getMaxConnectionsPerHost()));
+    }
+
+    /** {@code own}, lowered to the client's limit if that is finite (AHC uses {@code -1} for unlimited). */
+    static int capped(int own, int clientLimit) {
+        return clientLimit > 0 ? Math.min(own, clientLimit) : own;
     }
 
     /** Whether {@link #close()} closes the underlying client ({@code create}) or leaves it to its owner ({@code wrap}). */
@@ -152,8 +182,12 @@ public final class AhcHttpTransport implements HttpTransport {
         ScheduledFuture<?> deadline;
         try {
             deadline = deadlines.schedule(() -> {
-                if (exchange.fail(TransportFailures.timeout(request, timeoutNanos))) {
+                // Internal clean-up first, on this thread; completing the future (and running the caller's
+                // continuations) happens elsewhere so a slow continuation cannot delay other deadlines.
+                if (exchange.terminate()) {
+                    admission.withdraw(exchange.waiting);
                     exchange.abort();
+                    completeElsewhere(exchange, TransportFailures.timeout(request, timeoutNanos));
                 }
             }, timeoutNanos, TimeUnit.NANOSECONDS);
         } catch (RejectedExecutionException e) {
@@ -180,8 +214,16 @@ public final class AhcHttpTransport implements HttpTransport {
         return exchange.result;
     }
 
+    private void completeElsewhere(Exchange exchange, HttpTransportException failure) {
+        try {
+            completions.execute(() -> exchange.fail(failure));
+        } catch (RejectedExecutionException e) {
+            exchange.fail(failure); // transport closing: complete inline rather than never
+        }
+    }
+
     private void send(Exchange exchange, HttpRequest request, int redirects) {
-        if (exchange.result.isDone()) {
+        if (exchange.isOver()) {
             return;
         }
         String origin;
@@ -192,7 +234,7 @@ public final class AhcHttpTransport implements HttpTransport {
             return;
         }
         exchange.waiting = admission.acquire(origin, () -> dispatch(exchange, request, redirects, origin));
-        if (exchange.result.isDone()) {
+        if (exchange.isOver()) {
             // Completed (deadline, close, cancel) while queueing; its completion handler may have run before the
             // ticket was stored.
             admission.withdraw(exchange.waiting);
@@ -207,8 +249,15 @@ public final class AhcHttpTransport implements HttpTransport {
                 admission.release(origin);
             }
         };
-        if (exchange.result.isDone()) {
+        if (exchange.isOver()) {
             releasePermit.run();
+            return;
+        }
+        if (closed.get()) {
+            // close() has begun: a request it has not reached yet must not be sent any more.
+            releasePermit.run();
+            exchange.fail(new HttpTransportException(HttpTransportException.Kind.CANCELLED,
+                    "transport closed (" + request.getMethod() + " " + request.getRedactedUrl() + ")"));
             return;
         }
         long remainingMillis = TimeUnit.NANOSECONDS.toMillis(exchange.deadlineNanos - System.nanoTime());
@@ -234,7 +283,7 @@ public final class AhcHttpTransport implements HttpTransport {
         exchange.current = pending;
         pending.toCompletableFuture().whenComplete((response, failure) -> {
             releasePermit.run();
-            if (exchange.result.isDone()) {
+            if (exchange.isOver()) {
                 return;
             }
             if (failure != null) {
@@ -254,7 +303,7 @@ public final class AhcHttpTransport implements HttpTransport {
                 exchange.fail(TransportFailures.translate(e, request));
             }
         });
-        if (exchange.result.isDone()) {
+        if (exchange.isOver()) {
             pending.cancel(true);
         }
     }
@@ -341,7 +390,13 @@ public final class AhcHttpTransport implements HttpTransport {
             next.sensitiveQueryParameter(parameter);
         }
         if (!switchToGet && request.hasBody()) {
-            next.body(request.getBody(), request.getContentType().orElse("application/octet-stream"));
+            // The content type of the possibly filtered headers: a Content-Type marked sensitive and dropped on an
+            // origin change must not come back with the body.
+            HttpHeaders kept = headers.build();
+            next.body(request.getBody(), kept.getFirst("Content-Type").orElse("application/octet-stream"));
+            if (!kept.contains("Content-Type")) {
+                next.removeHeader("Content-Type");
+            }
         }
         return next.build();
     }
@@ -411,6 +466,7 @@ public final class AhcHttpTransport implements HttpTransport {
             exchange.abort();
         }
         deadlines.shutdownNow();
+        completions.shutdown();
         if (ownsClient) {
             try {
                 client.close();
@@ -445,6 +501,7 @@ public final class AhcHttpTransport implements HttpTransport {
         final CompletableFuture<HttpResponse> result = new CompletableFuture<HttpResponse>();
         volatile ListenableFuture<Response> current;
         volatile ConnectionAdmission.Ticket waiting;
+        private final AtomicBoolean terminated = new AtomicBoolean();
 
         Exchange(HttpRequest request, long deadlineNanos, long timeoutNanos) {
             this.request = request;
@@ -454,6 +511,16 @@ public final class AhcHttpTransport implements HttpTransport {
 
         boolean fail(HttpTransportException failure) {
             return result.completeExceptionally(failure);
+        }
+
+        /** Marks the exchange as ending before its future completes; {@code true} for the first caller only. */
+        boolean terminate() {
+            return !result.isDone() && terminated.compareAndSet(false, true);
+        }
+
+        /** Completed, or about to be: no further request may be sent. */
+        boolean isOver() {
+            return terminated.get() || result.isDone();
         }
 
         void abort() {
