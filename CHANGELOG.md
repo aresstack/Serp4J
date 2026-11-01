@@ -9,6 +9,18 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
 
 ### Added
 
+- `serp4j-provider-dataforseo` (Java 8, Paket D, gegen die DataForSEO-API-Referenz vom 2026-11-01):
+  `DataForSeoSearchProvider` implementiert `SearchProvider` für Google und Bing organic über
+  `POST /v3/serp/{engine}/organic/live/{regular|advanced}` (ein Task je Request, `depth` = offset + limit, max. 200).
+  Zugangsdaten über `CredentialProvider` (`<id>.login`, `<id>.password`), nur als Basic-`Authorization`-Header.
+  Statuscodes im Body werden ausgewertet: 20000 Erfolg, 40102 leeres Ergebnis, 40106 Teilergebnis
+  (`complete=false`, Warnung `partial_results`), 40100 `AUTHENTICATION`, 40202/40209 `RATE_LIMITED`, 402xx
+  `QUOTA_EXHAUSTED`, 5xxxx `UNAVAILABLE`/`TIMEOUT` (retryable). Mapping über die Definition
+  `dataforseo-serp-organic` plus Custom Mapper (Knowledge Graph, People also ask, SERP-Bereich); `cost` →
+  `ProviderUsage.cost` in USD, Provenienz je Ergebnis, `check_url`/`datetime`/`time` in `ExecutionInfo`, Rohantwort
+  nur mit `RawPayloadPolicy.ALWAYS`. `DataForSeoOptions` (location_code/-name, se_domain, os, Funktion, tag) und
+  `DataForSeoSearchProviderFactory` (ServiceLoader). Fixtures sind **synthetisch** und als solche gekennzeichnet,
+  bis eine aufgezeichnete Antwort vorliegt (E-1). Noch nicht enthalten: Standard-Task-Ablauf, HTML, Locations/Languages.
 - `serp4j-testkit`: `MappingDefinitionContractTest` (ADR-019) – Definition lädt, jeder Pfad trifft in einer Fixture,
   „unbekannter Typ überlebt“, Golden-Output je Fixture (`SERP4J_UPDATE_GOLDEN=1`); nur aufgezeichnete Fixtures (E-1).
   `serp4j-mapping` ist `compileOnly`.
