@@ -25,7 +25,9 @@ B–H hinzu.
 ## Bauen
 
 Voraussetzungen: JDK 21 als Compiler-Toolchain (`--release 8` für die Java-8-Module) und ein JDK 8 für den
-zusätzlichen Testlauf. Fehlt eines, lädt Gradle es über die Foojay-Toolchain-Auflösung nach.
+zusätzlichen Testlauf. Fehlt eines, lädt Gradle es über die Foojay-Toolchain-Auflösung nach. Gradle selbst muss mit
+JDK 17 oder neuer gestartet werden (z. B. JDK 21), weil die Build-Plugins (Foojay-Resolver, nmcp) Java-17-Bytecode
+sind; JDK 8 wird nur als Test-Laufzeit gebraucht.
 
 ```bash
 ./gradlew build                            # Kompilieren, Tests auf JDK 21 und JDK 8, Javadoc, ArchUnit
