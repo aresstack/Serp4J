@@ -154,9 +154,18 @@ public final class RawPayload {
     public int hashCode() {
         int hash = Objects.hash(contentType, Arrays.hashCode(body), charset, httpStatus);
         for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
-            hash += Objects.hash(entry.getKey().toLowerCase(Locale.ROOT), entry.getValue());
+            hash += Objects.hash(foldCase(entry.getKey()), entry.getValue());
         }
         return hash;
+    }
+
+    /** Folds a header name the way {@link String#CASE_INSENSITIVE_ORDER} compares: per char, upper then lower case. */
+    private static String foldCase(String name) {
+        char[] chars = name.toCharArray();
+        for (int i = 0; i < chars.length; i++) {
+            chars[i] = Character.toLowerCase(Character.toUpperCase(chars[i]));
+        }
+        return new String(chars);
     }
 
     /** Never includes the body. */

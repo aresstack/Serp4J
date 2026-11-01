@@ -125,6 +125,12 @@ class ExtensionsTest {
         assertThat(upper).isEqualTo(lower);
         assertThat(upper.hashCode()).isEqualTo(lower.hashCode());
         assertThat(upper).isNotEqualTo(RawPayload.builder("text/plain", new byte[0]).header("x-trace", "2").build());
+
+        // String.CASE_INSENSITIVE_ORDER folds per char (upper, then lower): dotless i (U+0131) equals 'i'.
+        RawPayload dotted = RawPayload.builder("text/plain", new byte[0]).header("X-I", "1").build();
+        RawPayload dotless = RawPayload.builder("text/plain", new byte[0]).header("X-\u0131", "1").build();
+        assertThat(dotted).isEqualTo(dotless);
+        assertThat(dotted.hashCode()).isEqualTo(dotless.hashCode());
     }
 
     /** #9: a header name with surrounding whitespace must not bypass the sensitive-header filter. */

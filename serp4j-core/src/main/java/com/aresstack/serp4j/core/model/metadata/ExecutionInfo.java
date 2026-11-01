@@ -109,12 +109,29 @@ public final class ExecutionInfo {
                 providerTimestamp);
     }
 
+    /** Prints the source URL without query string and fragment, which may echo credentials. */
     @Override
     public String toString() {
         return "ExecutionInfo{startedAt=" + startedAt + ", duration=" + duration
                 + ", providerReportedDuration=" + providerReportedDuration
-                + ", providerRequestId=" + providerRequestId + ", sourceUrl=" + sourceUrl
+                + ", providerRequestId=" + providerRequestId + ", sourceUrl=" + redactedSourceUrl()
                 + ", attempts=" + attempts + ", providerTimestamp=" + providerTimestamp + '}';
+    }
+
+    private String redactedSourceUrl() {
+        if (sourceUrl == null) {
+            return null;
+        }
+        int cut = sourceUrl.length();
+        int query = sourceUrl.indexOf('?');
+        int fragment = sourceUrl.indexOf('#');
+        if (query >= 0) {
+            cut = query;
+        }
+        if (fragment >= 0 && fragment < cut) {
+            cut = fragment;
+        }
+        return cut == sourceUrl.length() ? sourceUrl : sourceUrl.substring(0, cut) + "?...";
     }
 
     /** Builder for {@link ExecutionInfo}. */

@@ -60,6 +60,20 @@ class ExecutionInfoTest {
                 .getProviderReportedDuration()).contains(Duration.ZERO);
     }
 
+    /** architecture.md §9: no secret in a string representation; provider URL echoes may carry query credentials. */
+    @Test
+    void toStringOmitsQueryStringAndFragmentOfTheSourceUrl() {
+        String secret = "s3cr3t-9b8a7c6d-unique";
+        ExecutionInfo info = ExecutionInfo.builder()
+                .sourceUrl("https://example.test/search?q=serp4j&api_key=" + secret + "#top").build();
+
+        assertThat(info.getSourceUrl()).contains("https://example.test/search?q=serp4j&api_key=" + secret + "#top");
+        assertThat(info.toString()).doesNotContain(secret).doesNotContain("#top")
+                .contains("sourceUrl=https://example.test/search?...");
+        assertThat(ExecutionInfo.builder().sourceUrl("https://example.test/serp").build().toString())
+                .contains("sourceUrl=https://example.test/serp");
+    }
+
     @Test
     void sourceUrlIsTrimmedAndBlankMeansAbsent() {
         assertThat(ExecutionInfo.builder().sourceUrl("  https://example.test/serp ").build().getSourceUrl())
