@@ -16,4 +16,11 @@ dependencies {
     // Contract tests are JUnit 5 classes; consumers bring JUnit Jupiter themselves (implementation-plan.md, Paket E).
     compileOnly(platform(libs.junit.bom))
     compileOnly(libs.junit.jupiter)
+
+    // MappingDefinitionContractTest (ADR-019): only provider modules with mapping definitions use it, and they depend
+    // on serp4j-mapping themselves; everyone else never loads the class and gets no mapping types.
+    compileOnly(project(":serp4j-mapping"))
+
+    testImplementation(project(":serp4j-mapping"))
+    testImplementation(project(":serp4j-json"))
 }

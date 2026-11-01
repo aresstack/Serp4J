@@ -1,0 +1,43 @@
+{
+  "definition": "testkit-synthetic-web",
+  "version": 1,
+  "results": [
+    {
+      "id": "items#1",
+      "type": "organic",
+      "url": "https://example.com/a",
+      "title": "A",
+      "position": {
+        "rankInGroup": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "testkit": {
+            "extra": true
+          }
+        }
+      }
+    }
+  ],
+  "features": [
+    {
+      "id": "items#2",
+      "type": "knowledge_panel",
+      "class": "KnowledgePanelFeature",
+      "title": "Serp4J",
+      "description": "A Java library."
+    }
+  ],
+  "metadata": {
+    "originalQuery": "serp4j",
+    "extensions": {
+      "unmapped": {
+        "testkit": {
+          "trailer": 1
+        }
+      }
+    }
+  },
+  "warnings": []
+}

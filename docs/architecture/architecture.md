@@ -243,7 +243,7 @@ Regeln, die der Build erzwingt (Modulgrenze) oder ein Architekturtest prüft (Ar
 | `serp4j-engine-google-common` | core | jsoup (Java 8, ohne transitive Deps) | – |
 | `serp4j-engine-google-http` | core, http-api | engine-google-common | – |
 | `serp4j-engine-google-browser` | core, browser-api | engine-google-common | – |
-| `serp4j-testkit` | core, http-api | – (JUnit Jupiter `compileOnly`) | – |
+| `serp4j-testkit` | core, http-api | – (JUnit Jupiter und `serp4j-mapping` `compileOnly`) | – |
 | `serp4j-browser-testkit` | browser-api | – (JUnit Jupiter `compileOnly`) | – |
 
 **Eine** JSON-Bibliothek im Projekt: Gson, nur als `implementation` und nur in `serp4j-json`. Provider-Module parsen

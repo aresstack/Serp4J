@@ -1,0 +1,17 @@
+{
+  "id": "testkit-synthetic-web",
+  "version": 1,
+  "namespace": "testkit",
+  "description": "Synthetic definition for the testkit's own MappingDefinitionContractTest; not a real provider.",
+  "metadata": { "originalQuery": "$.query" },
+  "sections": [
+    {
+      "id": "items", "kind": "elements", "path": "$.items[*]", "discriminator": "type",
+      "discriminatorMap": { "organic": "item:organic", "panel": "feature:knowledge_panel" },
+      "fieldsByType": {
+        "organic": { "url": "link", "title": "title", "rankInGroup": "rank" },
+        "knowledge_panel": { "title": "name", "description": "text" }
+      }
+    }
+  ]
+}

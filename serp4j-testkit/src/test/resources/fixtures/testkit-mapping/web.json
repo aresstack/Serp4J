@@ -1,0 +1,8 @@
+{
+  "query": "serp4j",
+  "items": [
+    { "type": "organic", "link": "https://example.com/a", "title": "A", "rank": 1, "extra": true },
+    { "type": "panel", "name": "Serp4J", "text": "A Java library." }
+  ],
+  "trailer": 1
+}
