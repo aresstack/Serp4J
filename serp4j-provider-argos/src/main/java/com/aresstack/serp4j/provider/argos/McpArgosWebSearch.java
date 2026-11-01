@@ -10,6 +10,11 @@ import com.aresstack.serp4j.json.JsonTrees;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -51,6 +56,7 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
     private final Duration defaultTimeout;
     private final AtomicLong ids = new AtomicLong();
     private final AtomicBoolean closed = new AtomicBoolean();
+    private final Set<Call> running = Collections.newSetFromMap(new ConcurrentHashMap<Call, Boolean>());
     private final Object sessionLock = new Object();
     private CompletableFuture<Optional<String>> session;
 
@@ -85,15 +91,66 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
         }
         final Duration effective = timeout != null ? timeout : defaultTimeout;
         final long deadlineNanos = System.nanoTime() + effective.toNanos();
-        return callTool(query, deadlineNanos, true).thenApply(new Function<String, ArgosSearchOutput>() {
-            @Override
-            public ArgosSearchOutput apply(String text) {
-                return ArgosSearchOutputParser.parse(text);
+        final Call call = new Call();
+        running.add(call);
+        call.result.whenComplete((output, error) -> {
+            running.remove(call);
+            call.abort();
+        });
+        final ScheduledFuture<?> deadlineTask = Deadlines.SCHEDULER.schedule(() -> call.result.completeExceptionally(
+                new HttpTransportException(HttpTransportException.Kind.TIMEOUT,
+                        "Argos web search exceeded its time budget of " + effective + " (" + redactedEndpoint + ")")),
+                effective.toNanos(), TimeUnit.NANOSECONDS);
+        call.result.whenComplete((output, error) -> deadlineTask.cancel(false));
+        if (closed.get()) {
+            call.result.completeExceptionally(closedFailure());
+            return call.result;
+        }
+        callTool(query, deadlineNanos, true, call).whenComplete((text, error) -> {
+            if (error != null) {
+                call.result.completeExceptionally(unwrap(error));
+                return;
+            }
+            try {
+                call.result.complete(ArgosSearchOutputParser.parse(text));
+            } catch (RuntimeException e) {
+                call.result.completeExceptionally(e);
             }
         });
+        return call.result;
     }
 
-    private CompletableFuture<String> callTool(final String query, final long deadline, final boolean mayRetry) {
+    private HttpTransportException closedFailure() {
+        return new HttpTransportException(HttpTransportException.Kind.CANCELLED, "Argos web search was closed");
+    }
+
+    /**
+     * One running search: its result future and the HTTP request it currently waits for. Completing the result in
+     * any way (cancel, deadline, close) cancels that request. Requests of the shared MCP initialization are never
+     * registered here, so one caller's cancellation does not break the session other callers wait for.
+     */
+    private static final class Call {
+        final CompletableFuture<ArgosSearchOutput> result = new CompletableFuture<ArgosSearchOutput>();
+        final AtomicReference<CompletableFuture<HttpResponse>> current =
+                new AtomicReference<CompletableFuture<HttpResponse>>();
+
+        void register(CompletableFuture<HttpResponse> request) {
+            current.set(request);
+            if (result.isDone()) {
+                request.cancel(true);
+            }
+        }
+
+        void abort() {
+            CompletableFuture<HttpResponse> request = current.get();
+            if (request != null && !request.isDone()) {
+                request.cancel(true);
+            }
+        }
+    }
+
+    private CompletableFuture<String> callTool(final String query, final long deadline, final boolean mayRetry,
+                                             final Call call) {
         final CompletableFuture<Optional<String>> current = session(deadline);
         return current.thenCompose(new Function<Optional<String>, CompletableFuture<String>>() {
             @Override
@@ -102,7 +159,7 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
                         .put("name", TOOL_NAME)
                         .put("arguments", StructuredValue.objectBuilder().put("query", query).build())
                         .build();
-                return rpc("tools/call", params, sessionId, deadline).thenApply(new Function<StructuredValue, String>() {
+                return rpc("tools/call", params, sessionId, deadline, call).thenApply(new Function<StructuredValue, String>() {
                     @Override
                     public String apply(StructuredValue result) {
                         return toolText(result);
@@ -118,7 +175,7 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
                 Throwable cause = unwrap(error);
                 if (mayRetry && isSessionLost(cause)) {
                     resetSession(current);
-                    return callTool(query, deadline, false);
+                    return callTool(query, deadline, false, call);
                 }
                 CompletableFuture<String> failed = new CompletableFuture<String>();
                 failed.completeExceptionally(cause);
@@ -152,7 +209,7 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
                         .put("name", "serp4j-provider-argos").put("version", "1").build())
                 .build();
         final long id = ids.incrementAndGet();
-        return post(message("initialize", params, id), Optional.<String>empty(), deadline)
+        return post(message("initialize", params, id), Optional.<String>empty(), deadline, null)
                 .thenCompose(new Function<HttpResponse, CompletableFuture<Optional<String>>>() {
                     @Override
                     public CompletableFuture<Optional<String>> apply(HttpResponse response) {
@@ -160,7 +217,7 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
                         final Optional<String> sessionId = response.getHeaders().getFirst(SESSION_HEADER);
                         StructuredValue notification = StructuredValue.objectBuilder()
                                 .put("jsonrpc", "2.0").put("method", "notifications/initialized").build();
-                        return post(notification, sessionId, deadline)
+                        return post(notification, sessionId, deadline, null)
                                 .thenApply(new Function<HttpResponse, Optional<String>>() {
                                     @Override
                                     public Optional<String> apply(HttpResponse ack) {
@@ -175,9 +232,9 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
     }
 
     private CompletableFuture<StructuredValue> rpc(final String method, StructuredValue params,
-                                                   Optional<String> sessionId, long deadline) {
+                                                   Optional<String> sessionId, long deadline, Call call) {
         final long id = ids.incrementAndGet();
-        return post(message(method, params, id), sessionId, deadline)
+        return post(message(method, params, id), sessionId, deadline, call)
                 .thenApply(new Function<HttpResponse, StructuredValue>() {
                     @Override
                     public StructuredValue apply(HttpResponse response) {
@@ -187,7 +244,7 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
     }
 
     private CompletableFuture<HttpResponse> post(StructuredValue message, Optional<String> sessionId,
-                                                 long deadline) {
+                                                 long deadline, Call call) {
         long remaining = deadline - System.nanoTime();
         if (remaining <= 0) {
             CompletableFuture<HttpResponse> expired = new CompletableFuture<HttpResponse>();
@@ -204,14 +261,17 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
             request.setHeader(SESSION_HEADER, sessionId.get());
         }
         CompletableFuture<HttpResponse> sanitized = new CompletableFuture<HttpResponse>();
-        CompletableFuture<HttpResponse> call;
+        CompletableFuture<HttpResponse> transportCall;
         try {
-            call = transport.execute(request.build());
+            transportCall = transport.execute(request.build());
         } catch (RuntimeException e) {
             sanitized.completeExceptionally(sanitize(e));
             return sanitized;
         }
-        call.whenComplete((response, error) -> {
+        if (call != null) {
+            call.register(transportCall);
+        }
+        transportCall.whenComplete((response, error) -> {
             if (error != null) {
                 sanitized.completeExceptionally(sanitize(unwrap(error)));
             } else {
@@ -359,7 +419,8 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
     }
 
     /**
-     * Forgets the MCP session. The sidecar ends idle sessions itself; the transport is borrowed and stays open.
+     * Forgets the MCP session and aborts running searches (their HTTP requests are cancelled, their futures fail
+     * with {@code CANCELLED}). The sidecar ends idle sessions itself; the transport is borrowed and stays open.
      * Idempotent.
      */
     @Override
@@ -367,6 +428,9 @@ public final class McpArgosWebSearch implements ArgosWebSearch {
         if (closed.compareAndSet(false, true)) {
             synchronized (sessionLock) {
                 session = null;
+            }
+            for (Call call : running) {
+                call.result.completeExceptionally(closedFailure());
             }
         }
     }

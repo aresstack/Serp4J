@@ -17,7 +17,8 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
   `ArgosSearchProvider` bildet Treffer, Engine (aus dem Host des liefernden Versuchs), Engine-Versuche und manuelle
   Challenges (`BLOCKED`, nie umgangen) auf das Domain-Modell ab; Plugin-Registrierung über `ServiceLoader`
   (`ArgosSearchProviderFactory`, Properties `endpoint` oder `port` + Credential `token`). Den Sidecar startet weiter der
-  Host. Testdaten sind ausschließlich synthetisch und als solche gekennzeichnet (E-1).
+  Host. Cancellation, `close()` und Deadline (auch beim Warten auf die gemeinsame MCP-Initialisierung) brechen den
+  laufenden HTTP-Aufruf ab (ADR-017); `SearchProviderContractTest` läuft. Testdaten sind ausschließlich synthetisch und als solche gekennzeichnet (E-1).
 - `serp4j-testkit`: `MappingDefinitionContractTest` (ADR-019) – Definition lädt, jeder Pfad trifft in einer Fixture,
   „unbekannter Typ überlebt“, Golden-Output je Fixture (`SERP4J_UPDATE_GOLDEN=1`); nur aufgezeichnete Fixtures (E-1).
   `serp4j-mapping` ist `compileOnly`.

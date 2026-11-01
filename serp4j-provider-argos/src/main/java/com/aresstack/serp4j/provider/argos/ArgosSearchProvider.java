@@ -75,6 +75,8 @@ public final class ArgosSearchProvider implements SearchProvider {
     private final boolean ownsSearch;
     private final Clock clock;
     private final AtomicBoolean closed = new AtomicBoolean();
+    private final Set<CompletableFuture<SearchResponse>> running = java.util.Collections.newSetFromMap(
+            new java.util.concurrent.ConcurrentHashMap<CompletableFuture<SearchResponse>, Boolean>());
 
     private ArgosSearchProvider(Builder builder) {
         SearchCapabilities.Builder capabilities = SearchCapabilities.builder()
@@ -130,12 +132,20 @@ public final class ArgosSearchProvider implements SearchProvider {
         }
         Duration timeout = context.getRemainingTime(startedAt).orElse(null);
         final CompletableFuture<SearchResponse> result = new CompletableFuture<SearchResponse>();
-        CompletableFuture<ArgosSearchOutput> call;
+        final CompletableFuture<ArgosSearchOutput> call;
         try {
             call = search.search(request.getQuery(), timeout);
         } catch (RuntimeException e) {
             return failed(translate(e));
         }
+        // Whatever ends the result first (answer, cancellation, close) also ends the underlying call.
+        running.add(result);
+        result.whenComplete((response, error) -> {
+            running.remove(result);
+            if (!call.isDone()) {
+                call.cancel(true);
+            }
+        });
         call.whenComplete((output, error) -> {
             if (error != null) {
                 result.completeExceptionally(translate(McpArgosWebSearch.unwrap(error)));
@@ -153,6 +163,10 @@ public final class ArgosSearchProvider implements SearchProvider {
         });
         context.getCancellation().onCancel(() -> result.completeExceptionally(
                 failure(SearchErrorCategory.CANCELLED, "search was cancelled")));
+        if (closed.get()) {
+            result.completeExceptionally(failure(SearchErrorCategory.CANCELLED,
+                    "provider " + descriptor.getId() + " is closed"));
+        }
         return result;
     }
 
@@ -340,10 +354,20 @@ public final class ArgosSearchProvider implements SearchProvider {
         return future;
     }
 
-    /** Closes the {@link ArgosWebSearch} only if this provider owns it (ADR-017). Idempotent. */
+    /**
+     * Fails running searches with {@code CANCELLED} and cancels their calls; closes the {@link ArgosWebSearch} only if
+     * this provider owns it (ADR-017). Idempotent.
+     */
     @Override
     public void close() {
-        if (closed.compareAndSet(false, true) && ownsSearch) {
+        if (!closed.compareAndSet(false, true)) {
+            return;
+        }
+        for (CompletableFuture<SearchResponse> pending : running) {
+            pending.completeExceptionally(failure(SearchErrorCategory.CANCELLED,
+                    "provider " + descriptor.getId() + " was closed"));
+        }
+        if (ownsSearch) {
             search.close();
         }
     }

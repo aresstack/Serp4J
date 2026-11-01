@@ -193,6 +193,22 @@ class ArgosSearchProviderTest {
 
         assertThat(((SearchProviderException) failureOf(running)).getCategory())
                 .isEqualTo(SearchErrorCategory.CANCELLED);
+        assertThat(search.answer.isCancelled()).as("underlying Argos call is cancelled").isTrue();
+    }
+
+    @Test
+    void closeAbortsRunningSearches() {
+        FakeSearch search = new FakeSearch(); // never answers
+        ArgosSearchProvider provider = ArgosSearchProvider.builder(ID, search).build();
+        CompletableFuture<SearchResponse> running = provider.search(SearchRequest.builder("q").build(),
+                SearchContext.defaults());
+
+        provider.close();
+
+        assertThat(((SearchProviderException) failureOf(running)).getCategory())
+                .isEqualTo(SearchErrorCategory.CANCELLED);
+        assertThat(search.answer.isCancelled()).isTrue();
+        assertThat(search.closeCalls).as("borrowed port stays open").isZero();
     }
 
     @Test
