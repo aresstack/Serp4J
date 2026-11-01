@@ -93,6 +93,27 @@ class Serp4jJsonTest {
             assertThat(WITH_RAW.write(WITH_RAW.readSearchResponse(first))).isEqualTo(first);
         }
 
+        @Test
+        void structured_null_values_survive() {
+            SearchResponse response = SearchResponse.of(SearchData.builder()
+                            .feature(com.aresstack.serp4j.core.model.feature.GenericSerpFeature.builder(
+                                    com.aresstack.serp4j.core.model.id.ElementId.of("g"),
+                                    com.aresstack.serp4j.core.model.feature.SerpFeatureType.of("empty"),
+                                    StructuredValue.nullValue()).build())
+                            .build(),
+                    SearchMetadata.forProvider(ModelSamples.BRAVE, SearchEngineId.BRAVE, SearchVertical.WEB,
+                            QueryInfo.of("q"))
+                            .warning(com.aresstack.serp4j.core.model.metadata.SearchWarning
+                                    .builder("code", "message").details(StructuredValue.nullValue()).build())
+                            .extensions(Extensions.builder()
+                                    .put(ExtensionKey.of("acme", "nothing", StructuredValue.class),
+                                            StructuredValue.nullValue())
+                                    .unmapped("acme", StructuredValue.nullValue())
+                                    .build())
+                            .build());
+            assertThat(JSON.readSearchResponse(JSON.write(response))).isEqualTo(response);
+        }
+
         private SearchConversation withoutRawPayload(SearchConversation conversation) {
             SearchConversation.Builder builder = SearchConversation.builder(conversation.getSessionId(),
                     conversation.getProviderId(), conversation.getTarget(), conversation.getState());

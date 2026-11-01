@@ -671,7 +671,7 @@ public final class ModelCodec {
             }
             builder = b;
         } else if (KIND_GENERIC.equals(kind)) {
-            StructuredValue content = in.raw("content");
+            StructuredValue content = in.structured("content");
             if (content == null) {
                 throw in.fail("content", "required member is missing");
             }
@@ -810,8 +810,11 @@ public final class ModelCodec {
 
     private static Object fromStructured(In entry, Class<?> type) {
         if (type == StructuredValue.class) {
-            StructuredValue value = entry.raw("value");
-            return value == null ? StructuredValue.nullValue() : value;
+            StructuredValue value = entry.structured("value");
+            if (value == null) {
+                throw entry.fail("value", "required member is missing");
+            }
+            return value;
         } else if (type == String.class) {
             return entry.text("value");
         } else if (type == Boolean.class) {
@@ -994,7 +997,7 @@ public final class ModelCodec {
         builder.complete(complete == null || complete);
         for (In warning : in.objects("warnings")) {
             SearchWarning.Builder w = SearchWarning.builder(warning.text("code"), warning.text("message"))
-                    .details(warning.raw("details"));
+                    .details(warning.structured("details"));
             String warningProvider = warning.optText("provider");
             if (warningProvider != null) {
                 w.provider(ProviderId.of(warningProvider));

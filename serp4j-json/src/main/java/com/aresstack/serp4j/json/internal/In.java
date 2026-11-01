@@ -59,6 +59,14 @@ final class In {
         return member == null || member.isNull() ? null : member;
     }
 
+    /**
+     * A member holding arbitrary structured data, where JSON {@code null} is a value of its own
+     * ({@link StructuredValue#nullValue()}); {@code null} only if the member is absent.
+     */
+    StructuredValue structured(String name) {
+        return value.getMembers().get(name);
+    }
+
     private StructuredValue required(String name) {
         StructuredValue member = raw(name);
         if (member == null) {
