@@ -10,7 +10,10 @@ import org.junit.jupiter.api.Assertions;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -27,7 +30,22 @@ public abstract class PlaywrightRuntimeContractTest extends BrowserRuntimeContra
     /** Environment variable with the browser executable; unset = Playwright's lookup. */
     public static final String EXECUTABLE_ENV = "SERP4J_BROWSER_EXECUTABLE";
 
+    /** Close timeout of the TCK runtimes; short, so that the hard-kill test stays fast. */
+    static final Duration CLOSE_TIMEOUT = Duration.ofSeconds(5);
+
     private TckHttpServer server;
+    private Path profileRoot;
+
+    private synchronized Path profileRoot() {
+        if (profileRoot == null) {
+            try {
+                profileRoot = Files.createTempDirectory("serp4j-tck-profiles");
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+        return profileRoot;
+    }
 
     @Override
     protected final synchronized TckSite site() {
@@ -46,6 +64,21 @@ public abstract class PlaywrightRuntimeContractTest extends BrowserRuntimeContra
         if (server != null) {
             server.close();
         }
+        if (profileRoot != null) {
+            deleteQuietly(profileRoot.toFile());
+        }
+    }
+
+    private static void deleteQuietly(java.io.File file) {
+        java.io.File[] children = file.listFiles();
+        if (children != null) {
+            for (java.io.File child : children) {
+                deleteQuietly(child);
+            }
+        }
+        if (!file.delete()) {
+            file.deleteOnExit();
+        }
     }
 
     /**
@@ -54,6 +87,8 @@ public abstract class PlaywrightRuntimeContractTest extends BrowserRuntimeContra
     protected PlaywrightBrowserRuntime.Builder runtimeBuilder() {
         PlaywrightBrowserRuntime.Builder builder = PlaywrightBrowserRuntime.builder()
                 .maxConcurrentSessions(3)
+                .closeTimeout(CLOSE_TIMEOUT)
+                .profileDirectory(profileRoot())
                 .shutdownHook(false);
         String executable = System.getenv(EXECUTABLE_ENV);
         if (executable != null && !executable.trim().isEmpty()) {
@@ -70,6 +105,36 @@ public abstract class PlaywrightRuntimeContractTest extends BrowserRuntimeContra
     @Override
     protected Object processSnapshot() {
         return ProcessProbe.isSupported() ? ProcessProbe.descendants() : null;
+    }
+
+    /** Stops (SIGSTOP) the browser processes started after {@code before}; Unix only. */
+    @Override
+    protected boolean freezeBrowser(BrowserRuntime runtime, Object before) throws Exception {
+        if (before == null || System.getProperty("os.name", "").toLowerCase(Locale.ROOT).startsWith("windows")) {
+            return false;
+        }
+        Map<?, ?> previous = (Map<?, ?>) before;
+        List<String> command = new ArrayList<String>();
+        command.add("kill");
+        command.add("-STOP");
+        for (Map.Entry<Long, String> process : ProcessProbe.descendants().entrySet()) {
+            String line = process.getValue().toLowerCase(Locale.ROOT);
+            boolean browser = line.contains("chrom") || line.contains("headless_shell")
+                    || line.contains("firefox") || line.contains("webkit");
+            if (!previous.containsKey(process.getKey()) && browser) {
+                command.add(String.valueOf(process.getKey()));
+            }
+        }
+        if (command.size() == 2) {
+            return false;
+        }
+        Process kill = new ProcessBuilder(command).redirectErrorStream(true).start();
+        return kill.waitFor() == 0;
+    }
+
+    @Override
+    protected Duration hungCloseBound() {
+        return CLOSE_TIMEOUT.plusSeconds(20);
     }
 
     @Override

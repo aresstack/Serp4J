@@ -37,6 +37,20 @@ class UrlPolicyTest {
     }
 
     @Test
+    void google_domains_with_multi_part_tlds_are_configured_explicitly() {
+        UrlPolicy policy = UrlPolicy.allowHosts("google.co.uk", "*.google.co.uk", "google.com.au", "*.google.com.au",
+                "google.de", "*.google.de");
+        assertThat(policy.isAllowed("https://www.google.co.uk/search?q=x")).isTrue();
+        assertThat(policy.isAllowed("https://google.co.uk/")).isTrue();
+        assertThat(policy.isAllowed("https://consent.google.co.uk/ml")).isTrue();
+        assertThat(policy.isAllowed("https://www.google.com.au/")).isTrue();
+        assertThat(policy.isAllowed("https://www.google.de/")).isTrue();
+        assertThat(policy.isAllowed("https://www.google.fr/")).as("not configured").isFalse();
+        assertThat(policy.isAllowed("https://google.co.uk.evil.example/")).isFalse();
+        assertThat(policy.isAllowed("https://evilgoogle.co.uk/")).isFalse();
+    }
+
+    @Test
     void subdomain_glob_does_not_match_the_apex() {
         UrlPolicy policy = UrlPolicy.allowHosts("*.example.com");
         assertThat(policy.isAllowed("https://a.example.com/")).isTrue();

@@ -14,6 +14,11 @@ import java.util.Set;
  * <p>Budgets: a session is closed with state {@link BrowserSessionState#EXPIRED} when its {@code maxLifetime} or
  * {@code idleTimeout} has passed or when it has used {@code maxNavigations} navigations; the next call fails with
  * {@link BrowserSessionClosedException}. Every budget is unlimited unless set.</p>
+ *
+ * <p>Profile and obstacle policy imply capabilities: {@link ProfileMode#persistentExclusive(String)} adds
+ * {@link BrowserCapability#PERSISTENT_PROFILE}, {@link ObstaclePolicy#waitForHuman(Duration)} adds
+ * {@link BrowserCapability#HEADED_MODE} to {@link #getRequiredCapabilities()}; a runtime without them refuses the
+ * session with {@link UnsupportedBrowserCapabilityException}.</p>
  */
 public final class BrowserSessionOptions {
 
@@ -29,24 +34,38 @@ public final class BrowserSessionOptions {
     private final Duration defaultTimeout;
     private final UrlPolicy urlPolicy;
     private final Set<BrowserCapability> requiredCapabilities;
+    private final Set<BrowserCapability> explicitCapabilities;
     private final Duration maxLifetime;
     private final Duration idleTimeout;
     private final Integer maxNavigations;
+    private final ProfileMode profileMode;
+    private final ObstaclePolicy obstaclePolicy;
 
     private BrowserSessionOptions(Builder builder) {
         this.locale = builder.locale;
         this.acquireTimeout = builder.acquireTimeout;
         this.defaultTimeout = builder.defaultTimeout;
         this.urlPolicy = builder.urlPolicy;
-        this.requiredCapabilities = Collections.unmodifiableSet(builder.requiredCapabilities.isEmpty()
-                ? EnumSet.noneOf(BrowserCapability.class) : EnumSet.copyOf(builder.requiredCapabilities));
+        this.profileMode = builder.profileMode;
+        this.obstaclePolicy = builder.obstaclePolicy;
+        Set<BrowserCapability> required = EnumSet.noneOf(BrowserCapability.class);
+        required.addAll(builder.requiredCapabilities);
+        this.explicitCapabilities = Collections.unmodifiableSet(EnumSet.copyOf(required));
+        if (profileMode.isPersistent()) {
+            required.add(BrowserCapability.PERSISTENT_PROFILE);
+        }
+        if (obstaclePolicy.isWaitForHuman()) {
+            required.add(BrowserCapability.HEADED_MODE);
+        }
+        this.requiredCapabilities = Collections.unmodifiableSet(required);
         this.maxLifetime = builder.maxLifetime;
         this.idleTimeout = builder.idleTimeout;
         this.maxNavigations = builder.maxNavigations;
     }
 
     /**
-     * @return the default options: no locale, allow all web URLs, 30 s timeouts, no budgets
+     * @return the default options: no locale, allow all web URLs, 30 s timeouts, no budgets, ephemeral profile,
+     * fail fast on obstacles
      */
     public static BrowserSessionOptions defaults() {
         return DEFAULTS;
@@ -89,7 +108,22 @@ public final class BrowserSessionOptions {
     }
 
     /**
-     * @return capabilities the runtime must support, otherwise opening fails (unmodifiable)
+     * @return the profile of the session; {@link ProfileMode#ephemeral()} by default
+     */
+    public ProfileMode getProfileMode() {
+        return profileMode;
+    }
+
+    /**
+     * @return the obstacle policy; {@link ObstaclePolicy#failFast()} by default
+     */
+    public ObstaclePolicy getObstaclePolicy() {
+        return obstaclePolicy;
+    }
+
+    /**
+     * @return capabilities the runtime must support, otherwise opening fails, including the ones implied by profile
+     * and obstacle policy (unmodifiable)
      */
     public Set<BrowserCapability> getRequiredCapabilities() {
         return requiredCapabilities;
@@ -125,10 +159,12 @@ public final class BrowserSessionOptions {
         builder.acquireTimeout = acquireTimeout;
         builder.defaultTimeout = defaultTimeout;
         builder.urlPolicy = urlPolicy;
-        builder.requiredCapabilities.addAll(requiredCapabilities);
+        builder.requiredCapabilities.addAll(explicitCapabilities);
         builder.maxLifetime = maxLifetime;
         builder.idleTimeout = idleTimeout;
         builder.maxNavigations = maxNavigations;
+        builder.profileMode = profileMode;
+        builder.obstaclePolicy = obstaclePolicy;
         return builder;
     }
 
@@ -143,8 +179,9 @@ public final class BrowserSessionOptions {
         BrowserSessionOptions that = (BrowserSessionOptions) o;
         return eq(locale, that.locale) && acquireTimeout.equals(that.acquireTimeout)
                 && defaultTimeout.equals(that.defaultTimeout) && urlPolicy.equals(that.urlPolicy)
-                && requiredCapabilities.equals(that.requiredCapabilities) && eq(maxLifetime, that.maxLifetime)
-                && eq(idleTimeout, that.idleTimeout) && eq(maxNavigations, that.maxNavigations);
+                && explicitCapabilities.equals(that.explicitCapabilities) && eq(maxLifetime, that.maxLifetime)
+                && eq(idleTimeout, that.idleTimeout) && eq(maxNavigations, that.maxNavigations)
+                && profileMode.equals(that.profileMode) && obstaclePolicy.equals(that.obstaclePolicy);
     }
 
     private static boolean eq(Object a, Object b) {
@@ -153,8 +190,8 @@ public final class BrowserSessionOptions {
 
     @Override
     public int hashCode() {
-        Object[] parts = {locale, acquireTimeout, defaultTimeout, urlPolicy, requiredCapabilities, maxLifetime,
-                idleTimeout, maxNavigations};
+        Object[] parts = {locale, acquireTimeout, defaultTimeout, urlPolicy, explicitCapabilities, maxLifetime,
+                idleTimeout, maxNavigations, profileMode, obstaclePolicy};
         return java.util.Arrays.hashCode(parts);
     }
 
@@ -163,7 +200,8 @@ public final class BrowserSessionOptions {
         return "BrowserSessionOptions{locale=" + locale + ", acquireTimeout=" + acquireTimeout
                 + ", defaultTimeout=" + defaultTimeout + ", urlPolicy=" + urlPolicy
                 + ", requiredCapabilities=" + requiredCapabilities + ", maxLifetime=" + maxLifetime
-                + ", idleTimeout=" + idleTimeout + ", maxNavigations=" + maxNavigations + '}';
+                + ", idleTimeout=" + idleTimeout + ", maxNavigations=" + maxNavigations + ", profileMode="
+                + profileMode + ", obstaclePolicy=" + obstaclePolicy + '}';
     }
 
     /** Builder for {@link BrowserSessionOptions}. */
@@ -176,6 +214,8 @@ public final class BrowserSessionOptions {
         private Duration maxLifetime;
         private Duration idleTimeout;
         private Integer maxNavigations;
+        private ProfileMode profileMode = ProfileMode.ephemeral();
+        private ObstaclePolicy obstaclePolicy = ObstaclePolicy.failFast();
 
         private Builder() {
         }
@@ -213,6 +253,24 @@ public final class BrowserSessionOptions {
          */
         public Builder urlPolicy(UrlPolicy urlPolicy) {
             this.urlPolicy = Args.notNull(urlPolicy, "urlPolicy");
+            return this;
+        }
+
+        /**
+         * @param profileMode ephemeral (default) or persistent, exclusively leased profile
+         * @return this builder
+         */
+        public Builder profileMode(ProfileMode profileMode) {
+            this.profileMode = Args.notNull(profileMode, "profileMode");
+            return this;
+        }
+
+        /**
+         * @param obstaclePolicy fail fast (default) or wait for a human in the visible window
+         * @return this builder
+         */
+        public Builder obstaclePolicy(ObstaclePolicy obstaclePolicy) {
+            this.obstaclePolicy = Args.notNull(obstaclePolicy, "obstaclePolicy");
             return this;
         }
 

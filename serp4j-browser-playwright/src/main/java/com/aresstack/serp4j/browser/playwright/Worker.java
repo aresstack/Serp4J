@@ -4,14 +4,18 @@ import com.aresstack.serp4j.browser.BrowserReadiness;
 import com.aresstack.serp4j.browser.BrowserSessionOptions;
 import com.aresstack.serp4j.browser.BrowserUnavailableException;
 import com.microsoft.playwright.Browser;
+import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 import com.microsoft.playwright.PlaywrightException;
+import com.microsoft.playwright.options.ServiceWorkerPolicy;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,6 +60,11 @@ final class Worker {
     private volatile boolean disconnected;
     /** Locally launched browser processes; empty for a remote browser or on Java 8. */
     private Set<Long> browserPids = Collections.<Long>emptySet();
+    /** Browser and driver processes this worker started; killed forcibly when closing times out. */
+    private final Set<Long> ownedPids = Collections.synchronizedSet(new LinkedHashSet<Long>());
+    /** Serialises process snapshots around launches, so that new processes are attributed to the right worker. */
+    private static final Object LAUNCH_LOCK = new Object();
+    private static final long HARD_KILL_JOIN_MILLIS = 2_000L;
     private volatile String browserVersion;
     private Playwright playwright;
     private Browser browser;
@@ -135,19 +144,27 @@ final class Worker {
         Map<String, String> env = new LinkedHashMap<String, String>();
         env.put("PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD", "1");
         env.putAll(config.driverEnvironment);
-        playwright = Playwright.create(new Playwright.CreateOptions().setEnv(env));
-        BrowserType type;
-        switch (config.browserType) {
-            case FIREFOX:
-                type = playwright.firefox();
-                break;
-            case WEBKIT:
-                type = playwright.webkit();
-                break;
-            default:
-                type = playwright.chromium();
-                break;
+        synchronized (LAUNCH_LOCK) {
+            Map<Long, String> before = BrowserProcesses.descendants();
+            try {
+                launch(env);
+            } finally {
+                ownedPids.addAll(BrowserProcesses.ownedSince(before));
+            }
+            browserPids = BrowserProcesses.startedSince(before);
         }
+        browser.onDisconnected(new Consumer<Browser>() {
+            @Override
+            public void accept(Browser disconnectedBrowser) {
+                disconnected = true;
+            }
+        });
+        browserVersion = browser.version();
+    }
+
+    private void launch(Map<String, String> env) {
+        playwright = Playwright.create(new Playwright.CreateOptions().setEnv(env));
+        BrowserType type = browserType();
         if (config.isRemote()) {
             browser = type.connect(config.wsEndpoint,
                     new BrowserType.ConnectOptions().setTimeout(config.startTimeout.toMillis()));
@@ -164,23 +181,65 @@ final class Worker {
             if (config.executablePath != null) {
                 options.setExecutablePath(config.executablePath);
             }
-            Map<Long, String> before = BrowserProcesses.descendants();
             browser = type.launch(options);
-            browserPids = BrowserProcesses.startedSince(before);
         }
-        browser.onDisconnected(new Consumer<Browser>() {
-            @Override
-            public void accept(Browser disconnectedBrowser) {
-                disconnected = true;
+    }
+
+    private BrowserType browserType() {
+        switch (config.browserType) {
+            case FIREFOX:
+                return playwright.firefox();
+            case WEBKIT:
+                return playwright.webkit();
+            default:
+                return playwright.chromium();
+        }
+    }
+
+    /**
+     * Owner thread: launches a browser on a persistent profile directory (its own browser process) for a session
+     * with {@link com.aresstack.serp4j.browser.ProfileMode#persistentExclusive(String)}. Its processes are owned by
+     * this worker for the hard kill.
+     */
+    BrowserContext launchPersistent(Path userDataDir, BrowserSessionOptions options, Set<Long> processes) {
+        checkOwner();
+        BrowserType.LaunchPersistentContextOptions launch = new BrowserType.LaunchPersistentContextOptions()
+                .setHeadless(config.headless)
+                .setTimeout(config.startTimeout.toMillis())
+                .setAcceptDownloads(false)
+                .setServiceWorkers(ServiceWorkerPolicy.BLOCK);
+        if (!config.launchArgs.isEmpty()) {
+            launch.setArgs(new ArrayList<String>(config.launchArgs));
+        }
+        if (config.channel != null) {
+            launch.setChannel(config.channel);
+        }
+        if (config.executablePath != null) {
+            launch.setExecutablePath(config.executablePath);
+        }
+        if (options.getLocale().isPresent()) {
+            launch.setLocale(options.getLocale().get().toLanguageTag());
+        }
+        synchronized (LAUNCH_LOCK) {
+            Map<Long, String> before = BrowserProcesses.descendants();
+            try {
+                return browserType().launchPersistentContext(userDataDir, launch);
+            } finally {
+                Set<Long> started = BrowserProcesses.ownedSince(before);
+                ownedPids.addAll(started);
+                processes.addAll(started);
             }
-        });
-        browserVersion = browser.version();
+        }
     }
 
     /**
      * Owner thread: whether the locally launched browser processes are all gone although the driver has not reported
      * a disconnect yet. Marks the worker as disconnected; the owner loop then fails all sessions as lost.
      */
+    long closeTimeoutMillis() {
+        return config.closeTimeout.toMillis();
+    }
+
     boolean checkBrowserProcessGone() {
         if (!disconnected && !BrowserProcesses.anyAlive(browserPids)) {
             disconnected = true;
@@ -254,7 +313,7 @@ final class Worker {
                     handleDisconnect();
                     throw new WorkerStoppedException("browser of worker " + name + " is disconnected");
                 }
-                PlaywrightSession session = new PlaywrightSession(Worker.this, runtime, options, config.headless);
+                PlaywrightSession session = new PlaywrightSession(Worker.this, runtime, options, config.headless, config.profileRoot);
                 try {
                     session.init();
                 } catch (PlaywrightException e) {
@@ -429,9 +488,12 @@ final class Worker {
                 close.result.get(timeoutMillis, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-            } catch (ExecutionException | TimeoutException e) {
-                LOG.log(Level.WARNING, "browser worker " + name + " did not close within " + timeoutMillis
-                        + " ms; interrupting its owner thread", e);
+            } catch (ExecutionException e) {
+                LOG.log(Level.WARNING, "closing browser worker " + name + " failed", e);
+            } catch (TimeoutException e) {
+                running.set(false);
+                hardKill(timeoutMillis);
+                return;
             }
             running.set(false);
         }
@@ -443,6 +505,29 @@ final class Worker {
             }
             if (thread.isAlive()) {
                 thread.interrupt();
+            }
+        }
+    }
+
+    /**
+     * The browser did not close within the close timeout: forcibly end the browser and driver processes this
+     * worker started (WP3 §6.3 rule 2, R12), then give the owner thread a moment to notice.
+     */
+    private void hardKill(long timeoutMillis) {
+        Set<Long> pids;
+        synchronized (ownedPids) {
+            pids = new LinkedHashSet<Long>(ownedPids);
+        }
+        int killed = BrowserProcesses.killTrees(pids);
+        LOG.warning("browser worker " + name + " did not close within " + timeoutMillis + " ms; killed " + killed
+                + " browser/driver processes");
+        Thread thread = owner;
+        if (thread != null && thread != Thread.currentThread()) {
+            thread.interrupt();
+            try {
+                thread.join(HARD_KILL_JOIN_MILLIS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
     }

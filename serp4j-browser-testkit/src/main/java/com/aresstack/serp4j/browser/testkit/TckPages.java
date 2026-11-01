@@ -16,7 +16,7 @@ import java.time.Duration;
  *   <li>{@value #SLOW}: answers after {@link #SLOW_DELAY}</li>
  *   <li>{@value #REDIRECT_LOCAL}: 302 to {@value #NEXT} on the same host</li>
  *   <li>{@value #REDIRECT_FOREIGN}: 302 to {@value #NEXT} on the foreign host</li>
- *   <li>{@value #COOKIE_SET}: sets cookie {@code tck=1}; {@value #COOKIE_SHOW}: title {@value #COOKIE_TITLE_PREFIX}
+ *   <li>{@value #COOKIE_SET}: sets the persistent cookie {@code tck=1} (one hour); {@value #COOKIE_SHOW}: title {@value #COOKIE_TITLE_PREFIX}
  *       followed by {@code tck=1} or {@code none}</li>
  *   <li>{@value #LATE}: fetches {@value #LATE_API} {@link #LATE_DELAY} after load; the JSON response carries a
  *       {@code Set-Cookie} header that must never be exposed and a body of {@link #LATE_BODY_BYTES} bytes</li>

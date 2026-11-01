@@ -25,10 +25,14 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
     (`NetworkCapture`, ohne Cookie- und Authorization-Header); `UrlPolicy` als Host-Allowlist vor und nach jeder
     Navigation; Fehlertypen unter `BrowserException`.
   - `serp4j-browser-testkit`: `FakeBrowserRuntime` für Provider-Tests ohne Browser und die TCK
-    `BrowserRuntimeContractTest` (27 Fälle: Isolation, Kapazität, Timeouts, Absturz, Prozessaufräumen, Policy).
+    `BrowserRuntimeContractTest` (32 Fälle: Isolation, Kapazität, Timeouts, Absturz, Hard-Kill, Prozessaufräumen, Policy, Profile, Hindernisse).
   - `serp4j-browser-playwright` (Java 8): `PlaywrightBrowserRuntime` mit einem Owner-Thread je Browser,
     Kontext je Session, harter Kapazitätsgrenze, Lebensdauer-/Leerlauf-/Navigationsbudget, `RemotePlaywrightRuntime`
     für einen Playwright-Server und der Prüfung „genau ein Treiber“ über `PlaywrightDriverModule`.
+  - `ProfileMode` (`EPHEMERAL` als Default, `PERSISTENT_EXCLUSIVE(profileKey)` mit exklusiver Dateisperre),
+    `ObstaclePolicy` (`FAIL_FAST`, `WAIT_FOR_HUMAN(timeout)` nur im sichtbaren Modus) mit
+    `BrowserSession.resolveObstacle(...)` und `PageObstacleException`; Hard-Kill der Browser- und Treiberprozesse
+    nach überschrittenem Close-Timeout (WP3 §6.3, R12).
   - Treiber `serp4j-browser-playwright-driver-node` (Java 8) und `-driver-graal` (Java 21, playwright4j).
   - Build: Plugin `serp4j.browser-tests` (Source-Set `browserTest`, nur mit `-Pserp4j.browserTests=true`);
     CI-Job `browser-tck` mit Chromium und beiden Treibern.

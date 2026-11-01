@@ -85,6 +85,13 @@ try (BrowserRuntime runtime = PlaywrightBrowserRuntime.builder().maxConcurrentSe
 }
 ```
 
+Persistente Profile (`ProfileMode.persistentExclusive("google-de")`, z. B. für Consent-Cookies) gibt es nur mit
+`PlaywrightBrowserRuntime.builder().profileDirectory(pfad)`; ein Profil wird per Dateisperre exklusiv geleast.
+Hindernisse wie Consent- oder Challenge-Seiten erkennt der Engine-Adapter und übergibt sie an
+`session.resolveObstacle(...)`: mit `ObstaclePolicy.failFast()` (Default) kommt sofort eine `PageObstacleException`,
+mit `ObstaclePolicy.waitForHuman(timeout)` wartet die Session im sichtbaren Fenster (nur `headless(false)`), bis
+ein Mensch das Hindernis gelöst hat. Serp4J löst oder umgeht keine CAPTCHAs.
+
 Die Runtime gehört dem, der sie baut (ADR-017), und startet den Browser erst beim ersten Bedarf. Mit dem
 Graal-Treiber kein Fat-JAR bauen: playwright4j und GraalJS müssen als eigene JARs auf dem Klassenpfad bleiben.
 

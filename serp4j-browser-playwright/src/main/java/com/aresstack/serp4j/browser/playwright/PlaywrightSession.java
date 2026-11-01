@@ -1,5 +1,11 @@
 package com.aresstack.serp4j.browser.playwright;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.nio.file.Path;
+import com.aresstack.serp4j.browser.PageObstacleException;
+import com.aresstack.serp4j.browser.PageObstacle;
+import com.aresstack.serp4j.browser.ObstaclePolicy;
 import com.aresstack.serp4j.browser.BrowserCapability;
 import com.aresstack.serp4j.browser.BrowserException;
 import com.aresstack.serp4j.browser.BrowserSession;
@@ -62,6 +68,8 @@ final class PlaywrightSession implements BrowserSession {
 
     private static final String ABOUT_BLANK = "about:blank";
     private static final long URL_POLL_MILLIS = 50L;
+    /** How long a closed persistent browser may take to exit before it is killed (its cookies are saved already). */
+    private static final long PROFILE_EXIT_MILLIS = 3_000L;
     private static final String TEXT_SCRIPT = "() => document.body ? document.body.innerText : ''";
 
     private final Worker worker;
@@ -83,26 +91,55 @@ final class PlaywrightSession implements BrowserSession {
     private boolean crashed;
     private final List<Page> popups = new ArrayList<Page>();
     private final NetworkTracker network = new NetworkTracker();
+    private final Path profileRoot;
+    private ProfileLease lease;
+    /** Browser processes of a persistent session; the lease is held until they have ended. */
+    private final Set<Long> profileProcesses = new LinkedHashSet<Long>();
 
-    PlaywrightSession(Worker worker, PlaywrightBrowserRuntime runtime, BrowserSessionOptions options, boolean headless) {
+    PlaywrightSession(Worker worker, PlaywrightBrowserRuntime runtime, BrowserSessionOptions options, boolean headless,
+                      Path profileRoot) {
         this.worker = worker;
         this.runtime = runtime;
         this.options = options;
         this.headless = headless;
+        this.profileRoot = profileRoot;
     }
 
-    /** Owner thread: creates context and page. */
+    /**
+     * Owner thread: creates context and page. An ephemeral session gets a fresh context in the worker's browser; a
+     * persistent one leases its profile directory and launches its own browser on it.
+     */
     void init() {
         worker.checkOwner();
-        Browser browser = worker.browser();
-        Browser.NewContextOptions contextOptions = new Browser.NewContextOptions()
-                .setAcceptDownloads(false)
-                // Service workers would bypass request routing and therefore the URL policy.
-                .setServiceWorkers(ServiceWorkerPolicy.BLOCK);
-        if (options.getLocale().isPresent()) {
-            contextOptions.setLocale(options.getLocale().get().toLanguageTag());
+        if (options.getProfileMode().isPersistent()) {
+            lease = ProfileLease.acquire(profileRoot, options.getProfileMode().getProfileKey().get());
+            try {
+                context = worker.launchPersistent(lease.getDirectory(), options, profileProcesses);
+            } catch (RuntimeException e) {
+                lease.release();
+                throw e;
+            }
+            ProfileCookies.restore(context, lease.getDirectory());
+            context.onClose(new Consumer<BrowserContext>() {
+                @Override
+                public void accept(BrowserContext closedContext) {
+                    if (!closing) {
+                        // the browser of the persistent profile went away without us closing it
+                        crashed = true;
+                    }
+                }
+            });
+        } else {
+            Browser browser = worker.browser();
+            Browser.NewContextOptions contextOptions = new Browser.NewContextOptions()
+                    .setAcceptDownloads(false)
+                    // Service workers would bypass request routing and therefore the URL policy.
+                    .setServiceWorkers(ServiceWorkerPolicy.BLOCK);
+            if (options.getLocale().isPresent()) {
+                contextOptions.setLocale(options.getLocale().get().toLanguageTag());
+            }
+            context = browser.newContext(contextOptions);
         }
-        context = browser.newContext(contextOptions);
         try {
             context.setDefaultTimeout(options.getDefaultTimeout().toMillis());
             final UrlPolicy policy = options.getUrlPolicy();
@@ -132,7 +169,7 @@ final class PlaywrightSession implements BrowserSession {
                     popups.add(opened);
                 }
             });
-            page = context.newPage();
+            page = context.pages().isEmpty() ? context.newPage() : context.pages().get(0);
             page.onClose(new Consumer<Page>() {
                 @Override
                 public void accept(Page closedPage) {
@@ -148,10 +185,14 @@ final class PlaywrightSession implements BrowserSession {
                 }
             });
         } catch (PlaywrightException e) {
+            closing = true;
             try {
                 context.close();
             } catch (PlaywrightException ignored) {
                 // the context is unusable anyway
+            }
+            if (lease != null) {
+                lease.release();
             }
             throw e;
         }
@@ -407,6 +448,32 @@ final class PlaywrightSession implements BrowserSession {
                 return WaitOutcome.TIMED_OUT;
             }
             page.waitForTimeout(Math.min(URL_POLL_MILLIS, Math.max(1L, remaining / 1_000_000L)));
+        }
+    }
+
+    @Override
+    public void resolveObstacle(final PageObstacle obstacle, final WaitCondition resolved) {
+        if (obstacle == null || resolved == null) {
+            throw new NullPointerException("obstacle and resolved must not be null");
+        }
+        if (obstacle == PageObstacle.NONE) {
+            throw new IllegalArgumentException("obstacle must not be NONE");
+        }
+        final ObstaclePolicy policy = options.getObstaclePolicy();
+        if (!policy.isWaitForHuman()) {
+            checkUsable();
+            throw new PageObstacleException(obstacle, false, obstacle + " on the page (policy FAIL_FAST); Serp4J "
+                    + "does not solve or bypass obstacles");
+        }
+        if (headless) {
+            // openSession refuses WAIT_FOR_HUMAN without HEADED_MODE; this guards the invariant
+            throw new UnsupportedBrowserCapabilityException(EnumSet.of(BrowserCapability.HEADED_MODE),
+                    "waiting for a human needs a visible browser window");
+        }
+        // The human acts in the visible window; the session only waits until the caller's condition holds.
+        if (await(resolved, policy.getHumanTimeout().get()) != WaitOutcome.SATISFIED) {
+            throw new PageObstacleException(obstacle, true, obstacle + " was not resolved within "
+                    + policy.getHumanTimeout().get());
         }
     }
 
@@ -735,6 +802,9 @@ final class PlaywrightSession implements BrowserSession {
         closing = true;
         state = terminal;
         network.clear();
+        if (lease != null) {
+            ProfileCookies.save(context, lease.getDirectory());
+        }
         try {
             context.close();
         } catch (PlaywrightException e) {
@@ -751,12 +821,31 @@ final class PlaywrightSession implements BrowserSession {
         }
         state = BrowserSessionState.FAILED;
         network.clear();
+        if (lease != null) {
+            // a persistent session runs its own browser, which may still be alive
+            closing = true;
+            try {
+                context.close();
+            } catch (PlaywrightException e) {
+                // already gone
+            }
+        }
         worker.sessionEnded(this);
         release();
     }
 
     private void release() {
         if (released.compareAndSet(false, true)) {
+            if (lease != null) {
+                // Not every driver ends a persistent browser on close (the GraalJS driver leaves it running). The next
+                // session on this profile must not start while it runs, so wait briefly and then kill it; its
+                // cookies were saved by ProfileCookies before closing.
+                if (!BrowserProcesses.awaitExit(profileProcesses, Math.min(PROFILE_EXIT_MILLIS,
+                        worker.closeTimeoutMillis()))) {
+                    BrowserProcesses.killTrees(profileProcesses);
+                }
+                lease.release();
+            }
             runtime.release();
         }
     }

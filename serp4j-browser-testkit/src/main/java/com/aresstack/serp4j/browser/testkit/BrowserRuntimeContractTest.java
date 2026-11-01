@@ -2,6 +2,7 @@ package com.aresstack.serp4j.browser.testkit;
 
 import com.aresstack.serp4j.browser.BrowserCapability;
 import com.aresstack.serp4j.browser.BrowserCapacityException;
+import com.aresstack.serp4j.browser.BrowserProfileInUseException;
 import com.aresstack.serp4j.browser.BrowserReadiness;
 import com.aresstack.serp4j.browser.BrowserRuntime;
 import com.aresstack.serp4j.browser.BrowserRuntimeInfo;
@@ -20,7 +21,10 @@ import com.aresstack.serp4j.browser.NavigationResult;
 import com.aresstack.serp4j.browser.NetworkCapture;
 import com.aresstack.serp4j.browser.NetworkFilter;
 import com.aresstack.serp4j.browser.ObservedExchange;
+import com.aresstack.serp4j.browser.ObstaclePolicy;
 import com.aresstack.serp4j.browser.PageObstacle;
+import com.aresstack.serp4j.browser.PageObstacleException;
+import com.aresstack.serp4j.browser.ProfileMode;
 import com.aresstack.serp4j.browser.PageScript;
 import com.aresstack.serp4j.browser.PageSnapshot;
 import com.aresstack.serp4j.browser.ScriptEvaluationException;
@@ -132,6 +136,27 @@ public abstract class BrowserRuntimeContractTest {
      * @throws Exception if the check fails
      */
     protected void assertNoOrphanedProcesses(Object before, Object running) throws Exception {
+    }
+
+    /**
+     * Makes the browser of the runtime hang so that closing it cannot finish normally, for example by stopping the
+     * browser processes started after {@code before}. Return {@code false} if the implementation cannot simulate
+     * that; the test is then skipped.
+     *
+     * @param runtime runtime with at least one open session
+     * @param before  {@link #processSnapshot()} taken before the runtime was created
+     * @return whether the browser now hangs
+     * @throws Exception if the hang cannot be caused
+     */
+    protected boolean freezeBrowser(BrowserRuntime runtime, Object before) throws Exception {
+        return false;
+    }
+
+    /**
+     * @return upper bound for closing a runtime whose browser hangs: its close timeout plus the hard kill
+     */
+    protected Duration hungCloseBound() {
+        return Duration.ofSeconds(60);
     }
 
     /**
@@ -479,6 +504,22 @@ public abstract class BrowserRuntimeContractTest {
     }
 
     @Test
+    void close_timeout_hard_kills_a_hanging_browser_and_leaves_no_processes() throws Exception {
+        Object before = processSnapshot();
+        final BrowserRuntime own = extraRuntime();
+        BrowserSession session = own.openSession(options().build());
+        go(session, TckPages.HOME);
+        Object running = processSnapshot();
+        Assumptions.assumeTrue(freezeBrowser(own, before), "implementation cannot simulate a hanging browser");
+        long start = System.nanoTime();
+        own.close();
+        Duration took = Duration.ofNanos(System.nanoTime() - start);
+        Assertions.assertTrue(took.compareTo(hungCloseBound()) <= 0, "close took " + took);
+        Assertions.assertTrue(session.getState().isTerminal(), "session state " + session.getState());
+        assertNoOrphanedProcesses(before, running);
+    }
+
+    @Test
     void crashed_browser_fails_sessions_as_lost_and_new_sessions_work() throws Exception {
         Object before = processSnapshot();
         final BrowserRuntime own = extraRuntime();
@@ -515,6 +556,108 @@ public abstract class BrowserRuntimeContractTest {
         go(second, TckPages.COOKIE_SHOW);
         Assertions.assertEquals(TckPages.COOKIE_TITLE_PREFIX + "tck=1", title(first));
         Assertions.assertEquals(TckPages.COOKIE_TITLE_PREFIX + "none", title(second));
+    }
+
+    // ---------------------------------------------------------------------------------------- profile mode
+
+    @Test
+    void ephemeral_profile_is_the_default() {
+        Assertions.assertEquals(ProfileMode.ephemeral(), options().build().getProfileMode());
+        BrowserSession first = open();
+        go(first, TckPages.COOKIE_SET);
+        first.close();
+        BrowserSession second = open();
+        go(second, TckPages.COOKIE_SHOW);
+        Assertions.assertEquals(TckPages.COOKIE_TITLE_PREFIX + "none", title(second));
+    }
+
+    @Test
+    void persistent_profile_keeps_cookies_and_is_leased_exclusively() {
+        final String key = "tck-" + Long.toHexString(System.nanoTime());
+        final BrowserSessionOptions persistent = options().profileMode(ProfileMode.persistentExclusive(key))
+                .acquireTimeout(Duration.ZERO).build();
+        if (!runtime.getInfo().supports(BrowserCapability.PERSISTENT_PROFILE)) {
+            UnsupportedBrowserCapabilityException missing = expect(UnsupportedBrowserCapabilityException.class,
+                    new Executable() {
+                        @Override
+                        public void execute() {
+                            open(persistent);
+                        }
+                    });
+            Assertions.assertTrue(missing.getMissing().contains(BrowserCapability.PERSISTENT_PROFILE));
+            return;
+        }
+        BrowserSession first = open(persistent);
+        go(first, TckPages.COOKIE_SET);
+        BrowserProfileInUseException inUse = expect(BrowserProfileInUseException.class, new Executable() {
+            @Override
+            public void execute() {
+                open(persistent);
+            }
+        });
+        Assertions.assertEquals(key, inUse.getProfileKey());
+        BrowserSession other = open(options().profileMode(ProfileMode.persistentExclusive(key + "-other")).build());
+        go(other, TckPages.COOKIE_SHOW);
+        Assertions.assertEquals(TckPages.COOKIE_TITLE_PREFIX + "none", title(other), "profiles are isolated");
+        other.close();
+        first.close();
+
+        BrowserSession again = open(persistent);
+        go(again, TckPages.COOKIE_SHOW);
+        Assertions.assertEquals(TckPages.COOKIE_TITLE_PREFIX + "tck=1", title(again), "the lease was released and "
+                + "the profile kept its cookie");
+        BrowserSession ephemeral = open();
+        go(ephemeral, TckPages.COOKIE_SHOW);
+        Assertions.assertEquals(TckPages.COOKIE_TITLE_PREFIX + "none", title(ephemeral));
+    }
+
+    // -------------------------------------------------------------------------------------- obstacle policy
+
+    @Test
+    void fail_fast_reports_obstacles_typed_and_the_session_stays_usable() {
+        final BrowserSession session = open();
+        go(session, TckPages.HOME);
+        Assertions.assertEquals(ObstaclePolicy.failFast(), options().build().getObstaclePolicy());
+        PageObstacleException failure = expect(PageObstacleException.class, new Executable() {
+            @Override
+            public void execute() {
+                session.resolveObstacle(PageObstacle.CONSENT, WaitCondition.present(ElementSelector.css("h1")));
+            }
+        });
+        Assertions.assertEquals(PageObstacle.CONSENT, failure.getObstacle());
+        Assertions.assertFalse(failure.isWaitedForHuman());
+        go(session, TckPages.NEXT);
+        Assertions.assertEquals(TckPages.NEXT_TITLE, title(session));
+    }
+
+    @Test
+    void wait_for_human_is_only_allowed_in_headed_mode() {
+        final BrowserSessionOptions waiting = options().obstaclePolicy(ObstaclePolicy.waitForHuman(SHORT)).build();
+        Assertions.assertTrue(waiting.getRequiredCapabilities().contains(BrowserCapability.HEADED_MODE));
+        if (!runtime.getInfo().supports(BrowserCapability.HEADED_MODE)) {
+            UnsupportedBrowserCapabilityException missing = expect(UnsupportedBrowserCapabilityException.class,
+                    new Executable() {
+                        @Override
+                        public void execute() {
+                            open(waiting);
+                        }
+                    });
+            Assertions.assertTrue(missing.getMissing().contains(BrowserCapability.HEADED_MODE));
+            Assertions.assertTrue(runtime.getInfo().isHeadless());
+            return;
+        }
+        final BrowserSession session = open(waiting);
+        go(session, TckPages.HOME);
+        session.resolveObstacle(PageObstacle.CHALLENGE, WaitCondition.urlMatches("/$"));
+        PageObstacleException failure = expect(PageObstacleException.class, new Executable() {
+            @Override
+            public void execute() {
+                session.resolveObstacle(PageObstacle.CHALLENGE,
+                        WaitCondition.present(ElementSelector.css("#never-there")));
+            }
+        });
+        Assertions.assertTrue(failure.isWaitedForHuman());
+        Assertions.assertFalse(session.getState().isTerminal());
     }
 
     @Test

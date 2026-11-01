@@ -17,6 +17,9 @@ import com.aresstack.serp4j.browser.NetworkCapture;
 import com.aresstack.serp4j.browser.NetworkFilter;
 import com.aresstack.serp4j.browser.NetworkObserver;
 import com.aresstack.serp4j.browser.ObservedExchange;
+import com.aresstack.serp4j.browser.ObstaclePolicy;
+import com.aresstack.serp4j.browser.PageObstacle;
+import com.aresstack.serp4j.browser.PageObstacleException;
 import com.aresstack.serp4j.browser.PageScript;
 import com.aresstack.serp4j.browser.PageSnapshot;
 import com.aresstack.serp4j.browser.ScriptEvaluationException;
@@ -63,16 +66,19 @@ public final class FakeBrowserSession implements BrowserSession {
     private String url = ABOUT_BLANK;
     private FakePage page = FakePage.builder().build();
     private final Map<ElementSelector, String> inputValues = new LinkedHashMap<ElementSelector, String>();
-    private final Map<String, Map<String, String>> cookiesByHost = new HashMap<String, Map<String, String>>();
+    /** Cookie jar; for a persistent profile the profile's jar, used exclusively while the session holds the lease. */
+    private final Map<String, Map<String, String>> cookiesByHost;
     private final List<Scheduled> timeline = new CopyOnWriteArrayList<Scheduled>();
     private final List<String> navigations = new CopyOnWriteArrayList<String>();
     private final List<String> interactions = new CopyOnWriteArrayList<String>();
     private final List<String> evaluatedScripts = new CopyOnWriteArrayList<String>();
 
-    FakeBrowserSession(FakeBrowserRuntime runtime, FakeWeb web, BrowserSessionOptions options) {
+    FakeBrowserSession(FakeBrowserRuntime runtime, FakeWeb web, BrowserSessionOptions options,
+                       Map<String, Map<String, String>> cookieJar) {
         this.runtime = runtime;
         this.web = web;
         this.options = options;
+        this.cookiesByHost = cookieJar;
     }
 
     /** An exchange that becomes visible at a point in time. */
@@ -230,6 +236,25 @@ public final class FakeBrowserSession implements BrowserSession {
             return WaitOutcome.TIMED_OUT;
         } finally {
             end();
+        }
+    }
+
+    @Override
+    public void resolveObstacle(PageObstacle obstacle, WaitCondition resolved) {
+        if (obstacle == null || resolved == null) {
+            throw new NullPointerException("obstacle and resolved must not be null");
+        }
+        if (obstacle == PageObstacle.NONE) {
+            throw new IllegalArgumentException("obstacle must not be NONE");
+        }
+        ObstaclePolicy policy = options.getObstaclePolicy();
+        if (!policy.isWaitForHuman()) {
+            checkUsable();
+            throw new PageObstacleException(obstacle, false, obstacle + " on " + url + " (policy FAIL_FAST)");
+        }
+        if (await(resolved, policy.getHumanTimeout().get()) != WaitOutcome.SATISFIED) {
+            throw new PageObstacleException(obstacle, true, obstacle + " on " + url + " was not resolved within "
+                    + policy.getHumanTimeout().get());
         }
     }
 

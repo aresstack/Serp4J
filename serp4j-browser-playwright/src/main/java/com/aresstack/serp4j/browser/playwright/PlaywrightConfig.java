@@ -22,11 +22,12 @@ final class PlaywrightConfig {
     final Map<String, String> driverEnvironment;
     final boolean shutdownHook;
     final ClassLoader classLoader;
+    final Path profileRoot;
 
     PlaywrightConfig(PlaywrightBrowserType browserType, String channel, Path executablePath, boolean headless,
                      List<String> launchArgs, String wsEndpoint, int workers, int maxConcurrentSessions,
                      Duration startTimeout, Duration closeTimeout, Map<String, String> driverEnvironment,
-                     boolean shutdownHook, ClassLoader classLoader) {
+                     boolean shutdownHook, ClassLoader classLoader, Path profileRoot) {
         this.browserType = browserType;
         this.channel = channel;
         this.executablePath = executablePath;
@@ -40,6 +41,11 @@ final class PlaywrightConfig {
         this.driverEnvironment = Collections.unmodifiableMap(driverEnvironment);
         this.shutdownHook = shutdownHook;
         this.classLoader = classLoader;
+        this.profileRoot = profileRoot;
+    }
+
+    boolean supportsPersistentProfiles() {
+        return profileRoot != null && !isRemote();
     }
 
     boolean isRemote() {

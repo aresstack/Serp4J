@@ -90,7 +90,7 @@ public final class TckHttpServer implements TckSite, AutoCloseable {
             } else if (TckPages.REDIRECT_FOREIGN.equals(path)) {
                 redirect(exchange, foreignUrl(TckPages.NEXT));
             } else if (TckPages.COOKIE_SET.equals(path)) {
-                exchange.getResponseHeaders().add("Set-Cookie", "tck=1; Path=/");
+                exchange.getResponseHeaders().add("Set-Cookie", "tck=1; Path=/; Max-Age=3600");
                 html(exchange, 200, TckPages.page("TCK Cookie Set", "<p>set</p>"));
             } else if (TckPages.COOKIE_SHOW.equals(path)) {
                 html(exchange, 200, TckPages.cookieHtml(hasTckCookie(exchange) ? "tck=1" : "none"));

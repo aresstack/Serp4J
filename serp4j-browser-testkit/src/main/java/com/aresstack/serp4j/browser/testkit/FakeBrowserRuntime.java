@@ -2,6 +2,7 @@ package com.aresstack.serp4j.browser.testkit;
 
 import com.aresstack.serp4j.browser.BrowserCapability;
 import com.aresstack.serp4j.browser.BrowserCapacityException;
+import com.aresstack.serp4j.browser.BrowserProfileInUseException;
 import com.aresstack.serp4j.browser.BrowserReadiness;
 import com.aresstack.serp4j.browser.BrowserRuntime;
 import com.aresstack.serp4j.browser.BrowserRuntimeInfo;
@@ -15,7 +16,10 @@ import com.aresstack.serp4j.browser.UnsupportedBrowserCapabilityException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Semaphore;
@@ -44,6 +48,10 @@ public final class FakeBrowserRuntime implements BrowserRuntime {
     private final List<FakeBrowserSession> allSessions = new CopyOnWriteArrayList<FakeBrowserSession>();
     private final AtomicBoolean closed = new AtomicBoolean();
     private final AtomicInteger probes = new AtomicInteger();
+    /** Persistent profiles: cookie jars by profile key, and the keys currently leased. */
+    private final Map<String, Map<String, Map<String, String>>> profiles =
+            new HashMap<String, Map<String, Map<String, String>>>();
+    private final Set<String> leasedProfiles = new HashSet<String>();
 
     private FakeBrowserRuntime(Builder builder) {
         this.web = builder.web;
@@ -51,7 +59,7 @@ public final class FakeBrowserRuntime implements BrowserRuntime {
                 .browserVersion("fake")
                 .isolationLevel(IsolationLevel.CONTEXT)
                 .maxConcurrentSessions(builder.maxConcurrentSessions)
-                .headless(true)
+                .headless(!builder.capabilities.contains(BrowserCapability.HEADED_MODE))
                 .capabilities(builder.capabilities);
         if (builder.maxConcurrentSessions > 1) {
             infoBuilder.capability(BrowserCapability.PARALLEL_SESSIONS);
@@ -63,7 +71,8 @@ public final class FakeBrowserRuntime implements BrowserRuntime {
 
     /**
      * @return a builder with an empty web, 4 sessions and the capabilities {@code JAVASCRIPT},
-     * {@code NETWORK_OBSERVATION}, {@code NETWORK_INTERCEPTION} and {@code LOCALE_EMULATION}
+     * {@code NETWORK_OBSERVATION}, {@code NETWORK_INTERCEPTION}, {@code LOCALE_EMULATION} and
+     * {@code PERSISTENT_PROFILE} (headless; add {@code HEADED_MODE} for a visible fake)
      */
     public static Builder builder() {
         return new Builder();
@@ -112,7 +121,14 @@ public final class FakeBrowserRuntime implements BrowserRuntime {
             slots.release();
             ensureOpen();
         }
-        FakeBrowserSession session = new FakeBrowserSession(this, web, options);
+        Map<String, Map<String, String>> jar;
+        try {
+            jar = leaseProfile(options);
+        } catch (RuntimeException e) {
+            slots.release();
+            throw e;
+        }
+        FakeBrowserSession session = new FakeBrowserSession(this, web, options, jar);
         openSessions.add(session);
         allSessions.add(session);
         return session;
@@ -125,9 +141,33 @@ public final class FakeBrowserRuntime implements BrowserRuntime {
         }
     }
 
+    /** The cookie jar of the session: fresh when ephemeral, the leased profile's jar when persistent. */
+    private Map<String, Map<String, String>> leaseProfile(BrowserSessionOptions options) {
+        if (!options.getProfileMode().isPersistent()) {
+            return new HashMap<String, Map<String, String>>();
+        }
+        String key = options.getProfileMode().getProfileKey().get();
+        synchronized (profiles) {
+            if (!leasedProfiles.add(key)) {
+                throw new BrowserProfileInUseException(key, "profile '" + key + "' is used by another session");
+            }
+            Map<String, Map<String, String>> jar = profiles.get(key);
+            if (jar == null) {
+                jar = new HashMap<String, Map<String, String>>();
+                profiles.put(key, jar);
+            }
+            return jar;
+        }
+    }
+
     /** Called exactly once per session when it reaches a terminal state. */
     void released(FakeBrowserSession session) {
         if (openSessions.remove(session)) {
+            if (session.getOptions().getProfileMode().isPersistent()) {
+                synchronized (profiles) {
+                    leasedProfiles.remove(session.getOptions().getProfileMode().getProfileKey().get());
+                }
+            }
             slots.release();
         }
     }
@@ -194,7 +234,7 @@ public final class FakeBrowserRuntime implements BrowserRuntime {
         private int maxConcurrentSessions = 4;
         private final Set<BrowserCapability> capabilities = EnumSet.of(BrowserCapability.JAVASCRIPT,
                 BrowserCapability.NETWORK_OBSERVATION, BrowserCapability.NETWORK_INTERCEPTION,
-                BrowserCapability.LOCALE_EMULATION);
+                BrowserCapability.LOCALE_EMULATION, BrowserCapability.PERSISTENT_PROFILE);
         private BrowserReadiness readiness = BrowserReadiness.ready("fake");
 
         private Builder() {

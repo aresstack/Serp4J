@@ -102,6 +102,9 @@ public final class PlaywrightBrowserRuntime implements BrowserRuntime {
         if (config.maxConcurrentSessions > 1) {
             info.capability(BrowserCapability.PARALLEL_SESSIONS);
         }
+        if (config.supportsPersistentProfiles()) {
+            info.capability(BrowserCapability.PERSISTENT_PROFILE);
+        }
         return info.build();
     }
 
@@ -272,6 +275,7 @@ public final class PlaywrightBrowserRuntime implements BrowserRuntime {
         private String channel;
         private Path executablePath;
         private boolean headless = true;
+        private Path profileRoot;
         private final List<String> launchArgs = new ArrayList<String>();
         private String wsEndpoint;
         private int workers = 1;
@@ -313,6 +317,20 @@ public final class PlaywrightBrowserRuntime implements BrowserRuntime {
          */
         public Builder executablePath(Path executablePath) {
             this.executablePath = executablePath;
+            return this;
+        }
+
+        /**
+         * Enables {@link com.aresstack.serp4j.browser.ProfileMode#persistentExclusive(String)}: each profile key gets
+         * the directory {@code <root>/<key>}, leased exclusively through a file lock, so that two sessions (also in
+         * different processes) never use it at the same time. Each persistent session runs its own browser process.
+         * Not available for a remote Playwright server.
+         *
+         * @param root directory for persistent profiles; {@code null} disables them (default)
+         * @return this builder
+         */
+        public Builder profileDirectory(Path root) {
+            this.profileRoot = root;
             return this;
         }
 
@@ -441,13 +459,15 @@ public final class PlaywrightBrowserRuntime implements BrowserRuntime {
          * @return the runtime; nothing is started yet
          */
         public PlaywrightBrowserRuntime build() {
-            if (wsEndpoint != null && (executablePath != null || channel != null || !launchArgs.isEmpty())) {
-                throw new IllegalStateException("executablePath, channel and launch arguments do not apply to a "
-                        + "remote Playwright server");
+            if (wsEndpoint != null && (executablePath != null || channel != null || !launchArgs.isEmpty()
+                    || profileRoot != null)) {
+                throw new IllegalStateException("executablePath, channel, launch arguments and profile directory do "
+                        + "not apply to a remote Playwright server");
             }
             return new PlaywrightBrowserRuntime(new PlaywrightConfig(browserType, channel, executablePath, headless,
                     new ArrayList<String>(launchArgs), wsEndpoint, workers, maxConcurrentSessions, startTimeout,
-                    closeTimeout, new LinkedHashMap<String, String>(driverEnvironment), shutdownHook, classLoader));
+                    closeTimeout, new LinkedHashMap<String, String>(driverEnvironment), shutdownHook, classLoader,
+                    profileRoot));
         }
     }
 }

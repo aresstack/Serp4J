@@ -92,6 +92,18 @@ public interface BrowserSession extends AutoCloseable {
     void press(ElementSelector selector, String key, InteractionOptions options);
 
     /**
+     * Applies the session's {@link ObstaclePolicy} to an obstacle the caller detected on the current page (WP3 B-9).
+     * Serp4J never solves or bypasses the obstacle itself. With {@link ObstaclePolicy#failFast()} this throws at once;
+     * with {@link ObstaclePolicy#waitForHuman(java.time.Duration)} it waits in the visible window until
+     * {@code resolved} holds, at most the policy's waiting time.
+     *
+     * @param obstacle the detected obstacle, not {@link PageObstacle#NONE}
+     * @param resolved the condition that holds once a human resolved it (for example the result list is present)
+     * @throws PageObstacleException if the obstacle was not resolved; the session stays usable
+     */
+    void resolveObstacle(PageObstacle obstacle, WaitCondition resolved);
+
+    /**
      * Captures the rendered state of the page.
      *
      * @param options what to capture and how much
