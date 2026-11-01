@@ -22,6 +22,9 @@ gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 asynchttpclient = { module = "org.asynchttpclient:async-http-client", version.ref = "asynchttpclient" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 playwright = { module = "com.microsoft.playwright:playwright", version.ref = "playwright" }
+playwright-driver = { module = "com.microsoft.playwright:driver", version.ref = "playwright" }
+playwright-driver-bundle = { module = "com.microsoft.playwright:driver-bundle", version.ref = "playwright" }
+playwright4j = { module = "com.aresstack:playwright4j", version.ref = "playwright4j" }
 
 [plugins]
 nmcp-module = { id = "com.gradleup.nmcp", version.ref = "nmcp" }

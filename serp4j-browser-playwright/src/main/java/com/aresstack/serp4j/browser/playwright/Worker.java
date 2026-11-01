@@ -1,0 +1,601 @@
+package com.aresstack.serp4j.browser.playwright;
+
+import com.aresstack.serp4j.browser.BrowserReadiness;
+import com.aresstack.serp4j.browser.BrowserSessionOptions;
+import com.aresstack.serp4j.browser.BrowserUnavailableException;
+import com.microsoft.playwright.Browser;
+import com.microsoft.playwright.BrowserContext;
+import com.microsoft.playwright.BrowserType;
+import com.microsoft.playwright.Page;
+import com.microsoft.playwright.Playwright;
+import com.microsoft.playwright.PlaywrightException;
+import com.microsoft.playwright.options.ServiceWorkerPolicy;
+
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ * One owner thread with its own {@code Playwright} instance and one browser (WP3 §6.1). Every Playwright object of
+ * the worker is created and used on the owner thread only; other threads enqueue commands and block on the result.
+ * While no command is queued the owner thread pumps Playwright events in short slices.
+ */
+final class Worker {
+
+    /** A unit of work executed on the owner thread. */
+    interface Task<T> {
+        T run();
+    }
+
+    static final long PUMP_MILLIS = 20L;
+    private static final long REAP_INTERVAL_NANOS = TimeUnit.MILLISECONDS.toNanos(250);
+    private static final Logger LOG = Logger.getLogger(Worker.class.getName());
+
+    private final String name;
+    private final PlaywrightConfig config;
+    private final PlaywrightBrowserRuntime runtime;
+    private final BlockingQueue<Command<?>> queue = new LinkedBlockingQueue<Command<?>>();
+    private final AtomicBoolean running = new AtomicBoolean(true);
+    private final AtomicInteger sessionCount = new AtomicInteger();
+    private final List<PlaywrightSession> sessions = new ArrayList<PlaywrightSession>();
+    private final List<Runnable> deferred = new ArrayList<Runnable>();
+    private volatile Thread owner;
+    private volatile boolean disconnected;
+    /** Main process of the locally launched browser (see {@link BrowserProcesses}); empty when not known. */
+    private List<Object> browserProcesses = Collections.emptyList();
+    /** Browser and driver processes this worker provably started; killed forcibly when closing times out. */
+    private final List<Object> ownedProcesses = Collections.synchronizedList(new ArrayList<Object>());
+    private static final long HARD_KILL_JOIN_MILLIS = 2_000L;
+    private volatile String browserVersion;
+    private Playwright playwright;
+    private Browser browser;
+    private long nextReap;
+
+    private Worker(String name, PlaywrightConfig config, PlaywrightBrowserRuntime runtime) {
+        this.name = name;
+        this.config = config;
+        this.runtime = runtime;
+    }
+
+    /**
+     * Starts the owner thread, creates Playwright and the browser on it and returns once the browser is ready.
+     *
+     * @throws BrowserUnavailableException if the driver or the browser cannot be started
+     */
+    static Worker start(String name, PlaywrightConfig config, PlaywrightBrowserRuntime runtime) {
+        final Worker worker = new Worker(name, config, runtime);
+        final CompletableFuture<Void> started = new CompletableFuture<Void>();
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    worker.init();
+                } catch (Throwable e) {
+                    worker.running.set(false);
+                    worker.closePlaywrightQuietly();
+                    started.completeExceptionally(e);
+                    return;
+                }
+                if (!started.complete(null)) {
+                    // the caller gave up (timeout, interrupt) while the browser was starting: nobody owns it
+                    worker.running.set(false);
+                    worker.closePlaywrightQuietly();
+                    return;
+                }
+                worker.loop();
+            }
+        }, name);
+        thread.setDaemon(true);
+        worker.owner = thread;
+        thread.start();
+        try {
+            started.get(config.startTimeout.toMillis(), TimeUnit.MILLISECONDS);
+            return worker;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            abandon(worker, started);
+            throw new BrowserUnavailableException(BrowserReadiness.of(BrowserReadiness.Status.BROWSER_START_FAILED,
+                    "interrupted while starting the browser"), e);
+        } catch (TimeoutException e) {
+            abandon(worker, started);
+            throw new BrowserUnavailableException(BrowserReadiness.of(BrowserReadiness.Status.BROWSER_START_FAILED,
+                    "browser did not start within " + config.startTimeout), e);
+        } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof BrowserUnavailableException) {
+                throw (BrowserUnavailableException) cause;
+            }
+            throw new BrowserUnavailableException(Errors.startFailure(cause), cause);
+        }
+    }
+
+    /**
+     * The caller stops waiting for the start. If the owner thread has not finished starting yet, it cleans up itself
+     * once it has; if it has just finished, the running worker is shut down here, so no browser is left without owner.
+     */
+    private static void abandon(Worker worker, CompletableFuture<Void> started) {
+        if (!started.completeExceptionally(new CancellationException("start abandoned"))) {
+            if (!started.isCompletedExceptionally()) {
+                worker.shutdown(worker.config.closeTimeout.toMillis());
+            }
+        }
+    }
+
+    private void init() {
+        Map<String, String> env = new LinkedHashMap<String, String>();
+        env.put("PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD", "1");
+        env.putAll(config.driverEnvironment);
+        String marker = config.isRemote() ? null : marker();
+        try {
+            launch(env, marker);
+        } finally {
+            List<Object> browserMain = BrowserProcesses.marked(marker);
+            ownedProcesses.addAll(BrowserProcesses.ancestorsBelowJvm(browserMain));
+            ownedProcesses.addAll(browserMain);
+            browserProcesses = browserMain;
+        }
+        browser.onDisconnected(new Consumer<Browser>() {
+            @Override
+            public void accept(Browser disconnectedBrowser) {
+                disconnected = true;
+            }
+        });
+        browserVersion = browser.version();
+    }
+
+    /** A marker switch for Chromium-family browsers, which ignore unknown switches; others are not marked. */
+    private String marker() {
+        return config.browserType == PlaywrightBrowserType.CHROMIUM ? BrowserProcesses.newMarker() : null;
+    }
+
+    private List<String> launchArgs(String marker) {
+        List<String> args = new ArrayList<String>(config.launchArgs);
+        if (marker != null) {
+            args.add(marker);
+        }
+        return args;
+    }
+
+    private void launch(Map<String, String> env, String marker) {
+        playwright = Playwright.create(new Playwright.CreateOptions().setEnv(env));
+        BrowserType type = browserType();
+        if (config.isRemote()) {
+            browser = type.connect(config.wsEndpoint,
+                    new BrowserType.ConnectOptions().setTimeout(config.startTimeout.toMillis()));
+        } else {
+            BrowserType.LaunchOptions options = new BrowserType.LaunchOptions()
+                    .setHeadless(config.headless)
+                    .setTimeout(config.startTimeout.toMillis());
+            List<String> args = launchArgs(marker);
+            if (!args.isEmpty()) {
+                options.setArgs(args);
+            }
+            if (config.channel != null) {
+                options.setChannel(config.channel);
+            }
+            if (config.executablePath != null) {
+                options.setExecutablePath(config.executablePath);
+            }
+            browser = type.launch(options);
+        }
+    }
+
+    private BrowserType browserType() {
+        switch (config.browserType) {
+            case FIREFOX:
+                return playwright.firefox();
+            case WEBKIT:
+                return playwright.webkit();
+            default:
+                return playwright.chromium();
+        }
+    }
+
+    /**
+     * Owner thread: launches a browser on a persistent profile directory (its own browser process) for a session
+     * with {@link com.aresstack.serp4j.browser.ProfileMode#persistentExclusive(String)}. Its processes are owned by
+     * this worker for the hard kill.
+     */
+    BrowserContext launchPersistent(Path userDataDir, BrowserSessionOptions options, List<Object> processes) {
+        checkOwner();
+        BrowserType.LaunchPersistentContextOptions launch = new BrowserType.LaunchPersistentContextOptions()
+                .setHeadless(config.headless)
+                .setTimeout(config.startTimeout.toMillis())
+                .setAcceptDownloads(false)
+                .setServiceWorkers(ServiceWorkerPolicy.BLOCK);
+        String marker = marker();
+        List<String> args = launchArgs(marker);
+        if (!args.isEmpty()) {
+            launch.setArgs(args);
+        }
+        if (config.channel != null) {
+            launch.setChannel(config.channel);
+        }
+        if (config.executablePath != null) {
+            launch.setExecutablePath(config.executablePath);
+        }
+        if (options.getLocale().isPresent()) {
+            launch.setLocale(options.getLocale().get().toLanguageTag());
+        }
+        try {
+            return browserType().launchPersistentContext(userDataDir, launch);
+        } finally {
+            List<Object> started = BrowserProcesses.marked(marker);
+            ownedProcesses.addAll(started);
+            processes.addAll(started);
+        }
+    }
+
+    /** A persistent session's browser has ended or been killed: the worker no longer owns its processes. */
+    void forgetProcesses(List<Object> processes) {
+        ownedProcesses.removeAll(processes);
+    }
+
+    /**
+     * Owner thread: whether the locally launched browser processes are all gone although the driver has not reported
+     * a disconnect yet. Marks the worker as disconnected; the owner loop then fails all sessions as lost.
+     */
+    long closeTimeoutMillis() {
+        return config.closeTimeout.toMillis();
+    }
+
+    boolean checkBrowserProcessGone() {
+        if (!disconnected && !BrowserProcesses.anyAlive(browserProcesses)) {
+            disconnected = true;
+        }
+        return disconnected;
+    }
+
+    String getName() {
+        return name;
+    }
+
+    String getBrowserVersion() {
+        return browserVersion;
+    }
+
+    boolean isAlive() {
+        return running.get() && !disconnected;
+    }
+
+    boolean isDisconnected() {
+        return disconnected;
+    }
+
+    int getSessionCount() {
+        return sessionCount.get();
+    }
+
+    boolean isOwnerThread() {
+        return Thread.currentThread() == owner;
+    }
+
+    void checkOwner() {
+        if (!isOwnerThread()) {
+            throw new IllegalStateException("Playwright touched from thread '" + Thread.currentThread().getName()
+                    + "'; all Playwright access must run on the owner thread '" + name + "'");
+        }
+    }
+
+    Browser browser() {
+        checkOwner();
+        return browser;
+    }
+
+    /** Runs a task on the owner thread and blocks until it is done. */
+    <T> T call(Task<T> task) {
+        if (isOwnerThread()) {
+            return task.run();
+        }
+        if (!running.get()) {
+            throw new WorkerStoppedException("browser worker " + name + " has stopped");
+        }
+        Command<T> command = new Command<T>(task);
+        queue.add(command);
+        if (!running.get() && queue.remove(command)) {
+            throw new WorkerStoppedException("browser worker " + name + " has stopped");
+        }
+        return command.await();
+    }
+
+    /** Defers work to the owner loop, outside of event callbacks. Owner thread only. */
+    void defer(Runnable runnable) {
+        deferred.add(runnable);
+    }
+
+    PlaywrightSession openSession(final BrowserSessionOptions options) {
+        return call(new Task<PlaywrightSession>() {
+            @Override
+            public PlaywrightSession run() {
+                if (checkBrowserProcessGone() || !browser.isConnected()) {
+                    disconnected = true;
+                    handleDisconnect();
+                    throw new WorkerStoppedException("browser of worker " + name + " is disconnected");
+                }
+                PlaywrightSession session = new PlaywrightSession(Worker.this, runtime, options, config.headless, config.profileRoot);
+                try {
+                    session.init();
+                } catch (PlaywrightException e) {
+                    if (!browser.isConnected() || Errors.isGone(e)) {
+                        disconnected = true;
+                        handleDisconnect();
+                        throw new WorkerStoppedException("browser of worker " + name + " is disconnected");
+                    }
+                    throw Errors.map(e, "opening a browser session");
+                }
+                sessions.add(session);
+                sessionCount.incrementAndGet();
+                return session;
+            }
+        });
+    }
+
+    /** Owner thread: a session reached a terminal state. */
+    void sessionEnded(PlaywrightSession session) {
+        if (sessions.remove(session)) {
+            sessionCount.decrementAndGet();
+        }
+    }
+
+    private void loop() {
+        nextReap = System.nanoTime() + REAP_INTERVAL_NANOS;
+        while (running.get()) {
+            Command<?> command = queue.poll();
+            if (command != null) {
+                command.execute();
+                afterWork();
+                continue;
+            }
+            if (pump()) {
+                afterWork();
+            } else {
+                try {
+                    command = queue.poll(PUMP_MILLIS, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
+                    running.set(false);
+                    break;
+                }
+                if (command != null) {
+                    command.execute();
+                    afterWork();
+                }
+            }
+            long now = System.nanoTime();
+            if (now >= nextReap) {
+                nextReap = now + REAP_INTERVAL_NANOS;
+                if (checkBrowserProcessGone()) {
+                    if (running.get()) {
+                        handleDisconnect();
+                    }
+                    continue;
+                }
+                for (PlaywrightSession session : new ArrayList<PlaywrightSession>(sessions)) {
+                    session.reap(now);
+                }
+            }
+        }
+        Command<?> leftover;
+        while ((leftover = queue.poll()) != null) {
+            leftover.fail(new WorkerStoppedException("browser worker " + name + " has stopped"));
+        }
+    }
+
+    /** Pumps Playwright events for one slice; returns false if there is no page to pump on. */
+    private boolean pump() {
+        if (disconnected) {
+            return false;
+        }
+        Page page = null;
+        for (PlaywrightSession session : sessions) {
+            page = session.pageForPump();
+            if (page != null) {
+                break;
+            }
+        }
+        if (page == null) {
+            return false;
+        }
+        try {
+            page.waitForTimeout(PUMP_MILLIS);
+        } catch (PlaywrightException e) {
+            if (!browser.isConnected()) {
+                disconnected = true;
+            }
+        }
+        return true;
+    }
+
+    private void afterWork() {
+        if (!deferred.isEmpty()) {
+            List<Runnable> work = new ArrayList<Runnable>(deferred);
+            deferred.clear();
+            for (Runnable runnable : work) {
+                try {
+                    runnable.run();
+                } catch (RuntimeException e) {
+                    LOG.log(Level.FINE, "deferred browser task failed", e);
+                }
+            }
+        }
+        if (!disconnected) {
+            for (PlaywrightSession session : new ArrayList<PlaywrightSession>(sessions)) {
+                session.afterEvents();
+            }
+        }
+        if (disconnected && running.get()) {
+            handleDisconnect();
+        }
+    }
+
+    /** Owner thread: the browser is gone; every session is lost and the worker stops. */
+    private void handleDisconnect() {
+        for (PlaywrightSession session : new ArrayList<PlaywrightSession>(sessions)) {
+            session.markLost();
+        }
+        sessions.clear();
+        sessionCount.set(0);
+        running.set(false);
+        closePlaywrightQuietly();
+        runtime.workerStopped(this);
+    }
+
+    private void closeAll() {
+        for (PlaywrightSession session : new ArrayList<PlaywrightSession>(sessions)) {
+            session.closeOnOwner(com.aresstack.serp4j.browser.BrowserSessionState.CLOSED);
+        }
+        sessions.clear();
+        sessionCount.set(0);
+        running.set(false);
+        if (browser != null) {
+            try {
+                browser.close();
+            } catch (PlaywrightException e) {
+                LOG.log(Level.FINE, "closing the browser failed", e);
+            }
+        }
+        closePlaywrightQuietly();
+    }
+
+    private void closePlaywrightQuietly() {
+        if (playwright != null) {
+            try {
+                playwright.close();
+            } catch (RuntimeException e) {
+                LOG.log(Level.FINE, "closing Playwright failed", e);
+            }
+            playwright = null;
+        }
+    }
+
+    /** Closes all sessions, the browser and the driver; waits at most {@code timeoutMillis}. Idempotent. */
+    void shutdown(long timeoutMillis) {
+        Thread thread = owner;
+        if (running.get()) {
+            if (isOwnerThread()) {
+                closeAll();
+                return;
+            }
+            Command<Void> close = new Command<Void>(new Task<Void>() {
+                @Override
+                public Void run() {
+                    closeAll();
+                    return null;
+                }
+            });
+            queue.add(close);
+            try {
+                close.result.get(timeoutMillis, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (ExecutionException e) {
+                LOG.log(Level.WARNING, "closing browser worker " + name + " failed", e);
+            } catch (TimeoutException e) {
+                running.set(false);
+                hardKill(timeoutMillis);
+                return;
+            }
+            running.set(false);
+        }
+        if (thread != null && thread != Thread.currentThread()) {
+            try {
+                thread.join(timeoutMillis);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            if (thread.isAlive()) {
+                thread.interrupt();
+            }
+        }
+    }
+
+    /**
+     * The browser did not close within the close timeout: forcibly end the browser and driver processes this
+     * worker started (WP3 §6.3 rule 2, R12), then give the owner thread a moment to notice.
+     */
+    private void hardKill(long timeoutMillis) {
+        List<Object> processes;
+        synchronized (ownedProcesses) {
+            processes = new ArrayList<Object>(ownedProcesses);
+        }
+        int killed = BrowserProcesses.killTrees(processes);
+        LOG.warning("browser worker " + name + " did not close within " + timeoutMillis + " ms; killed " + killed
+                + " browser/driver processes");
+        Thread thread = owner;
+        if (thread != null && thread != Thread.currentThread()) {
+            thread.interrupt();
+            try {
+                thread.join(HARD_KILL_JOIN_MILLIS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "Worker{" + name + ", alive=" + isAlive() + ", sessions=" + sessionCount.get() + '}';
+    }
+
+    /** A queued command with its result. */
+    private static final class Command<T> {
+        final Task<T> task;
+        final CompletableFuture<T> result = new CompletableFuture<T>();
+
+        Command(Task<T> task) {
+            this.task = task;
+        }
+
+        void execute() {
+            try {
+                result.complete(task.run());
+            } catch (Throwable e) {
+                result.completeExceptionally(e);
+            }
+        }
+
+        void fail(RuntimeException reason) {
+            result.completeExceptionally(reason);
+        }
+
+        T await() {
+            boolean interrupted = false;
+            try {
+                while (true) {
+                    try {
+                        return result.get();
+                    } catch (InterruptedException e) {
+                        interrupted = true;
+                    }
+                }
+            } catch (ExecutionException e) {
+                Throwable cause = e.getCause();
+                if (cause instanceof RuntimeException) {
+                    throw (RuntimeException) cause;
+                }
+                if (cause instanceof Error) {
+                    throw (Error) cause;
+                }
+                throw new IllegalStateException(cause);
+            } finally {
+                if (interrupted) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+    }
+}
