@@ -310,6 +310,18 @@ class DataForSeoSearchProviderTest {
     }
 
     @Test
+    void cancellationAbortsTheHttpExchange() {
+        http.onAnyRequest(FakeHttpStep.hang());
+        com.aresstack.serp4j.core.port.CancellationSource cancel = new com.aresstack.serp4j.core.port.CancellationSource();
+        java.util.concurrent.CompletableFuture<SearchResponse> f = provider.search(SearchRequest.builder("q").build(),
+                SearchContext.builder().cancellation(cancel.getSignal()).build());
+        cancel.cancel();
+        assertThat(f).isCompletedExceptionally();
+        assertThat(http.getRunningCount()).isZero();
+        assertThat(http.isClosed()).isFalse();
+    }
+
+    @Test
     void timestampAndDurationParsing() {
         assertThat(DataForSeoResponseMapper.parseTimestamp("2019-11-15 12:57:46 +00:00")).isNotNull();
         assertThat(DataForSeoResponseMapper.parseSeconds("0.0874 sec.").get().toMillis()).isEqualTo(87);

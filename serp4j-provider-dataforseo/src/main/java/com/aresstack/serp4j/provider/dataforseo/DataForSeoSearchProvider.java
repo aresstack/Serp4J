@@ -182,6 +182,13 @@ public final class DataForSeoSearchProvider implements SearchProvider {
             future.completeExceptionally(transportFailure(e));
             return future;
         }
+        final CompletableFuture<HttpResponse> exchange = call;
+        // Cancellation, deadline or close() abort this exchange only; the borrowed transport stays open (ADR-017).
+        future.whenComplete((r, e) -> {
+            if (e != null && !exchange.isDone()) {
+                exchange.cancel(true);
+            }
+        });
         call.whenComplete((http, error) -> {
             if (future.isDone()) {
                 return;
