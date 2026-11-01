@@ -18,7 +18,7 @@ den ADRs eingearbeitet. `Vorgeschlagen` steht nur noch bei Entscheidungen, die A
 | [010](ADR-010-browser-api-eigenes-modul.md) | Browser-Port in eigenem Modul `serp4j-browser-api` | Angenommen |
 | [011](ADR-011-playwright-treibermodule.md) | Playwright-Adapter in Java 8, Treiber als Laufzeitmodule | Angenommen |
 | [012](ADR-012-transport-und-credentials.md) | HTTP-Transport- und Credential-Port; Konfiguration bleibt beim Host | Angenommen |
-| [013](ADR-013-serialisierung-serp4j-json.md) | Kein `Serializable`, JSON über `serp4j-json` | Vorgeschlagen |
+| [013](ADR-013-serialisierung-serp4j-json.md) | Kein `Serializable`, JSON über `serp4j-json` | Angenommen |
 | [014](ADR-014-migration-charakterisieren-vor-verschieben.md) | Migration: charakterisieren, portieren, Parität, umschalten | Angenommen |
 | [015](ADR-015-release-und-publishing.md) | Lockstep-SemVer, BOM, Maven Central | Angenommen |
 | [016](ADR-016-google-browser-adapter-grenzen.md) | Grenzen direkter Google-Zugriffe (Browser und HTTP) | Angenommen |
