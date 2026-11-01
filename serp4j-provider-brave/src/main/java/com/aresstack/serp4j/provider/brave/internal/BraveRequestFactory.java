@@ -4,6 +4,7 @@ import com.aresstack.serp4j.core.error.SearchErrorCategory;
 import com.aresstack.serp4j.core.error.SearchProviderException;
 import com.aresstack.serp4j.core.model.GeoLocation;
 import com.aresstack.serp4j.core.model.Paging;
+import com.aresstack.serp4j.core.model.ProviderRequestOptions;
 import com.aresstack.serp4j.core.model.SafeSearch;
 import com.aresstack.serp4j.core.model.SearchLocale;
 import com.aresstack.serp4j.core.model.SearchRequest;
@@ -134,9 +135,14 @@ public final class BraveRequestFactory {
         if (request.getTimeRange().isPresent()) {
             url.param("freshness", freshness(request.getTimeRange().get()));
         }
-        Optional<BraveRequestOptions> braveOptions = request.getProviderOptions(providerId, BraveRequestOptions.class);
-        if (braveOptions.isPresent()) {
-            applyOptions(url, braveOptions.get());
+        ProviderRequestOptions ownOptions = request.getProviderOptions().get(providerId);
+        if (ownOptions != null) {
+            if (!(ownOptions instanceof BraveRequestOptions)) {
+                // Never search silently with defaults when the caller meant to configure this instance.
+                throw invalid("provider options for " + providerId + " must be BraveRequestOptions, got "
+                        + ownOptions.getClass().getName());
+            }
+            applyOptions(url, (BraveRequestOptions) ownOptions);
         }
 
         HttpRequest.Builder http = HttpRequest.get(url.build())

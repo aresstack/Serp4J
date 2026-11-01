@@ -3,6 +3,7 @@ package com.aresstack.serp4j.provider.brave;
 import com.aresstack.serp4j.core.error.SearchErrorCategory;
 import com.aresstack.serp4j.core.error.SearchProviderException;
 import com.aresstack.serp4j.core.model.GeoLocation;
+import com.aresstack.serp4j.core.model.ProviderRequestOptions;
 import com.aresstack.serp4j.core.model.SafeSearch;
 import com.aresstack.serp4j.core.model.SearchFeature;
 import com.aresstack.serp4j.core.model.SearchLocale;
@@ -167,6 +168,23 @@ class BraveSearchProviderTest {
         assertThat(transport.getLastRequest().getUrl()).contains("count=20");
         assertThat(response.getMetadata().get().getWarnings()).extracting(SearchWarning::getCode)
                 .contains(SearchWarning.FEATURE_IGNORED);
+    }
+
+    @Test
+    void providerOptionsOfTheWrongTypeAreRejected() {
+        ProviderRequestOptions foreign = () -> BraveSearchProvider.DEFAULT_ID;
+        SearchProviderException failure = searchFails(SearchRequest.builder("q").providerOptions(foreign).build());
+        assertEquals(SearchErrorCategory.INVALID_REQUEST, failure.getCategory());
+        assertThat(failure.getMessage()).contains("BraveRequestOptions");
+        assertEquals(0, transport.getRequestCount());
+    }
+
+    @Test
+    void optionsForOtherProvidersAreIgnored() {
+        respondWith("web-search-synthetic.json");
+        ProviderRequestOptions other = () -> ProviderId.of("dataforseo");
+        search(SearchRequest.builder("q").providerOptions(other).build());
+        assertEquals(1, transport.getRequestCount());
     }
 
     @Test
