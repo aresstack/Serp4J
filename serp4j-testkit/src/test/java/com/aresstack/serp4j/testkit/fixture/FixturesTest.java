@@ -83,7 +83,7 @@ class FixturesTest {
         write("fixtures/acme/example.json.fixture.properties", example);
 
         try (URLClassLoader loader = classLoader()) {
-            Fixture fixture = Fixtures.loadRecorded("acme", "example.json", loader);
+            Fixture fixture = Fixtures.load("acme", "example.json", loader);
             assertThat(fixture.getProvenance()).isEqualTo(FixtureProvenance.RECORDED);
             assertThat(fixture.getRecordedAt()).contains("2026-10-12");
             assertThat(fixture.getStatus()).isEqualTo(200);
