@@ -18,9 +18,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Contract for a declarative mapping definition (ADR-019 §5, architecture.md §5.6 principle 6): the definition loads
@@ -65,6 +68,15 @@ public abstract class MappingDefinitionContractTest {
     /** Whether synthetic fixtures are accepted; default {@code false} (E-1). Only for the testkit's own tests. */
     protected boolean allowSyntheticFixtures() {
         return false;
+    }
+
+    /**
+     * Ids of sections with a discriminator that cannot be probed with an unknown element, because their path selects a
+     * single object instead of a list; default none. Every other section with a discriminator must be probed in at
+     * least one fixture, so a skipped check never passes silently.
+     */
+    protected Set<String> unprobeableSections() {
+        return Collections.emptySet();
     }
 
     /** Classpath resource of the golden file of a fixture: {@code golden/<definition id>/<provider>/<name>.snapshot.json}. */
@@ -117,12 +129,23 @@ public abstract class MappingDefinitionContractTest {
     void unknownTypeSurvives() {
         MappingEngine engine = engine();
         List<String> problems = new ArrayList<String>();
+        Set<String> probed = new LinkedHashSet<String>();
+        Set<String> skipped = new LinkedHashSet<String>();
         for (Map.Entry<Fixture, StructuredValue> e : trees().entrySet()) {
             MappingDefinitionVerifier.UnknownTypeReport report =
                     MappingDefinitionVerifier.verifyUnknownTypeSurvives(engine, e.getValue());
             if (!report.isOk()) {
                 problems.add(e.getKey().getResourcePath() + ": " + report.getProblems());
             }
+            probed.addAll(report.getProbedSections());
+            skipped.addAll(report.getSkippedSections());
+        }
+        skipped.removeAll(probed);
+        skipped.removeAll(unprobeableSections());
+        if (!skipped.isEmpty()) {
+            problems.add("section(s) " + skipped + " have a discriminator but could not be probed in any fixture (no"
+                    + " element list found); add a fixture with such a list, or name a section whose path selects a"
+                    + " single object in unprobeableSections()");
         }
         if (!problems.isEmpty()) {
             throw new AssertionError("unknown element types are lost: " + problems);

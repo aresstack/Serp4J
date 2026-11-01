@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -21,7 +22,7 @@ class MappingDefinitionContractTestTest {
             + "\"metadata\":{\"originalQuery\":\"$.query\"},\"sections\":[{\"id\":\"items\",\"kind\":\"elements\","
             + "\"path\":\"$.items[*]\",\"discriminator\":\"type\",\"discriminatorMap\":{\"organic\":\"item:organic\","
             + "\"panel\":\"feature:knowledge_panel\"},\"fieldsByType\":{\"organic\":{\"url\":\"link\",\"title\":\"title\","
-            + "\"rankInGroup\":\"rank\"%s},\"knowledge_panel\":{\"title\":\"name\",\"description\":\"text\"}}}]}";
+            + "\"rankInGroup\":\"rank\"%s},\"knowledge_panel\":{\"title\":\"name\",\"description\":\"text\"}}}%s]}";
 
     /** Contract over the synthetic fixture with a configurable definition. */
     private static class Probe extends MappingDefinitionContractTest {
@@ -29,6 +30,8 @@ class MappingDefinitionContractTestTest {
         private final boolean allowSynthetic;
         private final List<Fixture> fixtures;
         private final String goldenPrefix;
+        private String extraSections = "";
+        private Set<String> unprobeable = Collections.emptySet();
 
         Probe(String extraOrganicFields, boolean allowSynthetic, List<Fixture> fixtures, String goldenPrefix) {
             this.extraOrganicFields = extraOrganicFields;
@@ -43,7 +46,7 @@ class MappingDefinitionContractTestTest {
 
         @Override
         protected MappingEngine engine() {
-            return MappingEngine.of(MappingDefinitions.from(JsonTrees.read(String.format(DEFINITION, extraOrganicFields))));
+            return MappingEngine.of(MappingDefinitions.from(JsonTrees.read(String.format(DEFINITION, extraOrganicFields, extraSections))));
         }
 
         @Override
@@ -59,6 +62,11 @@ class MappingDefinitionContractTestTest {
         @Override
         protected boolean allowSyntheticFixtures() {
             return allowSynthetic;
+        }
+
+        @Override
+        protected Set<String> unprobeableSections() {
+            return unprobeable;
         }
 
         @Override
@@ -105,6 +113,20 @@ class MappingDefinitionContractTestTest {
         assertThatThrownBy(probe::definitionLoadsAndHasFixtures)
                 .isInstanceOf(AssertionError.class)
                 .hasMessageContaining("no fixtures");
+    }
+
+    @Test
+    void a_discriminator_section_that_was_never_probed_fails_unless_declared() {
+        Probe probe = Probe.good();
+        probe.extraSections = ",{\"id\":\"single\",\"kind\":\"features\",\"path\":\"$.items[1]\","
+                + "\"discriminator\":\"type\",\"discriminatorMap\":{\"panel\":\"knowledge_panel\"},"
+                + "\"fields\":{\"title\":\"name\"}}";
+        assertThatThrownBy(probe::unknownTypeSurvives)
+                .isInstanceOf(AssertionError.class)
+                .hasMessageContaining("[single]");
+
+        probe.unprobeable = Collections.singleton("single");
+        assertThatCode(probe::unknownTypeSurvives).doesNotThrowAnyException();
     }
 
     @Test

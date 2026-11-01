@@ -51,7 +51,8 @@ Das Testkit enthält derzeit **keine** Provider-Fixtures. Die echten DataForSEO-
 ## Beispiel: Mapping-Definition (ADR-019)
 
 Eine Klasse je Definition. Geprüft wird: Definition lädt und Engine baut; jeder Sektionspfad, Quellpfad und
-Diskriminatorwert trifft in mindestens einer Fixture; ein Element unbekannten Typs überlebt als `GenericSerpFeature`;
+Diskriminatorwert trifft in mindestens einer Fixture; ein Element unbekannten Typs überlebt als `GenericSerpFeature` (jede Sektion mit Diskriminator muss in einer
+Fixture geprüft worden sein; Ausnahmen nur ausdrücklich über `unprobeableSections()`);
 die Ausgabe jeder Fixture (`MappingSnapshot`) entspricht ihrem Golden-File. Synthetische Fixtures werden abgelehnt (E-1).
 
 ```java
