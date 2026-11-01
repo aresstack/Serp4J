@@ -16,6 +16,7 @@ import com.aresstack.serp4j.core.model.metadata.PageInfo;
 import com.aresstack.serp4j.core.model.metadata.QueryInfo;
 import com.aresstack.serp4j.core.model.metadata.SearchMetadata;
 import com.aresstack.serp4j.core.model.metadata.SearchWarning;
+import com.aresstack.serp4j.core.model.RequirementLevel;
 import com.aresstack.serp4j.core.model.SearchFeature;
 import com.aresstack.serp4j.core.port.ProviderDescriptor;
 import com.aresstack.serp4j.core.port.ProviderKind;
@@ -41,6 +42,8 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -92,6 +95,7 @@ public final class BrightDataSearchProvider implements SearchProvider {
     private final MappingEngine engine;
     private final ProviderDescriptor descriptor;
     private final AtomicBoolean closed = new AtomicBoolean();
+    private final Set<CompletableFuture<?>> running = ConcurrentHashMap.<CompletableFuture<?>>newKeySet();
 
     private BrightDataSearchProvider(Builder builder) {
         this.id = builder.id;
@@ -148,18 +152,29 @@ public final class BrightDataSearchProvider implements SearchProvider {
             }
             return failed(SearchErrorCategory.UNSUPPORTED, message.toString());
         }
+        final boolean coordinatesIgnored = request.getLocale().isPresent()
+                && request.getLocale().get().getLocation().isPresent()
+                && !request.getLocale().get().getLocation().get().getName().isPresent();
+        if (coordinatesIgnored && request.getRequirementLevel(SearchFeature.GEO_LOCATION) == RequirementLevel.REQUIRED) {
+            return failed(SearchErrorCategory.UNSUPPORTED,
+                    "Bright Data adapter needs a named location (uule); coordinates are not supported");
+        }
         final Optional<BrightDataOptions> options = request.getProviderOptions(id, BrightDataOptions.class);
         final String targetUrl = urlBuilder.build(request, options);
 
         Optional<SecretValue> key = credentials.resolve(apiKey);
-        if (!key.isPresent() || key.get().isEmpty()) {
-            return failed(SearchErrorCategory.CONFIGURATION, "no Bright Data API key configured under " + apiKey);
-        }
         HttpRequest.Builder http = HttpRequest.post(apiUrl)
                 .header("Accept", "application/json")
                 .jsonBody(requestBody(options, targetUrl));
-        String authorization = key.get().use(chars -> "Bearer " + new String(chars));
-        http.setSensitiveHeader("Authorization", authorization);
+        if (!key.isPresent()) {
+            return failed(SearchErrorCategory.CONFIGURATION, "no Bright Data API key configured under " + apiKey);
+        }
+        try (SecretValue secret = key.get()) {
+            if (secret.isEmpty()) {
+                return failed(SearchErrorCategory.CONFIGURATION, "no Bright Data API key configured under " + apiKey);
+            }
+            http.setSensitiveHeader("Authorization", secret.use(chars -> "Bearer " + new String(chars)));
+        }
         if (timeout != null) {
             http.timeout(timeout);
         }
@@ -173,6 +188,16 @@ public final class BrightDataSearchProvider implements SearchProvider {
         } catch (RuntimeException e) {
             return failedWith(translate(e));
         }
+        running.add(result);
+        result.whenComplete((ignored, error) -> {
+            running.remove(result);
+            if (result.isCompletedExceptionally()) {
+                call.cancel(true);
+            }
+        });
+        if (closed.get()) {
+            result.completeExceptionally(failure(SearchErrorCategory.CANCELLED, "provider is closed"));
+        }
         context.getCancellation().onCancel(() -> {
             result.completeExceptionally(failure(SearchErrorCategory.CANCELLED, "search was cancelled"));
             call.cancel(true);
@@ -184,7 +209,7 @@ public final class BrightDataSearchProvider implements SearchProvider {
             }
             try {
                 Duration took = Duration.ofNanos(System.nanoTime() - startNanos);
-                result.complete(toResponse(request, check, targetUrl, response, startedAt, took));
+                result.complete(toResponse(request, check, coordinatesIgnored, targetUrl, response, startedAt, took));
             } catch (SearchProviderException e) {
                 result.completeExceptionally(e);
             } catch (RuntimeException e) {
@@ -209,7 +234,8 @@ public final class BrightDataSearchProvider implements SearchProvider {
         return JsonTrees.write(body.build());
     }
 
-    private SearchResponse toResponse(SearchRequest request, CapabilityCheck check, String targetUrl,
+    private SearchResponse toResponse(SearchRequest request, CapabilityCheck check, boolean coordinatesIgnored,
+                                      String targetUrl,
                                       HttpResponse response, Instant startedAt, Duration took) {
         if (!response.isSuccessful()) {
             throw BrightDataResponses.httpFailure(id, response);
@@ -246,7 +272,12 @@ public final class BrightDataSearchProvider implements SearchProvider {
         for (CapabilityViolation ignored : check.getOptionalViolations()) {
             metadata.warning(SearchWarning.of(SearchWarning.FEATURE_IGNORED, ignored.getMessage(), id));
         }
-        if (request.getRawPayloadPolicy() == RawPayloadPolicy.ALWAYS) {
+        if (coordinatesIgnored) {
+            metadata.warning(SearchWarning.of(SearchWarning.FEATURE_IGNORED,
+                    "location without name ignored; Bright Data needs a named location (uule)", id));
+        }
+        RawPayloadPolicy policy = request.getRawPayloadPolicy();
+        if (policy == RawPayloadPolicy.ALWAYS || (policy == RawPayloadPolicy.ON_ERROR && !mapped.getWarnings().isEmpty())) {
             metadata.rawPayload(RawPayload.builder(response.getContentType().orElse("application/json"),
                     response.getBody()).httpStatus(response.getStatus()).build());
         }
@@ -307,10 +338,13 @@ public final class BrightDataSearchProvider implements SearchProvider {
         return future;
     }
 
-    /** Marks the provider closed; idempotent. The borrowed transport and credentials stay open (ADR-017). */
+    /** Marks the provider closed and cancels running searches with CANCELLED; idempotent. The borrowed transport and credentials stay open (ADR-017). */
     @Override
     public void close() {
         closed.set(true);
+        for (CompletableFuture<?> search : running) {
+            search.completeExceptionally(failure(SearchErrorCategory.CANCELLED, "provider was closed"));
+        }
     }
 
     @Override

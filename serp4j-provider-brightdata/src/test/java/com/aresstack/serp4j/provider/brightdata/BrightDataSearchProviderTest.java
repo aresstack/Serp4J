@@ -192,6 +192,30 @@ class BrightDataSearchProviderTest {
         assertThat(http.isClosed()).isFalse();
     }
 
+    @Test
+    void closeCancelsRunningSearch() {
+        FakeHttpTransport http = FakeHttpTransport.create().onAnyRequest(FakeHttpStep.hang());
+        BrightDataSearchProvider provider = provider(http);
+        java.util.concurrent.CompletableFuture<SearchResponse> pending =
+                provider.search(SearchRequest.builder("pizza").build(), SearchContext.defaults());
+        provider.close();
+        assertFailsWith(pending, SearchErrorCategory.CANCELLED);
+        assertThat(http.isClosed()).isFalse();
+    }
+
+    @Test
+    void coordinateOnlyLocationIsUnsupportedWhenRequiredAndWarnedOtherwise() {
+        com.aresstack.serp4j.core.model.SearchLocale coordinates = com.aresstack.serp4j.core.model.SearchLocale
+                .builder().location(com.aresstack.serp4j.core.model.GeoLocation.coordinates(52.5, 13.4)).build();
+        assertFailsWith(provider(recorded()).search(SearchRequest.builder("pizza").locale(coordinates)
+                .require(com.aresstack.serp4j.core.model.SearchFeature.GEO_LOCATION).build(),
+                SearchContext.defaults()), SearchErrorCategory.UNSUPPORTED);
+        SearchResponse response = assertCompletes(provider(recorded()).search(
+                SearchRequest.builder("pizza").locale(coordinates).build(), SearchContext.defaults()));
+        assertThat(response.getMetadata().get().getWarnings())
+                .anyMatch(w -> w.getCode().equals(com.aresstack.serp4j.core.model.metadata.SearchWarning.FEATURE_IGNORED));
+    }
+
     private static SearchProviderException assertFailure(FakeHttpStep step, SearchErrorCategory category) {
         FakeHttpTransport http = FakeHttpTransport.create().onAnyRequest(step);
         SearchProviderException failure = assertFailsWith(provider(http)
