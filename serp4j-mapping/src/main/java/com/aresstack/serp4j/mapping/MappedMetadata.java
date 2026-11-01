@@ -189,14 +189,14 @@ public final class MappedMetadata {
                 && Objects.equals(totalResultsEstimate, m.totalResultsEstimate) && Objects.equals(hasMore, m.hasMore)
                 && Objects.equals(pageNumber, m.pageNumber) && Objects.equals(providerRequestId, m.providerRequestId)
                 && Objects.equals(duration, m.duration) && Objects.equals(cost, m.cost)
-                && Objects.equals(currency, m.currency) && Objects.equals(credits, m.credits)
+                && Objects.equals(currency, m.currency) && (credits == null ? m.credits == null : m.credits != null && credits.compareTo(m.credits) == 0)
                 && extensions.equals(m.extensions);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(originalQuery, effectiveQuery, totalResultsEstimate, hasMore, pageNumber,
-                providerRequestId, duration, cost, currency, credits, extensions);
+                providerRequestId, duration, cost, currency, credits == null ? null : credits.stripTrailingZeros(), extensions);
     }
 
     @Override

@@ -185,6 +185,17 @@ class MappingEngineTest {
     }
 
     @Test
+    void credits_compare_numerically_like_provider_usage() {
+        MappedMetadata a = MappedMetadata.builder().credits(new BigDecimal("2.5")).build();
+        MappedMetadata b = MappedMetadata.builder().credits(new BigDecimal("2.50")).build();
+        assertThat(a).isEqualTo(b).hasSameHashCodeAs(b);
+        assertThat(a).isNotEqualTo(MappedMetadata.builder().credits(new BigDecimal("2.6")).build());
+        assertThat(a).isNotEqualTo(MappedMetadata.builder().build());
+        assertThatThrownBy(() -> MappedMetadata.builder().credits(new BigDecimal("-1")))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void metadata_mapper_and_transfer_to_search_metadata() {
         MappingDefinition d = MappingDefinitions.from(JsonTrees.read("{\"id\":\"t\",\"version\":1,\"namespace\":\"t\","
                 + "\"metadata\":{\"originalQuery\":\"q\",\"providerRequestId\":\"id\",\"credits\":\"credits\"}}"));
