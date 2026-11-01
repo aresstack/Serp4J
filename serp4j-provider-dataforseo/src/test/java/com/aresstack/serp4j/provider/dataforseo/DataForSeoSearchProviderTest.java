@@ -322,6 +322,48 @@ class DataForSeoSearchProviderTest {
     }
 
     @Test
+    void resolvedSecretsAreClosedAfterTheRequestIsBuilt() throws Exception {
+        java.util.List<com.aresstack.serp4j.core.port.credential.SecretValue> handedOut =
+                new java.util.concurrent.CopyOnWriteArrayList<com.aresstack.serp4j.core.port.credential.SecretValue>();
+        CredentialProvider tracking = key -> {
+            com.aresstack.serp4j.core.port.credential.SecretValue v = com.aresstack.serp4j.core.port.credential.SecretValue
+                    .of(key.getName().endsWith(".login") ? "login" : "pw-secret");
+            handedOut.add(v);
+            return java.util.Optional.of(v);
+        };
+        provider.close();
+        provider = DataForSeoSearchProvider.builder(http, tracking).build();
+        reply("google-organic-live-advanced.json");
+        search(SearchRequest.builder("q").build());
+        assertThat(handedOut).hasSize(2).allMatch(com.aresstack.serp4j.core.port.credential.SecretValue::isCleared);
+        assertThat(http.getLastRequest().getHeaders().getFirst("Authorization")).isPresent();
+    }
+
+    @Test
+    void rawPayloadOnErrorForPartialResults() throws Exception {
+        reply("status-40106-partial.json");
+        SearchResponse response = search(SearchRequest.builder("q").rawPayloadPolicy(RawPayloadPolicy.ON_ERROR).build());
+        assertThat(response.getMetadata().get().getRawPayload()).isPresent();
+    }
+
+    @Test
+    void rawPayloadOnErrorForIncompleteMapping() throws Exception {
+        // the advanced fixture contains an unknown element type, which the mapping reports as a warning
+        reply("google-organic-live-advanced.json");
+        SearchResponse response = search(SearchRequest.builder("q").rawPayloadPolicy(RawPayloadPolicy.ON_ERROR).build());
+        assertThat(response.getMetadata().get().getWarnings()).isNotEmpty();
+        assertThat(response.getMetadata().get().getRawPayload()).isPresent();
+    }
+
+    @Test
+    void noRawPayloadOnErrorForCleanResponse() throws Exception {
+        reply("google-organic-live-advanced-features.json");
+        SearchResponse response = search(SearchRequest.builder("q").rawPayloadPolicy(RawPayloadPolicy.ON_ERROR).build());
+        assertThat(response.getMetadata().get().getWarnings()).isEmpty();
+        assertThat(response.getMetadata().get().getRawPayload()).isEmpty();
+    }
+
+    @Test
     void timestampAndDurationParsing() {
         assertThat(DataForSeoResponseMapper.parseTimestamp("2019-11-15 12:57:46 +00:00")).isNotNull();
         assertThat(DataForSeoResponseMapper.parseSeconds("0.0874 sec.").get().toMillis()).isEqualTo(87);

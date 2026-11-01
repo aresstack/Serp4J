@@ -155,7 +155,9 @@ final class DataForSeoResponseMapper {
             metadata.complete(false).warning(SearchWarning.of(SearchWarning.PARTIAL_RESULTS,
                     "DataForSEO reported partial results (40106)", providerId));
         }
-        if (request.getRawPayloadPolicy() == RawPayloadPolicy.ALWAYS) {
+        boolean problem = taskStatus == DataForSeoStatus.PARTIAL_RESULTS || !mapped.getWarnings().isEmpty();
+        if (request.getRawPayloadPolicy() == RawPayloadPolicy.ALWAYS
+                || (request.getRawPayloadPolicy() == RawPayloadPolicy.ON_ERROR && problem)) {
             metadata.rawPayload(rawPayload(http));
         }
         return SearchResponse.of(data, metadata.build());

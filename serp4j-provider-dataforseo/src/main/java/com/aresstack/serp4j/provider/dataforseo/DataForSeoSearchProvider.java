@@ -219,13 +219,14 @@ public final class DataForSeoSearchProvider implements SearchProvider {
     private HttpRequest httpRequest(SearchRequest request, SearchEngineId engine, SearchContext context, Instant now) {
         DataForSeoFunction function = requestMapper.function(request);
         String body = requestMapper.body(request, engine);
-        final String login = resolve(loginKey);
-        final char[] password = resolve(passwordKey).toCharArray();
         HttpRequest.Builder http = HttpRequest.post(baseUrl + requestMapper.path(engine, function))
                 .jsonBody(body)
                 .setHeader("Accept", "application/json");
-        RequestAuthentication.basic(login, () -> password.clone()).apply(http);
-        java.util.Arrays.fill(password, '\0');
+        // Secret lifecycle: both SecretValues are closed after the header is built; the password never becomes
+        // a String (the login has to, RequestAuthentication.basic takes it as user name).
+        try (SecretValue login = resolve(loginKey); SecretValue password = resolve(passwordKey)) {
+            RequestAuthentication.basic(login.use(String::new), password::getChars).apply(http);
+        }
         Optional<Duration> remaining = context.getRemainingTime(now);
         if (remaining.isPresent()) {
             http.timeout(remaining.get());
@@ -233,7 +234,7 @@ public final class DataForSeoSearchProvider implements SearchProvider {
         return http.build();
     }
 
-    private String resolve(CredentialKey key) {
+    private SecretValue resolve(CredentialKey key) {
         Optional<SecretValue> secret;
         try {
             secret = credentials.resolve(key);
@@ -241,10 +242,14 @@ public final class DataForSeoSearchProvider implements SearchProvider {
             throw SearchProviderException.builder(descriptor.getId(), SearchErrorCategory.CONFIGURATION,
                     "credential '" + key.getName() + "' could not be resolved").build();
         }
-        if (!secret.isPresent() || secret.get().isEmpty()) {
+        if (!secret.isPresent()) {
             throw fail(SearchErrorCategory.CONFIGURATION, "credential '" + key.getName() + "' is not configured");
         }
-        return secret.get().use(String::new);
+        if (secret.get().isEmpty()) {
+            secret.get().close();
+            throw fail(SearchErrorCategory.CONFIGURATION, "credential '" + key.getName() + "' is empty");
+        }
+        return secret.get();
     }
 
     private SearchProviderException transportFailure(Throwable error) {
