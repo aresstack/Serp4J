@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * <ul>
  * <li><strong>Sessions:</strong> open empty in state {@code OPEN}; turn 0 is the initial search, later turns are
  * follow-ups; state {@code ACTIVE} after a turn; snapshots are immutable; responses are normal single-provider
- * responses with a {@link ConversationContext} (session id, 1-based turn number).</li>
+ * responses with a {@link ConversationContext} (session id, 0-based turn index).</li>
  * <li><strong>Turn rules:</strong> wrong {@code expectedTurnIndex} fails with {@code INVALID_REQUEST} and leaves the
  * session usable; a declared turn limit fails with {@code TURN_LIMIT_REACHED}; after {@code close()} turns fail with
  * {@code SESSION_CLOSED}; {@code close()} is idempotent.</li>
@@ -187,7 +187,7 @@ public abstract class ConversationalSearchProviderContractTest<I extends SharedI
             assertTrue(metadata.getConversation().isPresent(), "turn responses carry a ConversationContext");
             ConversationContext conversation = metadata.getConversation().get();
             assertEquals(session.getId(), conversation.getSessionId());
-            assertEquals(1, conversation.getTurnNumber(), "turn numbers are 1-based");
+            assertEquals(0, conversation.getTurnIndex(), "turn index is 0-based like ConversationTurn.getIndex()");
             assertFalse(turn.getResponse().getAnalysis().isPresent(), "providers never produce analysis");
         }
 
@@ -203,7 +203,7 @@ public abstract class ConversationalSearchProviderContractTest<I extends SharedI
 
             assertEquals(1, followUp.getIndex());
             assertEquals(TurnKind.FOLLOW_UP, followUp.getKind());
-            assertEquals(2, followUp.getResponse().getMetadata().get().getConversation().get().getTurnNumber());
+            assertEquals(1, followUp.getResponse().getMetadata().get().getConversation().get().getTurnIndex());
             assertEquals(1, afterFirst.getTurnCount(), "earlier snapshot is unchanged");
             assertEquals(2, session.snapshot().getTurnCount());
             assertEquals(followUp, session.snapshot().getLastTurn().get());
@@ -305,6 +305,17 @@ public abstract class ConversationalSearchProviderContractTest<I extends SharedI
             SearchSession session = open(secondProvider);
             ConversationTurn turn = send(session, initialRequest());
             assertSingleProviderResponse(turn.getResponse(), PROVIDER_B);
+        }
+
+        @Test
+        @DisplayName("concurrent close() calls neither fail nor close the infrastructure (ADR-017 rule 8)")
+        void concurrentCloseCallsDoNotFail() throws Exception {
+            SearchSession session = open(provider);
+            ConcurrentClose.run(4, provider::close, session::close);
+            assertEquals(SessionState.CLOSED, session.getState());
+            assertFalse(infrastructure.isClosed());
+            assertEquals(0, infrastructure.getCloseCalls());
+            assertFailsWith(provider.openSession(sessionOptions(), context()), SearchErrorCategory.CANCELLED);
         }
 
         @Test

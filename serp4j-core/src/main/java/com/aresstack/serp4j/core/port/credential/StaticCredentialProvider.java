@@ -5,6 +5,7 @@ import com.aresstack.serp4j.core.internal.Preconditions;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -12,10 +13,15 @@ import java.util.Set;
 /**
  * In-memory credentials for tests and simple hosts. Values are copied on construction; {@link #close()} wipes
  * them. Each {@link #resolve} returns a fresh {@link SecretValue} the caller closes.
+ *
+ * <p>Thread-safe: {@link #resolve}, {@link #getKeys()}, {@link #toString()} and {@link #close()} may be called
+ * from any thread and concurrently with each other. {@code close()} is idempotent (architecture.md §6.1 rule 8);
+ * a lookup that runs after it finds nothing and never observes a half-wiped secret.</p>
  */
 public final class StaticCredentialProvider implements CredentialProvider, AutoCloseable {
 
     private final Map<CredentialKey, char[]> secrets;
+    private boolean closed;
 
     private StaticCredentialProvider(Map<CredentialKey, char[]> secrets) {
         this.secrets = secrets;
@@ -34,18 +40,27 @@ public final class StaticCredentialProvider implements CredentialProvider, AutoC
     }
 
     @Override
-    public Optional<SecretValue> resolve(CredentialKey key) {
-        char[] value = secrets.get(Preconditions.requireNonNull(key, "key"));
+    public synchronized Optional<SecretValue> resolve(CredentialKey key) {
+        Preconditions.requireNonNull(key, "key");
+        if (closed) {
+            return Optional.empty();
+        }
+        char[] value = secrets.get(key);
         return value == null ? Optional.<SecretValue>empty() : Optional.of(SecretValue.of(value));
     }
 
-    public Set<CredentialKey> getKeys() {
-        return Collections.unmodifiableSet(secrets.keySet());
+    /** An immutable snapshot of the configured keys; later changes to this provider do not affect it. */
+    public synchronized Set<CredentialKey> getKeys() {
+        return Collections.unmodifiableSet(new LinkedHashSet<CredentialKey>(secrets.keySet()));
     }
 
-    /** Wipes all secrets; later lookups find nothing. */
+    /** Wipes all secrets; later lookups find nothing. Idempotent and thread-safe. */
     @Override
-    public void close() {
+    public synchronized void close() {
+        if (closed) {
+            return;
+        }
+        closed = true;
         for (char[] value : secrets.values()) {
             Arrays.fill(value, '\0');
         }
@@ -53,7 +68,7 @@ public final class StaticCredentialProvider implements CredentialProvider, AutoC
     }
 
     @Override
-    public String toString() {
+    public synchronized String toString() {
         return "StaticCredentialProvider{keys=" + secrets.keySet() + '}';
     }
 

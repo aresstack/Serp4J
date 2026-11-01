@@ -3,7 +3,6 @@ package com.aresstack.serp4j.http;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Builds a URL with a query string, percent-encoding names and values per RFC 3986 (UTF-8; unreserved characters
@@ -52,13 +51,13 @@ public final class UrlQueryBuilder {
         return param(name, Boolean.toString(value));
     }
 
-    /** Adds the parameter only when the value is present. */
-    public UrlQueryBuilder paramIfPresent(String name, Optional<String> value) {
-        if (value == null) {
-            throw new NullPointerException("value must not be null");
-        }
-        if (value.isPresent()) {
-            param(name, value.get());
+    /**
+     * Adds the parameter only when the value is not {@code null} (architecture.md §3: optional values are nullable,
+     * never {@code Optional} parameters). An empty string is a value and is added as {@code name=}.
+     */
+    public UrlQueryBuilder paramIfPresent(String name, String value) {
+        if (value != null) {
+            param(name, value);
         }
         return this;
     }

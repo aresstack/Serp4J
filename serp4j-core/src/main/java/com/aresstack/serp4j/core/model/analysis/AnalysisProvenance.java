@@ -34,6 +34,15 @@ public final class AnalysisProvenance {
         return builder(analyzerId).build();
     }
 
+    /** Returns a builder pre-filled with this instance's values. */
+    public Builder toBuilder() {
+        Builder builder = new Builder(analyzerId);
+        builder.version = version;
+        builder.model = model;
+        builder.analyzedAt = analyzedAt;
+        return builder;
+    }
+
     public String getAnalyzerId() {
         return analyzerId;
     }

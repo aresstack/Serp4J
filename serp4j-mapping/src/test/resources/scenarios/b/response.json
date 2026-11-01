@@ -1,0 +1,11 @@
+{
+  "meta": { "q": "example", "took_ms": "42" },
+  "results": [
+    { "name": "Example", "url": "https://example.com", "description": "<b>Description</b> &amp; more", "rank": "1", "extra": ["More text", "Even more"] },
+    { "name": "Only title, no url", "description": "broken", "rank": "2" },
+    { "name": "Third", "url": "https://third.example.net", "description": "Third", "rank": "3",
+      "thumbnail": { "src": "https://img.example/3.png", "width": "120", "height": 80 } }
+  ],
+  "info_box": { "label": "Example Corp", "long_desc": "A company.", "attributes": [ { "key": "Founded", "value": "1999" } ] },
+  "experimental_block": { "foo": "bar" }
+}

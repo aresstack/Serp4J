@@ -78,11 +78,14 @@ jobs:
       - name: Secrets prüfen
         id: secrets
         run: |
-          if [ -n "$ORG_GRADLE_PROJECT_mavenCentralUsername" ] && [ -n "$ORG_GRADLE_PROJECT_mavenCentralPassword" ]; then
+          # Alle drei müssen nichtleer sein: ein gesetzter, aber leerer Signing-Key würde sonst eine Signatur mit
+          # unlesbarem Schlüssel verlangen (serp4j.published.gradle.kts).
+          if [ -n "$ORG_GRADLE_PROJECT_mavenCentralUsername" ] && [ -n "$ORG_GRADLE_PROJECT_mavenCentralPassword" ] \
+             && [ -n "$ORG_GRADLE_PROJECT_signingInMemoryKey" ]; then
             echo "configured=true" >> "$GITHUB_OUTPUT"
           else
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Maven-Central-Secrets fehlen, Snapshot-Veröffentlichung übersprungen (siehe PUBLISHING.md)."
+            echo "::notice::Maven-Central- oder Signing-Secrets fehlen, Snapshot-Veröffentlichung übersprungen (siehe PUBLISHING.md)."
           fi
 
       - name: Checkout

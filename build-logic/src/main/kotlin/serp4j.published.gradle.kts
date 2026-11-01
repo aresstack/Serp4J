@@ -64,7 +64,9 @@ nmcp {
     }
 }
 
-val signingKey = providers.gradleProperty("signingInMemoryKey")
+// A set but blank key (e.g. an empty CI secret exported as ORG_GRADLE_PROJECT_signingInMemoryKey, or
+// -PsigningInMemoryKey=) counts as "not configured": no signature instead of a signature with an unreadable key.
+val signingKey = providers.gradleProperty("signingInMemoryKey").filter { it.isNotBlank() }
 val signingPassword = providers.gradleProperty("signingInMemoryKeyPassword")
 
 signing {

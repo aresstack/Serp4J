@@ -15,17 +15,21 @@ Entscheidungen in den [ADRs](docs/architecture/adr), die Reihenfolge der Arbeits
 |---|---|---|---|
 | `serp4j-core` | 8 | Domänenmodell (`SearchRequest`, `SearchResponse` = `SearchData` + `SearchMetadata` + `SearchAnalysis`, `SerpFeature`-Hierarchie mit Visitor, `Extensions`, `RawPayload`), Ports (`SearchProvider`, `ConversationalSearchProvider`, `SearchAnalyzer`, `CredentialProvider`, `SearchProviderFactory`), Capabilities, Fehlermodell | keine |
 | `serp4j-http-api` | 8 | `HttpTransport`-Port, `HttpRequest`/`HttpResponse`/`HttpHeaders`, `RequestAuthentication`, `UrlQueryBuilder` | keine |
+| `serp4j-mapping` | 8 | Response-Mapping: deklarative Mapping-Definitionen, `MappingEngine`, Custom Mapper je Definition, Prüfbausteine für Fixture-Tests ([Format](docs/mapping/mapping-definition-format.md)) | `serp4j-core` |
+| `serp4j-json` | 8 | `JsonTrees`: JSON-Text ↔ `StructuredValue` (einzige Stelle mit Gson) | `serp4j-core`, Gson |
 | `serp4j-testkit` | 8 | Test-Scope: `MockSearchProvider`, `ScriptedSearchProvider`, `ScriptedConversationalProvider`, `FakeHttpTransport`, Fixtures mit Herkunftskennzeichnung und Secret-Scan, abstrakte Contract-Tests ([README](serp4j-testkit/README.md)) | core, http-api; JUnit 5 `compileOnly` |
 | `serp4j-bom` | – | Bill of Materials über alle publizierten Module (Lockstep-Version) | – |
 
-Die weiteren Module (`serp4j-orchestration`, `serp4j-json`, `serp4j-mapping`, `serp4j-http-*`, `serp4j-provider-*`,
+Die weiteren Module (`serp4j-orchestration`, `serp4j-http-*`, `serp4j-provider-*`,
 `serp4j-browser-*`) sind in `settings.gradle.kts` bereits vorgesehen und kommen mit den Paketen
 B–H hinzu.
 
 ## Bauen
 
 Voraussetzungen: JDK 21 als Compiler-Toolchain (`--release 8` für die Java-8-Module) und ein JDK 8 für den
-zusätzlichen Testlauf. Fehlt eines, lädt Gradle es über die Foojay-Toolchain-Auflösung nach.
+zusätzlichen Testlauf. Fehlt eines, lädt Gradle es über die Foojay-Toolchain-Auflösung nach. Gradle selbst muss mit
+JDK 17 oder neuer gestartet werden (z. B. JDK 21), weil die Build-Plugins (Foojay-Resolver, nmcp) Java-17-Bytecode
+sind; JDK 8 wird nur als Test-Laufzeit gebraucht.
 
 ```bash
 ./gradlew build                            # Kompilieren, Tests auf JDK 21 und JDK 8, Javadoc, ArchUnit

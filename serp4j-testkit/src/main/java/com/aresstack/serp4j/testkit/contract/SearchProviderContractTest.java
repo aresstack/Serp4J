@@ -244,6 +244,15 @@ public abstract class SearchProviderContractTest<I extends SharedInfrastructure>
         }
 
         @Test
+        @DisplayName("concurrent close() calls neither fail nor close the infrastructure (ADR-017 rule 8)")
+        void concurrentCloseCallsDoNotFail() throws Exception {
+            ConcurrentClose.run(4, provider::close);
+            assertFalse(infrastructure.isClosed());
+            assertEquals(0, infrastructure.getCloseCalls());
+            assertFailsWith(provider.search(supportedRequest(), context()), SearchErrorCategory.CANCELLED);
+        }
+
+        @Test
         @DisplayName("search after close fails with CANCELLED through the future")
         void searchAfterCloseFailsWithCancelled() {
             provider.close();

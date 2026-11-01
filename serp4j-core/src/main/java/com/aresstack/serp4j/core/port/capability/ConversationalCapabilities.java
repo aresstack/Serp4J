@@ -33,6 +33,17 @@ public final class ConversationalCapabilities {
         return new Builder();
     }
 
+    /** Returns a builder pre-filled with this instance's values. */
+    public Builder toBuilder() {
+        Builder builder = new Builder();
+        builder.maxTurns = maxTurns;
+        builder.idleTimeout = idleTimeout;
+        builder.maxSessionAge = maxSessionAge;
+        builder.maxConcurrentSessions = maxConcurrentSessions;
+        builder.resumable = resumable;
+        return builder;
+    }
+
     /** Maximum number of turns per session including the initial turn; empty = no known limit. */
     public OptionalInt getMaxTurns() {
         return maxTurns == null ? OptionalInt.empty() : OptionalInt.of(maxTurns);

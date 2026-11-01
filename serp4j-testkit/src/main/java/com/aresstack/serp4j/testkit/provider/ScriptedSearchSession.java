@@ -221,7 +221,7 @@ public final class ScriptedSearchSession implements SearchSession {
         SearchMetadata metadata = SearchMetadata
                 .forProvider(getProviderId(), target.getEngine(), target.getVertical(),
                         QueryInfo.of(request.getMessage()))
-                .conversation(ConversationContext.of(id, index + 1))
+                .conversation(ConversationContext.of(id, index))
                 .build();
         return SearchResponse.of(data, metadata);
     }
