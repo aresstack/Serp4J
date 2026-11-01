@@ -35,12 +35,12 @@ class ToBuilderRoundTripTest {
     void providerUsageToBuilderRoundTrips() {
         ProviderUsage original = ProviderUsage.builder()
                 .cost(MonetaryAmount.of("0.002", "USD"))
-                .creditsUsed(3)
+                .credits(new java.math.BigDecimal("3"))
                 .rateLimit(RateLimitInfo.builder().limit(100).build())
                 .build();
 
         assertRoundTrip(original, original.toBuilder().build());
-        assertThat(original.toBuilder().creditsUsed(4).build()).isNotEqualTo(original);
+        assertThat(original.toBuilder().credits(new java.math.BigDecimal("4")).build()).isNotEqualTo(original);
     }
 
     @Test
@@ -68,8 +68,7 @@ class ToBuilderRoundTripTest {
 
     @Test
     void resultProvenanceToBuilderRoundTrips() {
-        ResultProvenance original = ResultProvenance.builder(ProviderId.of("brave"))
-                .engine(SearchEngineId.BRAVE)
+        ResultProvenance original = ResultProvenance.builder(ProviderId.of("brave"), SearchEngineId.BRAVE)
                 .originalId(E1)
                 .originalPosition(SerpPosition.ofRankInGroup(3))
                 .build();

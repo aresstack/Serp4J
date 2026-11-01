@@ -168,50 +168,53 @@ class DataValueTypesTest {
 
         private final ProviderId provider = ProviderId.of("brave-de");
 
+        /** WP1 §4.6: provider and engine are mandatory, original id and position optional. */
         @Test
-        void builderRequiresProviderAndKeepsOptionalOrigin() {
-            ResultProvenance minimal = ResultProvenance.builder(provider).build();
+        void builderRequiresProviderAndEngineAndKeepsOptionalOrigin() {
+            ResultProvenance minimal = ResultProvenance.builder(provider, SearchEngineId.BRAVE).build();
             SerpPosition position = SerpPosition.ofRankInGroup(3);
-            ResultProvenance full = ResultProvenance.builder(provider).engine(SearchEngineId.BRAVE)
+            ResultProvenance full = ResultProvenance.builder(provider, SearchEngineId.BRAVE)
                     .originalId(ElementId.of("o-1")).originalPosition(position).build();
 
             assertThat(minimal.getProvider()).isEqualTo(provider);
-            assertThat(minimal.getEngine()).isEmpty();
+            assertThat(minimal.getEngine()).isEqualTo(SearchEngineId.BRAVE);
             assertThat(minimal.getOriginalId()).isEmpty();
             assertThat(minimal.getOriginalPosition()).isEmpty();
-            assertThat(full.getEngine()).contains(SearchEngineId.BRAVE);
+            assertThat(full.getEngine()).isEqualTo(SearchEngineId.BRAVE);
             assertThat(full.getOriginalId()).contains(ElementId.of("o-1"));
             assertThat(full.getOriginalPosition()).contains(position);
-            assertThatNullPointerException().isThrownBy(() -> ResultProvenance.builder(null))
+            assertThatNullPointerException().isThrownBy(() -> ResultProvenance.builder(null, SearchEngineId.BRAVE))
                     .withMessageContaining("provider");
+            assertThatNullPointerException().isThrownBy(() -> ResultProvenance.builder(provider, null))
+                    .withMessageContaining("engine");
         }
 
         @Test
         void equalsAndHashCodeCoverEveryFieldIncludingInequality() {
-            ResultProvenance provenance = ResultProvenance.builder(provider).engine(SearchEngineId.BRAVE)
+            ResultProvenance provenance = ResultProvenance.builder(provider, SearchEngineId.BRAVE)
                     .originalId(ElementId.of("o-1")).originalPosition(SerpPosition.ofRankInGroup(3)).build();
-            ResultProvenance same = ResultProvenance.builder(ProviderId.of("Brave-DE")).engine(SearchEngineId.BRAVE)
+            ResultProvenance same = ResultProvenance.builder(ProviderId.of("Brave-DE"), SearchEngineId.BRAVE)
                     .originalId(ElementId.of("o-1")).originalPosition(SerpPosition.ofRankInGroup(3)).build();
 
             assertThat(provenance).isEqualTo(same);
             assertThat(provenance.hashCode()).isEqualTo(same.hashCode());
-            assertThat(provenance).isNotEqualTo(ResultProvenance.builder(ProviderId.of("other"))
-                    .engine(SearchEngineId.BRAVE).originalId(ElementId.of("o-1"))
+            assertThat(provenance).isNotEqualTo(ResultProvenance.builder(ProviderId.of("other"), SearchEngineId.BRAVE)
+                    .originalId(ElementId.of("o-1"))
                     .originalPosition(SerpPosition.ofRankInGroup(3)).build());
-            assertThat(provenance).isNotEqualTo(ResultProvenance.builder(provider).engine(SearchEngineId.GOOGLE)
+            assertThat(provenance).isNotEqualTo(ResultProvenance.builder(provider, SearchEngineId.GOOGLE)
                     .originalId(ElementId.of("o-1")).originalPosition(SerpPosition.ofRankInGroup(3)).build());
-            assertThat(provenance).isNotEqualTo(ResultProvenance.builder(provider).engine(SearchEngineId.BRAVE)
+            assertThat(provenance).isNotEqualTo(ResultProvenance.builder(provider, SearchEngineId.BRAVE)
                     .originalId(ElementId.of("o-2")).originalPosition(SerpPosition.ofRankInGroup(3)).build());
-            assertThat(provenance).isNotEqualTo(ResultProvenance.builder(provider).engine(SearchEngineId.BRAVE)
+            assertThat(provenance).isNotEqualTo(ResultProvenance.builder(provider, SearchEngineId.BRAVE)
                     .originalId(ElementId.of("o-1")).originalPosition(SerpPosition.ofRankInGroup(4)).build());
-            assertThat(provenance).isNotEqualTo(ResultProvenance.builder(provider).build());
+            assertThat(provenance).isNotEqualTo(ResultProvenance.builder(provider, SearchEngineId.BRAVE).build());
             assertThat(provenance).isNotEqualTo(null);
             assertThat(provenance).isNotEqualTo(provider);
         }
 
         @Test
         void toStringNamesProviderAndOrigin() {
-            assertThat(ResultProvenance.builder(provider).engine(SearchEngineId.BRAVE).build().toString())
+            assertThat(ResultProvenance.builder(provider, SearchEngineId.BRAVE).build().toString())
                     .startsWith("ResultProvenance{provider=").contains("brave-de").contains("engine=");
         }
     }

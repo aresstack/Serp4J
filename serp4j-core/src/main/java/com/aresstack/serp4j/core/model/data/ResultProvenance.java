@@ -9,9 +9,9 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Origin of an element in a <em>merged</em> response (ADR-008): the provider and engine that delivered it and its
- * original identifier and position. Elements of a single-provider response carry no provenance; a merger adds one
- * entry per contributing source, so a de-duplicated element keeps all its origins.
+ * Origin of an element in a <em>merged</em> response (ADR-008, WP1 §4.6): the provider and engine that delivered it
+ * (both mandatory) and its original identifier and position. Elements of a single-provider response carry no
+ * provenance; a merger adds one entry per contributing source, so a de-duplicated element keeps all its origins.
  */
 public final class ResultProvenance {
 
@@ -27,14 +27,14 @@ public final class ResultProvenance {
         this.originalPosition = builder.originalPosition;
     }
 
-    public static Builder builder(ProviderId provider) {
-        return new Builder(provider);
+    /** Starts a provenance; provider and engine are mandatory. */
+    public static Builder builder(ProviderId provider, SearchEngineId engine) {
+        return new Builder(provider, engine);
     }
 
     /** Returns a builder pre-filled with this instance's values. */
     public Builder toBuilder() {
-        Builder builder = new Builder(provider);
-        builder.engine = engine;
+        Builder builder = new Builder(provider, engine);
         builder.originalId = originalId;
         builder.originalPosition = originalPosition;
         return builder;
@@ -44,8 +44,8 @@ public final class ResultProvenance {
         return provider;
     }
 
-    public Optional<SearchEngineId> getEngine() {
-        return Optional.ofNullable(engine);
+    public SearchEngineId getEngine() {
+        return engine;
     }
 
     public Optional<ElementId> getOriginalId() {
@@ -66,7 +66,7 @@ public final class ResultProvenance {
         }
         ResultProvenance that = (ResultProvenance) o;
         return provider.equals(that.provider)
-                && Objects.equals(engine, that.engine)
+                && engine.equals(that.engine)
                 && Objects.equals(originalId, that.originalId)
                 && Objects.equals(originalPosition, that.originalPosition);
     }
@@ -85,17 +85,13 @@ public final class ResultProvenance {
     /** Builder for {@link ResultProvenance}. */
     public static final class Builder {
         private final ProviderId provider;
-        private SearchEngineId engine;
+        private final SearchEngineId engine;
         private ElementId originalId;
         private SerpPosition originalPosition;
 
-        private Builder(ProviderId provider) {
+        private Builder(ProviderId provider, SearchEngineId engine) {
             this.provider = Preconditions.requireNonNull(provider, "provider");
-        }
-
-        public Builder engine(SearchEngineId engine) {
-            this.engine = engine;
-            return this;
+            this.engine = Preconditions.requireNonNull(engine, "engine");
         }
 
         public Builder originalId(ElementId originalId) {

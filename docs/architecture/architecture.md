@@ -680,7 +680,8 @@ Bekannte Fehler im heutigen Bestand, die die Migration behebt (dokumentierte Par
 | DataForSEO `target_search_mode` hängt an der falschen Bedingung | WP5 | gegen API-Doku prüfen, Test |
 
 AskAI bindet Serp4J während der Entwicklung per Composite Build (`includeBuild '../Serp4J'`) ein, danach über
-Release-Artefakte. Dafür bleibt Serp4J auf Gradle 8.14.x (läuft auf JDK 8, wie AskAIs CI).
+Release-Artefakte. Dafür bleibt Serp4J auf Gradle 8.14.x. Die Gradle-JVM muss JDK 17 oder neuer sein (die Build-Plugins
+Foojay-Resolver und nmcp sind Java-17-Bytecode); JDK 8 ist ausschließlich Test-Laufzeit der Java-8-Module.
 
 ---
 

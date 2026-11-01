@@ -21,7 +21,6 @@ public final class ExecutionInfo {
     private final String sourceUrl;
     private final Integer attempts;
     private final Instant providerTimestamp;
-    private final Boolean cached;
 
     private ExecutionInfo(Builder builder) {
         this.startedAt = builder.startedAt;
@@ -31,7 +30,6 @@ public final class ExecutionInfo {
         this.sourceUrl = builder.sourceUrl;
         this.attempts = builder.attempts;
         this.providerTimestamp = builder.providerTimestamp;
-        this.cached = builder.cached;
     }
 
     public static Builder builder() {
@@ -74,10 +72,6 @@ public final class ExecutionInfo {
         return Optional.ofNullable(providerTimestamp);
     }
 
-    public Optional<Boolean> getCached() {
-        return Optional.ofNullable(cached);
-    }
-
     /** Returns a builder pre-populated with all values of this instance. */
     public Builder toBuilder() {
         Builder builder = new Builder();
@@ -88,7 +82,6 @@ public final class ExecutionInfo {
         builder.sourceUrl = sourceUrl;
         builder.attempts = attempts;
         builder.providerTimestamp = providerTimestamp;
-        builder.cached = cached;
         return builder;
     }
 
@@ -107,14 +100,13 @@ public final class ExecutionInfo {
                 && Objects.equals(providerRequestId, that.providerRequestId)
                 && Objects.equals(sourceUrl, that.sourceUrl)
                 && Objects.equals(attempts, that.attempts)
-                && Objects.equals(providerTimestamp, that.providerTimestamp)
-                && Objects.equals(cached, that.cached);
+                && Objects.equals(providerTimestamp, that.providerTimestamp);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(startedAt, duration, providerReportedDuration, providerRequestId, sourceUrl, attempts,
-                providerTimestamp, cached);
+                providerTimestamp);
     }
 
     @Override
@@ -122,7 +114,7 @@ public final class ExecutionInfo {
         return "ExecutionInfo{startedAt=" + startedAt + ", duration=" + duration
                 + ", providerReportedDuration=" + providerReportedDuration
                 + ", providerRequestId=" + providerRequestId + ", sourceUrl=" + sourceUrl
-                + ", attempts=" + attempts + ", providerTimestamp=" + providerTimestamp + ", cached=" + cached + '}';
+                + ", attempts=" + attempts + ", providerTimestamp=" + providerTimestamp + '}';
     }
 
     /** Builder for {@link ExecutionInfo}. */
@@ -134,7 +126,6 @@ public final class ExecutionInfo {
         private String sourceUrl;
         private Integer attempts;
         private Instant providerTimestamp;
-        private Boolean cached;
 
         private Builder() {
         }
@@ -174,11 +165,6 @@ public final class ExecutionInfo {
 
         public Builder providerTimestamp(Instant providerTimestamp) {
             this.providerTimestamp = providerTimestamp;
-            return this;
-        }
-
-        public Builder cached(boolean cached) {
-            this.cached = cached;
             return this;
         }
 

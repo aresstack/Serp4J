@@ -40,7 +40,8 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
   `EntityMention`, `Topic`, `Fact`, `ConversationalCapabilities`; `UrlQueryBuilder.paramIfPresent(String, String)`
   ersetzt die `Optional`-Überladung; `HttpHeaders` weist Namen, die kein RFC-7230-Token sind, und Werte mit CR/LF/NUL
   zurück; Thread-Sicherheit von `close()` in den Port-Javadocs (ADR-017 Regel 8); Tests für alle bisher ungetesteten
-  Wertklassen.
+  Wertklassen. Angleichung an WP1: `ProviderUsage.getCredits()` (`Optional<BigDecimal>`, ersetzt `getCreditsUsed()`),
+  `ResultProvenance.builder(provider, engine)` mit Pflicht-Engine, `ExecutionInfo` ohne `cached`.
 
 ### Fixed
 

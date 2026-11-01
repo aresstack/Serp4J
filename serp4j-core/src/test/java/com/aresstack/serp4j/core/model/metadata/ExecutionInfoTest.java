@@ -23,7 +23,6 @@ class ExecutionInfoTest {
                 .sourceUrl("https://www.google.com/search?q=serp4j")
                 .attempts(2)
                 .providerTimestamp(PROVIDER_TS)
-                .cached(false)
                 .build();
     }
 
@@ -38,7 +37,6 @@ class ExecutionInfoTest {
         assertThat(info.getSourceUrl()).isEmpty();
         assertThat(info.getAttempts()).isEmpty();
         assertThat(info.getProviderTimestamp()).isEmpty();
-        assertThat(info.getCached()).isEmpty();
     }
 
     @Test
@@ -97,7 +95,6 @@ class ExecutionInfoTest {
         assertThat(copy.getSourceUrl()).contains("https://www.google.com/search?q=serp4j");
         assertThat(copy.getProviderTimestamp()).contains(PROVIDER_TS);
         assertThat(copy.getAttempts()).hasValue(2);
-        assertThat(copy.getCached()).contains(false);
     }
 
     @Test
@@ -120,8 +117,16 @@ class ExecutionInfoTest {
         assertThat(base).isNotEqualTo(base.toBuilder().sourceUrl("https://other.test").build());
         assertThat(base).isNotEqualTo(base.toBuilder().providerTimestamp(STARTED).build());
         assertThat(base).isNotEqualTo(base.toBuilder().providerRequestId("task-2").build());
-        assertThat(base).isNotEqualTo(base.toBuilder().cached(true).build());
         assertThat(base).isNotEqualTo(null);
         assertThat(base).isNotEqualTo("ExecutionInfo");
+    }
+
+    /** WP1 §4.8 lists no cache flag; a provider must not report one through ExecutionInfo. */
+    @Test
+    void hasNoCacheFlag() {
+        assertThat(ExecutionInfo.class.getMethods()).extracting(java.lang.reflect.Method::getName)
+                .noneMatch(name -> name.toLowerCase(java.util.Locale.ROOT).contains("cached"));
+        assertThat(ExecutionInfo.Builder.class.getMethods()).extracting(java.lang.reflect.Method::getName)
+                .noneMatch(name -> name.toLowerCase(java.util.Locale.ROOT).contains("cached"));
     }
 }

@@ -78,7 +78,7 @@ class MetadataValueTypesTest {
             ProviderUsage usage = ProviderUsage.builder().build();
 
             assertThat(usage.getCost()).isEmpty();
-            assertThat(usage.getCreditsUsed()).isEmpty();
+            assertThat(usage.getCredits()).isEmpty();
             assertThat(usage.getRateLimit()).isEmpty();
         }
 
@@ -86,35 +86,38 @@ class MetadataValueTypesTest {
         void builderKeepsAllFields() {
             RateLimitInfo rateLimit = RateLimitInfo.builder().limit(10).remaining(3).build();
             ProviderUsage usage = ProviderUsage.builder()
-                    .cost(MonetaryAmount.of("0.002", "USD")).creditsUsed(0).rateLimit(rateLimit).build();
+                    .cost(MonetaryAmount.of("0.002", "USD")).credits(new BigDecimal("0.5")).rateLimit(rateLimit).build();
 
             assertThat(usage.getCost()).contains(MonetaryAmount.of("0.0020", "USD"));
-            assertThat(usage.getCreditsUsed()).hasValue(0);
+            assertThat(usage.getCredits()).contains(new BigDecimal("0.5"));
             assertThat(usage.getRateLimit()).contains(rateLimit);
         }
 
         @Test
         void rejectsNegativeCredits() {
-            assertThatIllegalArgumentException().isThrownBy(() -> ProviderUsage.builder().creditsUsed(-1))
-                    .withMessageContaining("creditsUsed");
+            assertThatIllegalArgumentException()
+                    .isThrownBy(() -> ProviderUsage.builder().credits(new BigDecimal("-0.01")))
+                    .withMessageContaining("credits");
+            assertThat(ProviderUsage.builder().credits(BigDecimal.ZERO).build().getCredits()).contains(BigDecimal.ZERO);
+            assertThat(ProviderUsage.builder().credits(BigDecimal.ONE).credits(null).build().getCredits()).isEmpty();
         }
 
         @Test
         void equalsAndHashCodeCoverEveryFieldIncludingInequality() {
             RateLimitInfo rateLimit = RateLimitInfo.builder().limit(10).build();
             ProviderUsage usage = ProviderUsage.builder()
-                    .cost(MonetaryAmount.of("1", "USD")).creditsUsed(5).rateLimit(rateLimit).build();
+                    .cost(MonetaryAmount.of("1", "USD")).credits(new BigDecimal("5")).rateLimit(rateLimit).build();
             ProviderUsage same = ProviderUsage.builder()
-                    .cost(MonetaryAmount.of("1.0", "usd")).creditsUsed(5).rateLimit(rateLimit).build();
+                    .cost(MonetaryAmount.of("1.0", "usd")).credits(new BigDecimal("5.00")).rateLimit(rateLimit).build();
 
             assertThat(usage).isEqualTo(same);
             assertThat(usage.hashCode()).isEqualTo(same.hashCode());
             assertThat(usage).isNotEqualTo(ProviderUsage.builder()
-                    .cost(MonetaryAmount.of("2", "USD")).creditsUsed(5).rateLimit(rateLimit).build());
+                    .cost(MonetaryAmount.of("2", "USD")).credits(new BigDecimal("5")).rateLimit(rateLimit).build());
             assertThat(usage).isNotEqualTo(ProviderUsage.builder()
-                    .cost(MonetaryAmount.of("1", "USD")).creditsUsed(6).rateLimit(rateLimit).build());
+                    .cost(MonetaryAmount.of("1", "USD")).credits(new BigDecimal("6")).rateLimit(rateLimit).build());
             assertThat(usage).isNotEqualTo(ProviderUsage.builder()
-                    .cost(MonetaryAmount.of("1", "USD")).creditsUsed(5).build());
+                    .cost(MonetaryAmount.of("1", "USD")).credits(new BigDecimal("5")).build());
             assertThat(usage).isNotEqualTo(ProviderUsage.builder().build());
             assertThat(usage).isNotEqualTo(null);
             assertThat(usage).isNotEqualTo(rateLimit);
@@ -122,10 +125,10 @@ class MetadataValueTypesTest {
 
         @Test
         void toStringNamesTheFields() {
-            String text = ProviderUsage.builder().cost(MonetaryAmount.of("1", "USD")).creditsUsed(5).build()
+            String text = ProviderUsage.builder().cost(MonetaryAmount.of("1", "USD")).credits(new BigDecimal("2.5")).build()
                     .toString();
 
-            assertThat(text).startsWith("ProviderUsage{").contains("1 USD").contains("creditsUsed=5");
+            assertThat(text).startsWith("ProviderUsage{").contains("1 USD").contains("credits=2.5");
         }
     }
 
