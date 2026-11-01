@@ -167,4 +167,100 @@ class ScriptedConversationalProviderTest {
 
         assertSessionFailure(resumed.send(QUESTION, SearchContext.defaults()), SearchErrorCategory.TURN_LIMIT_REACHED);
     }
+
+    @Test
+    void throwingScriptFailsTheTurnAndLeavesTheSessionUsable() {
+        java.util.concurrent.atomic.AtomicInteger calls = new java.util.concurrent.atomic.AtomicInteger();
+        ScriptedConversationalProvider provider = ScriptedConversationalProvider.builder(ID)
+                .script((turn, request) -> {
+                    if (calls.getAndIncrement() == 0) {
+                        throw new IllegalStateException("script bug");
+                    }
+                    return Outcome.syntheticResults(1);
+                }).build();
+        SearchSession session = open(provider);
+
+        assertSessionFailure(session.send(QUESTION, SearchContext.defaults()), SearchErrorCategory.INTERNAL);
+
+        assertThat(session.getState()).isNotEqualTo(SessionState.BUSY);
+        assertThat(assertCompletes(session.send(QUESTION, SearchContext.defaults())).getIndex()).isZero();
+    }
+
+    @Test
+    void resumingTwiceKeepsOneLiveSessionPerConversation() {
+        ScriptedConversationalProvider provider = ScriptedConversationalProvider.builder(ID)
+                .capabilities(ConversationalCapabilities.builder().resumable(true).maxConcurrentSessions(2).build())
+                .build();
+        SearchSession session = open(provider);
+        SessionHandle handle = session.getHandle().get();
+        session.close();
+
+        SearchSession first = assertCompletes(provider.resumeSession(handle, SearchContext.defaults()));
+        SearchSession second = assertCompletes(provider.resumeSession(handle, SearchContext.defaults()));
+
+        assertThat(first.getState()).isEqualTo(SessionState.CLOSED);
+        assertThat(provider.getOpenSessions()).containsExactly((ScriptedSearchSession) second);
+    }
+
+    @Test
+    void concurrentResumesNeverLeaveTwoLiveSessions() throws Exception {
+        for (int round = 0; round < 200; round++) {
+            ScriptedConversationalProvider provider = ScriptedConversationalProvider.builder(ID)
+                    .capabilities(ConversationalCapabilities.builder().resumable(true).maxConcurrentSessions(4)
+                            .build()).build();
+            SearchSession session = open(provider);
+            SessionHandle handle = session.getHandle().get();
+            session.close();
+            java.util.List<CompletableFuture<SearchSession>> resumes = race(4,
+                    () -> provider.resumeSession(handle, SearchContext.defaults()));
+
+            long live = resumes.stream().map(CompletableFuture::join)
+                    .filter(s -> s.getState() != SessionState.CLOSED).count();
+            assertThat(live).isEqualTo(1);
+            assertThat(provider.getOpenSessions()).hasSize(1);
+        }
+    }
+
+    @Test
+    void sessionsOpenedConcurrentlyWithCloseAreClosedOrRefused() throws Exception {
+        for (int round = 0; round < 200; round++) {
+            ScriptedConversationalProvider provider = ScriptedConversationalProvider.builder(ID)
+                    .capabilities(ConversationalCapabilities.builder().maxConcurrentSessions(8).build()).build();
+            java.util.List<CompletableFuture<SearchSession>> opens = race(4, () -> {
+                if (Thread.currentThread().getName().endsWith("-0")) {
+                    provider.close();
+                    return CompletableFuture.<SearchSession>completedFuture(null);
+                }
+                return provider.openSession(OPTIONS, SearchContext.defaults());
+            });
+
+            for (CompletableFuture<SearchSession> open : opens) {
+                SearchSession opened = open.handle((s, e) -> s).join();
+                if (opened != null) {
+                    assertThat(opened.getState()).isEqualTo(SessionState.CLOSED);
+                }
+            }
+            assertThat(provider.getOpenSessions()).isEmpty();
+        }
+    }
+
+    /** Runs {@code action} on {@code threads} threads released at the same moment. */
+    private static <T> java.util.List<T> race(int threads, java.util.concurrent.Callable<T> action)
+            throws Exception {
+        java.util.concurrent.CyclicBarrier barrier = new java.util.concurrent.CyclicBarrier(threads);
+        java.util.List<java.util.concurrent.FutureTask<T>> tasks = new java.util.ArrayList<>();
+        for (int i = 0; i < threads; i++) {
+            java.util.concurrent.FutureTask<T> task = new java.util.concurrent.FutureTask<>(() -> {
+                barrier.await();
+                return action.call();
+            });
+            tasks.add(task);
+            new Thread(task, "race-" + i).start();
+        }
+        java.util.List<T> results = new java.util.ArrayList<>();
+        for (java.util.concurrent.FutureTask<T> task : tasks) {
+            results.add(task.get(10, java.util.concurrent.TimeUnit.SECONDS));
+        }
+        return results;
+    }
 }

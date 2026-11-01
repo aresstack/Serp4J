@@ -125,7 +125,15 @@ public final class ScriptedSearchSession implements SearchSession {
                 result.completeExceptionally(error);
             }
         });
-        Outcome outcome = provider.getScript().answer(index, request);
+        Outcome outcome;
+        try {
+            outcome = provider.getScript().answer(index, request);
+        } catch (RuntimeException | Error e) {
+            // Report through the future; the completion handler above leaves BUSY again.
+            raw.completeExceptionally(SearchSessionException.builder(id, getProviderId(),
+                    SearchErrorCategory.INTERNAL, "TurnScript failed").cause(e).build());
+            return result;
+        }
         if (outcome == null) {
             raw.completeExceptionally(failure(SearchErrorCategory.INTERNAL, "TurnScript returned null"));
             return result;

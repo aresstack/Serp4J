@@ -97,6 +97,19 @@ class MockSearchProviderTest {
     }
 
     @Test
+    void cancellingReleasesTheScheduledLatencyTask() {
+        MockSearchProvider provider = MockSearchProvider.builder(ID).latency(Duration.ofHours(1)).build();
+        int before = com.aresstack.serp4j.testkit.internal.TestkitScheduler.queuedTasks();
+        CompletableFuture<SearchResponse> future = provider.search(REQUEST, SearchContext.defaults());
+        assertThat(com.aresstack.serp4j.testkit.internal.TestkitScheduler.queuedTasks()).isGreaterThan(before);
+
+        provider.close();
+
+        assertFailsWith(future, SearchErrorCategory.CANCELLED);
+        assertThat(com.aresstack.serp4j.testkit.internal.TestkitScheduler.queuedTasks()).isEqualTo(before);
+    }
+
+    @Test
     void hangEndsWithTimeoutAtTheDeadline() {
         MockSearchProvider provider = MockSearchProvider.builder(ID).answer(Outcome.hang()).build();
         SearchContext context = SearchContext.builder().timeout(Instant.now(), Duration.ofMillis(100)).build();

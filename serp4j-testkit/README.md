@@ -25,14 +25,17 @@ Alle Mocks bestehen ihre eigenen Contract-Tests (`src/test/.../contract`).
 
 ## Fixtures (E-1)
 
-Ablage im Classpath unter `fixtures/<provider>/<name>`, daneben **verpflichtend** `<name>.fixture.properties`:
+Ablage im Classpath unter `fixtures/<provider>/<name>`, daneben **verpflichtend** `<name>.fixture.properties` (Java-Properties: Kommentare nur auf eigenen `#`-Zeilen, nie hinter einem Wert):
 
 ```properties
-provenance=recorded          # recorded | synthetic
+# recorded | synthetic
+provenance=recorded
 source=DataForSEO playground, POST /v3/serp/google/organic/live/advanced
 recordedAt=2026-10-12
-anonymized=true              # Pflicht für recorded
-status=200                   # optional, Default 200
+# Pflicht für recorded
+anonymized=true
+# optional, Default 200
+status=200
 ```
 
 - Response-Mapper werden nur gegen **aufgezeichnete** Antworten getestet: `Fixtures.loadRecorded(...)` lehnt

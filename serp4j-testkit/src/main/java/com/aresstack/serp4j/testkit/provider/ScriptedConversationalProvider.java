@@ -114,11 +114,11 @@ public final class ScriptedConversationalProvider implements ConversationalSearc
             return failed(rejection);
         }
         Integer maxTurns = minTurns(options);
-        ScriptedSearchSession session = register(new ScriptedSearchSession(this, SearchSessionId.random(),
-                Collections.<ConversationTurn>emptyList(), maxTurns));
-        if (session == null) {
-            return failed(failure(SearchErrorCategory.RATE_LIMITED, "concurrent-session limit of "
-                    + conversational.getMaxConcurrentSessions() + " reached"));
+        ScriptedSearchSession session = new ScriptedSearchSession(this, SearchSessionId.random(),
+                Collections.<ConversationTurn>emptyList(), maxTurns);
+        SearchProviderException refused = register(session, false);
+        if (refused != null) {
+            return failed(refused);
         }
         openedSessions.incrementAndGet();
         return CompletableFuture.<SearchSession>completedFuture(session);
@@ -151,16 +151,11 @@ public final class ScriptedConversationalProvider implements ConversationalSearc
                     descriptor.getId(), SearchErrorCategory.SESSION_LOST,
                     "session " + handle.getSessionId() + " is unknown to the provider"));
         }
-        ScriptedSearchSession previous = openSessions.get(handle.getSessionId());
-        if (previous != null) {
-            previous.close(); // one live session object per conversation
-        }
         Integer limit = storedLimit == null || storedLimit == 0 ? null : storedLimit;
-        ScriptedSearchSession session = register(new ScriptedSearchSession(this, handle.getSessionId(), turns,
-                limit));
-        if (session == null) {
-            return failed(failure(SearchErrorCategory.RATE_LIMITED, "concurrent-session limit of "
-                    + conversational.getMaxConcurrentSessions() + " reached"));
+        ScriptedSearchSession session = new ScriptedSearchSession(this, handle.getSessionId(), turns, limit);
+        SearchProviderException refused = register(session, true);
+        if (refused != null) {
+            return failed(refused);
         }
         return CompletableFuture.<SearchSession>completedFuture(session);
     }
@@ -184,14 +179,38 @@ public final class ScriptedConversationalProvider implements ConversationalSearc
         return null;
     }
 
-    private synchronized ScriptedSearchSession register(ScriptedSearchSession session) {
-        if (openSessions.size() >= conversational.getMaxConcurrentSessions()) {
-            return null;
+    /**
+     * Registers {@code session} atomically with {@link #close()} and with other opens/resumes: a provider closed in
+     * the meantime refuses it with {@code CANCELLED}, otherwise {@link #close()} is guaranteed to see it. With
+     * {@code replace}, a live session object of the same conversation is taken out in the same step and closed
+     * afterwards, so there is never more than one per conversation.
+     *
+     * @return {@code null} on success, otherwise the failure to report
+     */
+    private SearchProviderException register(ScriptedSearchSession session, boolean replace) {
+        ScriptedSearchSession previous = null;
+        synchronized (this) {
+            if (closed.get()) {
+                return failure(SearchErrorCategory.CANCELLED, "provider " + descriptor.getId() + " is closed");
+            }
+            if (replace) {
+                previous = openSessions.remove(session.getId());
+            }
+            if (openSessions.size() >= conversational.getMaxConcurrentSessions()) {
+                if (previous != null) {
+                    openSessions.put(previous.getId(), previous);
+                }
+                return failure(SearchErrorCategory.RATE_LIMITED, "concurrent-session limit of "
+                        + conversational.getMaxConcurrentSessions() + " reached");
+            }
+            openSessions.put(session.getId(), session);
+            knownConversations.put(session.getId(), session.snapshot().getTurns());
+            turnLimits.put(session.getId(), session.getTurnLimit() == null ? 0 : session.getTurnLimit());
         }
-        openSessions.put(session.getId(), session);
-        knownConversations.put(session.getId(), session.snapshot().getTurns());
-        turnLimits.put(session.getId(), session.getTurnLimit() == null ? 0 : session.getTurnLimit());
-        return session;
+        if (previous != null) {
+            previous.close(); // removes nothing: the map already holds the new session
+        }
+        return null;
     }
 
     private Integer minTurns(SearchSessionOptions options) {
@@ -277,10 +296,15 @@ public final class ScriptedConversationalProvider implements ConversationalSearc
     @Override
     public void close() {
         closeCalls.incrementAndGet();
-        if (closed.compareAndSet(false, true)) {
-            for (ScriptedSearchSession session : new ArrayList<ScriptedSearchSession>(openSessions.values())) {
-                session.close();
+        List<ScriptedSearchSession> sessions;
+        synchronized (this) { // pairs with register(): every registered session is in this snapshot
+            if (!closed.compareAndSet(false, true)) {
+                return;
             }
+            sessions = new ArrayList<ScriptedSearchSession>(openSessions.values());
+        }
+        for (ScriptedSearchSession session : sessions) {
+            session.close();
         }
     }
 

@@ -31,12 +31,19 @@ public final class FixtureSecretScanner {
             + "|access[_-]?token|refresh[_-]?token|auth[_-]?token|bearer[_-]?token|id[_-]?token|client[_-]?secret"
             + "|secret[_-]?key|private[_-]?key|password|passwd|pwd|secret|token|api[_-]?token|session[_-]?token";
 
+    /**
+     * Separator between a name and its value. After {@code :} the value may sit on the next line when it starts with a
+     * quote (pretty-printed JSON); after {@code =} (properties, query strings) it stays on the same line.
+     */
+    private static final String SEPARATOR = "(?::(?:\\s*(?=[\"'])|[ \\t]*)|=[ \\t]*)";
+
     private static final List<Rule> RULES = Collections.unmodifiableList(Arrays.asList(
             new Rule("authorization-header", Pattern.compile(
-                    "(?i)(?<![A-Za-z0-9_-])(?:proxy-)?authorization[\"']?\\s*[:=]\\s*[\"']?\\s*"
+                    "(?i)(?<![A-Za-z0-9_-])(?:proxy-)?authorization[\"']?[ \\t]*" + SEPARATOR + "[\"']?[ \\t]*"
                             + "(?:bearer|basic|token|digest|apikey)\\s+([^\\s\"',;]+)"), 1),
             new Rule("credential-field", Pattern.compile(
-                    "(?i)(?<![A-Za-z0-9_-])[\"']?(?:" + KEY_NAMES + ")[\"']?\\s*[:=]\\s*[\"']?([^\\s\"',;&}\\]]+)"), 1),
+                    "(?i)(?<![A-Za-z0-9_-])[\"']?(?:" + KEY_NAMES + ")[\"']?[ \\t]*" + SEPARATOR
+                            + "[\"']?([^\\s\"',;&}\\]]+)"), 1),
             new Rule("credential-query-parameter", Pattern.compile(
                     "(?i)[?&](?:key|" + KEY_NAMES + ")=([^&\\s\"'#]+)"), 1),
             new Rule("private-key", Pattern.compile("-----BEGIN (?:[A-Z]+ )?PRIVATE KEY-----"), 0),
@@ -74,27 +81,42 @@ public final class FixtureSecretScanner {
 
     /** Findings in {@code text}; {@code location} labels them. */
     public List<SecretFinding> scan(String location, String text) {
+        // The whole text is scanned at once, so a value on the line after its name is still found.
         List<SecretFinding> findings = new ArrayList<SecretFinding>();
-        String[] lines = text.split("\r?\n", -1);
-        for (int i = 0; i < lines.length; i++) {
-            String line = lines[i];
-            for (Rule rule : RULES) {
-                Matcher matcher = rule.pattern.matcher(line);
-                while (matcher.find()) {
-                    String value = rule.valueGroup > 0 ? matcher.group(rule.valueGroup) : matcher.group();
-                    if (rule.valueGroup > 0 && isPlaceholder(value)) {
-                        continue;
-                    }
-                    findings.add(new SecretFinding(location, i + 1, rule.name, mask(matcher.group(), value)));
+        for (Rule rule : RULES) {
+            Matcher matcher = rule.pattern.matcher(text);
+            while (matcher.find()) {
+                String value = rule.valueGroup > 0 ? matcher.group(rule.valueGroup) : matcher.group();
+                if (rule.valueGroup > 0 && isPlaceholder(value)) {
+                    continue;
                 }
-            }
-            for (String value : forbidden) {
-                if (line.contains(value)) {
-                    findings.add(new SecretFinding(location, i + 1, "forbidden-value", mask(value, value)));
-                }
+                int at = rule.valueGroup > 0 ? matcher.start(rule.valueGroup) : matcher.start();
+                findings.add(new SecretFinding(location, lineOf(text, at), rule.name,
+                        mask(matcher.group().replaceAll("\\s+", " "), value)));
             }
         }
+        for (String value : forbidden) {
+            for (int at = text.indexOf(value); at >= 0; at = text.indexOf(value, at + value.length())) {
+                findings.add(new SecretFinding(location, lineOf(text, at), "forbidden-value", mask(value, value)));
+            }
+        }
+        Collections.sort(findings, new java.util.Comparator<SecretFinding>() {
+            @Override
+            public int compare(SecretFinding a, SecretFinding b) {
+                return Integer.compare(a.getLine(), b.getLine());
+            }
+        });
         return Collections.unmodifiableList(findings);
+    }
+
+    private static int lineOf(String text, int offset) {
+        int line = 1;
+        for (int i = 0; i < offset; i++) {
+            if (text.charAt(i) == '\n') {
+                line++;
+            }
+        }
+        return line;
     }
 
     /** Findings in a fixture (content decoded as UTF-8). */

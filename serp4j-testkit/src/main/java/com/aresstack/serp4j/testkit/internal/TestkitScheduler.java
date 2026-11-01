@@ -1,9 +1,8 @@
 package com.aresstack.serp4j.testkit.internal;
 
 import java.time.Duration;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -15,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public final class TestkitScheduler {
 
-    private static final ScheduledExecutorService SCHEDULER = Executors.newScheduledThreadPool(2, new ThreadFactory() {
+    private static final ScheduledThreadPoolExecutor SCHEDULER = new ScheduledThreadPoolExecutor(2, new ThreadFactory() {
         private final AtomicInteger counter = new AtomicInteger();
 
         @Override
@@ -26,6 +25,11 @@ public final class TestkitScheduler {
         }
     });
 
+    static {
+        // A cancelled task (completed future, closed fake) leaves the queue at once instead of holding its data.
+        SCHEDULER.setRemoveOnCancelPolicy(true);
+    }
+
     private TestkitScheduler() {
     }
 
@@ -33,5 +37,10 @@ public final class TestkitScheduler {
     public static ScheduledFuture<?> schedule(Runnable task, Duration delay) {
         long nanos = Math.max(0L, delay.toNanos());
         return SCHEDULER.schedule(task, nanos, TimeUnit.NANOSECONDS);
+    }
+
+    /** Number of tasks waiting in the scheduler; for the testkit's own tests. */
+    public static int queuedTasks() {
+        return SCHEDULER.getQueue().size();
     }
 }

@@ -75,6 +75,22 @@ class FixturesTest {
     }
 
     @Test
+    void sidecarExampleFromTheReadmeLoadsAsWritten() throws IOException {
+        String readme = new String(Files.readAllBytes(java.nio.file.Paths.get("README.md")), StandardCharsets.UTF_8);
+        int start = readme.indexOf("```properties\n") + "```properties\n".length();
+        String example = readme.substring(start, readme.indexOf("```", start));
+        write("fixtures/acme/example.json", "{}");
+        write("fixtures/acme/example.json.fixture.properties", example);
+
+        try (URLClassLoader loader = classLoader()) {
+            Fixture fixture = Fixtures.loadRecorded("acme", "example.json", loader);
+            assertThat(fixture.getProvenance()).isEqualTo(FixtureProvenance.RECORDED);
+            assertThat(fixture.getRecordedAt()).contains("2026-10-12");
+            assertThat(fixture.getStatus()).isEqualTo(200);
+        }
+    }
+
+    @Test
     void fixtureWithoutSidecarOrProvenanceIsRejected() throws IOException {
         write("fixtures/acme/orphan.json", "{}");
         write("fixtures/acme/bad.json", "{}");

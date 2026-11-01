@@ -61,7 +61,9 @@ final class Completion {
         if (latency.isZero()) {
             finish.run();
         } else {
-            TestkitScheduler.schedule(finish, latency);
+            final ScheduledFuture<?> delayed = TestkitScheduler.schedule(finish, latency);
+            // Cancellation, deadline or close may complete the future first: release the task right away.
+            future.whenComplete((value, error) -> delayed.cancel(false));
         }
     }
 

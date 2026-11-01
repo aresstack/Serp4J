@@ -52,6 +52,24 @@ class FixtureSecretScannerTest {
     }
 
     @Test
+    void findsCredentialValuesOnTheLineAfterTheirName() {
+        String json = "{\n  \"task\": 1,\n  \"api_key\":\n    \"sk_live_9f8e7d6c5b4a\",\n"
+                + "  \"Authorization\":\n    \"Bearer abcdef1234567890abcdef\"\n}";
+
+        List<SecretFinding> findings = scanner.scan("pretty", json);
+
+        assertThat(findings).extracting(SecretFinding::getRule)
+                .containsExactly("credential-field", "authorization-header");
+        assertThat(findings).extracting(SecretFinding::getLine).containsExactly(4, 6);
+        assertThat(findings.toString()).doesNotContain("9f8e7d6c5b4a").doesNotContain("1234567890abcdef");
+    }
+
+    @Test
+    void emptyPropertiesValueDoesNotReachIntoTheNextLine() {
+        assertThat(scanner.scan("props", "token=\nkeyword=serp4j tutorial\npassword:\nnested: value")).isEmpty();
+    }
+
+    @Test
     void forbiddenValuesAreFoundAnywhereAndNeverPrinted() {
         String key = "live-recording-key-0815";
         List<SecretFinding> findings = scanner.forbidding(key).scan("rec", "{\"note\": \"" + key + "\"}");
