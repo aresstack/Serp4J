@@ -106,7 +106,7 @@ Drei Schreibweisen:
 | `answer_box`, `calculator`, `weather` | `text` (Pflicht), `sourceUrl`, `sourceTitle` |
 | `related_searches` | `queries` (Liste, Pflicht) |
 | alle anderen Feature-Typen | `title`; das Feature wird `GenericSerpFeature` mit vollem Elementinhalt |
-| Metadaten | `originalQuery`, `effectiveQuery`, `totalResultsEstimate`, `hasMore`, `pageNumber`, `providerRequestId`, `durationMillis`, `cost`, `currency`, `creditsUsed` |
+| Metadaten | `originalQuery`, `effectiveQuery`, `totalResultsEstimate`, `hasMore`, `pageNumber`, `providerRequestId`, `durationMillis`, `cost`, `currency`, `credits` (Kontingent-Einheiten, auch gebrochen) |
 | Extensions (überall) | `<namespace>:<name>`, Namensraum = `namespace` der Definition |
 
 Fehlen einem deklarativ gebauten Feature seine Pflichtwerte, bleibt es als `GenericSerpFeature` erhalten (Warnung).

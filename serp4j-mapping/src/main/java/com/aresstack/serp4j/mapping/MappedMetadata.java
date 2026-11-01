@@ -34,7 +34,7 @@ public final class MappedMetadata {
     private final Duration duration;
     private final BigDecimal cost;
     private final String currency;
-    private final Long creditsUsed;
+    private final BigDecimal credits;
     private final Extensions extensions;
 
     private MappedMetadata(Builder b) {
@@ -47,7 +47,7 @@ public final class MappedMetadata {
         this.duration = b.duration;
         this.cost = b.cost;
         this.currency = b.currency;
-        this.creditsUsed = b.creditsUsed;
+        this.credits = b.credits;
         this.extensions = b.extensions.build();
     }
 
@@ -99,8 +99,9 @@ public final class MappedMetadata {
         return Optional.ofNullable(currency);
     }
 
-    public OptionalLong getCreditsUsed() {
-        return creditsUsed == null ? OptionalLong.empty() : OptionalLong.of(creditsUsed);
+    /** Quota units consumed by the request (may be fractional, see {@link ProviderUsage#getCredits()}). */
+    public Optional<BigDecimal> getCredits() {
+        return Optional.ofNullable(credits);
     }
 
     /** Declared extension values plus the unmapped rest of the response root. */
@@ -134,15 +135,15 @@ public final class MappedMetadata {
      */
     public Optional<ProviderUsage> toUsage() {
         boolean hasCost = cost != null && currency != null;
-        if (!hasCost && creditsUsed == null) {
+        if (!hasCost && credits == null) {
             return Optional.empty();
         }
         ProviderUsage.Builder builder = ProviderUsage.builder();
         if (hasCost) {
             builder.cost(MonetaryAmount.of(cost, currency));
         }
-        if (creditsUsed != null) {
-            builder.creditsUsed(creditsUsed);
+        if (credits != null) {
+            builder.credits(credits);
         }
         return Optional.of(builder.build());
     }
@@ -173,7 +174,7 @@ public final class MappedMetadata {
         b.duration = duration;
         b.cost = cost;
         b.currency = currency;
-        b.creditsUsed = creditsUsed;
+        b.credits = credits;
         b.extensions = extensions.toBuilder();
         return b;
     }
@@ -188,14 +189,14 @@ public final class MappedMetadata {
                 && Objects.equals(totalResultsEstimate, m.totalResultsEstimate) && Objects.equals(hasMore, m.hasMore)
                 && Objects.equals(pageNumber, m.pageNumber) && Objects.equals(providerRequestId, m.providerRequestId)
                 && Objects.equals(duration, m.duration) && Objects.equals(cost, m.cost)
-                && Objects.equals(currency, m.currency) && Objects.equals(creditsUsed, m.creditsUsed)
+                && Objects.equals(currency, m.currency) && (credits == null ? m.credits == null : m.credits != null && credits.compareTo(m.credits) == 0)
                 && extensions.equals(m.extensions);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(originalQuery, effectiveQuery, totalResultsEstimate, hasMore, pageNumber,
-                providerRequestId, duration, cost, currency, creditsUsed, extensions);
+                providerRequestId, duration, cost, currency, credits == null ? null : credits.stripTrailingZeros(), extensions);
     }
 
     @Override
@@ -216,7 +217,7 @@ public final class MappedMetadata {
         private Duration duration;
         private BigDecimal cost;
         private String currency;
-        private Long creditsUsed;
+        private BigDecimal credits;
         private Extensions.Builder extensions = Extensions.builder();
 
         private Builder() {
@@ -284,11 +285,11 @@ public final class MappedMetadata {
             return this;
         }
 
-        public Builder creditsUsed(Long value) {
-            if (value != null && value < 0) {
-                throw new IllegalArgumentException("creditsUsed must not be negative");
+        public Builder credits(BigDecimal value) {
+            if (value != null && value.signum() < 0) {
+                throw new IllegalArgumentException("credits must not be negative");
             }
-            this.creditsUsed = value;
+            this.credits = value;
             return this;
         }
 

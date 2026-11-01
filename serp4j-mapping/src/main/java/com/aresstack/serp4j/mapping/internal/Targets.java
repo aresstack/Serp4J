@@ -50,7 +50,7 @@ public final class Targets {
     private static final Map<String, Kind> METADATA = ordered(
             "originalQuery", Kind.TEXT, "effectiveQuery", Kind.TEXT, "totalResultsEstimate", Kind.LONG,
             "hasMore", Kind.BOOLEAN, "pageNumber", Kind.INT, "providerRequestId", Kind.TEXT,
-            "durationMillis", Kind.LONG, "cost", Kind.DECIMAL, "currency", Kind.TEXT, "creditsUsed", Kind.LONG);
+            "durationMillis", Kind.LONG, "cost", Kind.DECIMAL, "currency", Kind.TEXT, "credits", Kind.DECIMAL);
 
     private static final Map<String, Kind> GENERIC_FEATURE = ordered("title", Kind.TEXT);
 
