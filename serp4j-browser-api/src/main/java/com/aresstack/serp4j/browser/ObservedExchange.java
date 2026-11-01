@@ -120,7 +120,8 @@ public final class ObservedExchange {
 
     /**
      * @return whether the body was larger than {@link NetworkFilter#getMaxBodyBytes()}: either cut at that limit, or
-     *         left out entirely ({@link #getBody()} empty) when the runtime knew its size beforehand and did not load it
+     *         left out entirely ({@link #getBody()} empty) when the runtime knew beforehand that it is far larger and
+     *         did not load it (the Playwright adapter: above four times the limit and 4 MiB)
      */
     public boolean isBodyTruncated() {
         return bodyTruncated;

@@ -219,8 +219,8 @@ final class NetworkTracker {
                         transferred = transferredBodySize(request, headers);
                     }
                     int max = capture.filter.getMaxBodyBytes();
-                    if (transferred > max) {
-                        // never load a body that is known to exceed the limit (driver and JVM would hold it whole)
+                    if (tooLargeToLoad(transferred, max)) {
+                        // driver and JVM would hold the whole body only to cut it; leave it out
                         builder.bodyOmitted();
                     } else {
                         if (!bodyLoaded) {
@@ -254,6 +254,17 @@ final class NetworkTracker {
             // fall back to the header
         }
         return declaredLength(headers.get("content-length"));
+    }
+
+    /** Bodies up to this size are loaded and cut to the limit, so that a capture still gets the body's beginning. */
+    static final long LOAD_CEILING_BYTES = 4L * 1024 * 1024;
+
+    /**
+     * Whether a body is too large to load just to cut it: its transferred size exceeds both four times the limit and
+     * {@link #LOAD_CEILING_BYTES}. Smaller bodies over the limit are loaded and truncated; unknown sizes are loaded.
+     */
+    static boolean tooLargeToLoad(long transferred, int maxBodyBytes) {
+        return transferred > Math.max(4L * maxBodyBytes, LOAD_CEILING_BYTES);
     }
 
     static long declaredLength(String header) {
