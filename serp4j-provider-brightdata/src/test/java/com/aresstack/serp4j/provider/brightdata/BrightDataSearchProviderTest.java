@@ -216,6 +216,32 @@ class BrightDataSearchProviderTest {
                 .anyMatch(w -> w.getCode().equals(com.aresstack.serp4j.core.model.metadata.SearchWarning.FEATURE_IGNORED));
     }
 
+    @Test
+    void optionsOfWrongTypeAreRejected() {
+        FakeHttpTransport http = recorded();
+        com.aresstack.serp4j.core.model.ProviderRequestOptions foreign = () -> ID;
+        assertFailsWith(provider(http).search(SearchRequest.builder("pizza").providerOptions(foreign).build(),
+                SearchContext.defaults()), SearchErrorCategory.INVALID_REQUEST);
+        assertThat(http.getRequestCount()).isZero();
+    }
+
+    @Test
+    void onErrorKeepsRawPayloadOnlyForIncompleteMapping() {
+        // Synthetic SERP written for this test: one organic entry whose rank cannot be converted.
+        String serp = "{\"general\":{\"query\":\"pizza\"},\"organic\":[{\"link\":\"https://example.invalid/a\","
+                + "\"title\":\"Synthetic result\",\"rank\":\"not-a-number\"}]}";
+        String wrapper = "{\"status_code\":200,\"headers\":{},\"body\":" + JsonTrees.write(StructuredValue.of(serp)) + "}";
+        SearchRequest onError = SearchRequest.builder("pizza").rawPayloadPolicy(RawPayloadPolicy.ON_ERROR).build();
+
+        SearchResponse incomplete = assertCompletes(provider(FakeHttpTransport.create()
+                .onAnyRequest(FakeHttpStep.json(200, wrapper))).search(onError, SearchContext.defaults()));
+        assertThat(incomplete.getMetadata().get().getWarnings()).isNotEmpty();
+        assertThat(incomplete.getMetadata().get().getRawPayload()).isPresent();
+
+        SearchResponse complete = assertCompletes(provider(recorded()).search(onError, SearchContext.defaults()));
+        assertThat(complete.getMetadata().get().getRawPayload()).isEmpty();
+    }
+
     private static SearchProviderException assertFailure(FakeHttpStep step, SearchErrorCategory category) {
         FakeHttpTransport http = FakeHttpTransport.create().onAnyRequest(step);
         SearchProviderException failure = assertFailsWith(provider(http)

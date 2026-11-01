@@ -159,6 +159,11 @@ public final class BrightDataSearchProvider implements SearchProvider {
             return failed(SearchErrorCategory.UNSUPPORTED,
                     "Bright Data adapter needs a named location (uule); coordinates are not supported");
         }
+        Object addressed = request.getProviderOptions().get(id);
+        if (addressed != null && !(addressed instanceof BrightDataOptions)) {
+            return failed(SearchErrorCategory.INVALID_REQUEST, "provider options for " + id + " must be "
+                    + BrightDataOptions.class.getSimpleName() + " but were " + addressed.getClass().getName());
+        }
         final Optional<BrightDataOptions> options = request.getProviderOptions(id, BrightDataOptions.class);
         final String targetUrl = urlBuilder.build(request, options);
 
