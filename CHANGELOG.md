@@ -9,6 +9,19 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
 
 ### Added
 
+- `serp4j-provider-brightdata` (Java 8, Paket C): `BrightDataSearchProvider` für die Bright Data SERP API,
+  synchroner Weg `POST https://api.brightdata.com/request` mit `{zone, url, format: "json", data_format: "parsed"}`
+  (von Angelo real verifiziert). Die Google-URL entsteht aus dem neutralen `SearchRequest` (`q`, `start`, `hl`, `gl`,
+  `uule`, `safe`, `tbs`, `brd_mobile`; kein `num`); Bright-Data-Spezifisches über `BrightDataOptions` (Zone,
+  Proxy-Land `country` ≠ `gl`, `uule`, `brd_mobile`, `brd_browser`, `brd_json`, weitere URL-Parameter). Zweistufiges
+  Parsen (Wrapper `status_code`/`headers`/`body`, `body` ist ein JSON-String); Ziel-Status ≠ 2xx wird `BLOCKED`
+  bzw. `UNAVAILABLE`. Mapping-Definition `brightdata-google-web` v1 (organic, videos, short_videos,
+  knowledge, overview, people_also_ask, related): `rank` → `rankInGroup`, `global_rank` → `rankAbsolute`; Rest
+  (u. a. `navigation`, Data-URIs) bleibt in `unmapped`. API-Key nur als sensibler `Authorization`-Header.
+  `BrightDataSearchProviderFactory` per `ServiceLoader` (Properties `zone`, `apiUrl`, `googleSearchUrl`,
+  `requestTimeout`). Erste echte Fixture `fixtures/brightdata/google-web-pizza.json` (recorded 2026-07-28) mit
+  Golden-File. Async-API (`/serp/req`) folgt separat.
+
 - `serp4j-testkit`: `MappingDefinitionContractTest` (ADR-019) – Definition lädt, jeder Pfad trifft in einer Fixture,
   „unbekannter Typ überlebt“, Golden-Output je Fixture (`SERP4J_UPDATE_GOLDEN=1`); nur aufgezeichnete Fixtures (E-1).
   `serp4j-mapping` ist `compileOnly`.
