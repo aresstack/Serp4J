@@ -1,0 +1,165 @@
+{
+  "version": "0.1.20261101",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "time": "4.1234 sec.",
+  "cost": 0.002,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "11011234-0000-0000-0000-000000000002",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "time": "4.0512 sec.",
+      "cost": 0.002,
+      "result_count": 1,
+      "path": [
+        "v3",
+        "serp",
+        "google",
+        "organic",
+        "live",
+        "advanced"
+      ],
+      "data": {
+        "api": "serp",
+        "function": "live",
+        "se": "google",
+        "se_type": "organic",
+        "keyword": "pizza berlin",
+        "location_code": 2840,
+        "language_code": "en",
+        "device": "desktop",
+        "os": "windows",
+        "depth": 10
+      },
+      "result": [
+        {
+          "keyword": "pizza berlin",
+          "type": "organic",
+          "se_domain": "google.com",
+          "location_code": 2840,
+          "language_code": "en",
+          "check_url": "https://www.google.com/search?q=pizza%20berlin",
+          "datetime": "2026-11-01 07:00:00 +00:00",
+          "spell": null,
+          "refinement_chips": null,
+          "item_types": [
+            "ai_overview",
+            "answer_box",
+            "discussions_and_forums",
+            "images",
+            "local_pack",
+            "organic",
+            "paid",
+            "top_stories",
+            "video"
+          ],
+          "se_results_count": 4560000,
+          "pages_count": 1,
+          "items_count": 9,
+          "items": [
+            {
+              "type": "paid",
+              "rank_group": 1,
+              "rank_absolute": 1,
+              "position": "right",
+              "page": 1,
+              "title": "Pizza delivery",
+              "url": "https://ads.example.com/pizza",
+              "domain": "ads.example.com",
+              "breadcrumb": "ads.example.com",
+              "website_name": "Example Pizza",
+              "description": "Order now."
+            },
+            {
+              "type": "answer_box",
+              "rank_group": 1,
+              "rank_absolute": 2,
+              "title": "Opening hours",
+              "url": "https://example.com/hours",
+              "text": [
+                "Open daily 11:00–23:00"
+              ],
+              "page": 1,
+              "position": "left"
+            },
+            {
+              "type": "ai_overview",
+              "rank_group": 1,
+              "rank_absolute": 3,
+              "title": "AI overview",
+              "items": [
+                {
+                  "type": "ai_overview_element",
+                  "text": "Synthetic overview text."
+                }
+              ],
+              "page": 1,
+              "position": "left"
+            },
+            {
+              "type": "local_pack",
+              "rank_group": 1,
+              "rank_absolute": 4,
+              "title": "Pizzeria Example",
+              "domain": "pizzeria.example",
+              "page": 1,
+              "position": "left"
+            },
+            {
+              "type": "top_stories",
+              "rank_group": 1,
+              "rank_absolute": 5,
+              "title": "Top stories",
+              "items": [],
+              "page": 1,
+              "position": "left"
+            },
+            {
+              "type": "images",
+              "rank_group": 1,
+              "rank_absolute": 6,
+              "title": "Images",
+              "items": [],
+              "page": 1,
+              "position": "left"
+            },
+            {
+              "type": "video",
+              "rank_group": 1,
+              "rank_absolute": 7,
+              "title": "Videos",
+              "items": [],
+              "page": 1,
+              "position": "left"
+            },
+            {
+              "type": "discussions_and_forums",
+              "rank_group": 1,
+              "rank_absolute": 8,
+              "title": "Discussions and forums",
+              "items": [],
+              "page": 1,
+              "position": "left"
+            },
+            {
+              "type": "organic",
+              "rank_group": 1,
+              "rank_absolute": 9,
+              "title": "Best pizza in Berlin",
+              "url": "https://food.example.net/berlin-pizza",
+              "domain": "food.example.net",
+              "breadcrumb": "food.example.net › berlin",
+              "website_name": "Food Example",
+              "description": "A synthetic list.",
+              "page": 1,
+              "position": "left"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

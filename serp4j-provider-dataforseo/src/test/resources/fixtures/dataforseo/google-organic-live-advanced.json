@@ -1,0 +1,47 @@
+{
+  "version": "0.1.20261101",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "time": "4.1234 sec.",
+  "cost": 0.002,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "11011234-0000-0000-0000-000000000001",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "time": "4.0512 sec.",
+      "cost": 0.002,
+      "result_count": 1,
+      "path": ["v3", "serp", "google", "organic", "live", "advanced"],
+      "data": { "api": "serp", "function": "live", "se": "google", "se_type": "organic", "keyword": "albert einstein", "location_code": 2840, "language_code": "en", "device": "desktop", "os": "windows", "depth": 10 },
+      "result": [
+        {
+          "keyword": "albert einstein",
+          "type": "organic",
+          "se_domain": "google.com",
+          "location_code": 2840,
+          "language_code": "en",
+          "check_url": "https://www.google.com/search?q=albert%20einstein&num=10&hl=en&gl=US",
+          "datetime": "2026-11-01 07:00:00 +00:00",
+          "spell": null,
+          "refinement_chips": null,
+          "item_types": ["featured_snippet", "organic", "knowledge_graph", "people_also_ask", "related_searches", "top_stories"],
+          "se_results_count": 123000000,
+          "pages_count": 1,
+          "items_count": 7,
+          "items": [
+            { "type": "featured_snippet", "rank_group": 1, "rank_absolute": 1, "page": 1, "position": "left", "xpath": "/html[1]/body[1]/div[1]", "domain": "example.org", "title": "Albert Einstein – Example Encyclopedia", "url": "https://example.org/wiki/albert-einstein", "description": "Albert Einstein was a theoretical physicist." },
+            { "type": "organic", "rank_group": 1, "rank_absolute": 2, "page": 1, "position": "left", "xpath": "/html[1]/body[1]/div[2]", "domain": "example.org", "title": "Albert Einstein", "url": "https://example.org/wiki/albert-einstein", "breadcrumb": "https://example.org › wiki", "website_name": "Example Encyclopedia", "description": "German-born theoretical physicist.", "pre_snippet": null, "extended_snippet": "Best known for the theory of relativity.", "timestamp": "2026-10-30 12:00:00 +00:00", "highlighted": ["Albert Einstein"], "links": null, "rating": null, "price": null, "is_featured_snippet": false },
+            { "type": "knowledge_graph", "rank_group": 1, "rank_absolute": 3, "page": 1, "position": "right", "xpath": "/html[1]/body[1]/div[3]", "title": "Albert Einstein", "sub_title": "Theoretical physicist", "description": "A synthetic description.", "items": [ { "type": "knowledge_graph_row_item", "title": "Born", "text": "14 March 1879" }, { "type": "knowledge_graph_images_item", "items": [] } ] },
+            { "type": "people_also_ask", "rank_group": 1, "rank_absolute": 4, "page": 1, "position": "left", "xpath": "/html[1]/body[1]/div[4]", "items": [ { "type": "people_also_ask_element", "title": "What is Einstein famous for?", "expanded_element": [ { "type": "people_also_ask_expanded_element", "description": "The theory of relativity.", "url": "https://example.com/einstein-faq", "domain": "example.com", "title": "FAQ" } ] } ] },
+            { "type": "organic", "rank_group": 2, "rank_absolute": 5, "page": 1, "position": "left", "xpath": "/html[1]/body[1]/div[5]", "domain": "physics.example.net", "title": "Einstein biography", "url": "https://physics.example.net/einstein", "breadcrumb": "physics.example.net", "description": "A synthetic biography." },
+            { "type": "related_searches", "rank_group": 1, "rank_absolute": 6, "page": 1, "position": "left", "xpath": "/html[1]/body[1]/div[6]", "items": ["albert einstein quotes", "albert einstein iq"] },
+            { "type": "brand_new_widget_2027", "rank_group": 1, "rank_absolute": 7, "page": 1, "position": "left", "payload": { "anything": [1, 2, 3] } }
+          ]
+        }
+      ]
+    }
+  ]
+}
