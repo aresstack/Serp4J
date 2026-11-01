@@ -278,8 +278,8 @@ public final class MappingSnapshot {
             b.put("cost", StructuredValue.of(m.getCost().get()));
         }
         opt(b, "currency", m.getCurrency());
-        if (m.getCreditsUsed().isPresent()) {
-            b.put("creditsUsed", m.getCreditsUsed().getAsLong());
+        if (m.getCredits().isPresent()) {
+            b.put("credits", StructuredValue.of(m.getCredits().get()));
         }
         extensions(b, m.getExtensions());
         return b.build();

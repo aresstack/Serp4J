@@ -750,8 +750,8 @@ public final class MappingEngine {
                     m.cost((BigDecimal) value);
                 } else if ("currency".equals(target)) {
                     m.currency((String) value);
-                } else if ("creditsUsed".equals(target)) {
-                    m.creditsUsed((Long) value);
+                } else if ("credits".equals(target)) {
+                    m.credits((BigDecimal) value);
                 }
             } catch (IllegalArgumentException e) {
                 StructuredValue.ObjectBuilder details = details(null, null);
