@@ -154,7 +154,8 @@ Zusätzlich:
   läuft; ArchUnit: `serp4j-mapping` ohne Gson; Javadoc der öffentlichen API.
 - **Stand (2026-10-31):** umgesetzt (`serp4j-mapping`, `serp4j-json` mit `JsonTrees`), Unit-Tests und
   Regressionstest grün auf JDK 21 und 8, ArchUnit ohne Gson, Javadoc. Die Prüflogik des Contract-Tests liegt
-  JUnit-frei in `com.aresstack.serp4j.mapping.verify`; `MappingDefinitionContractTest` im Testkit folgt nach E.
+  JUnit-frei in `com.aresstack.serp4j.mapping.verify`; `MappingDefinitionContractTest` im Testkit ist nach E ergänzt
+  (2026-11-01).
   **Offen:** Lauf gegen eine echte DataForSEO-Fixture, die noch in keinem Repository liegt (E-1).
 
 ### E – Testkit & Mock-Provider

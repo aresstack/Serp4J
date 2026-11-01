@@ -164,5 +164,5 @@ bleibt das deklarative Ergebnis samt Rest erhalten und es gibt eine Warnung.
   Typs muss als `GenericSerpFeature` mit Warnung überleben;
 - `MappingSnapshot.render(result)` – deterministischer Golden-Output.
 
-`MappingDefinitionContractTest` in `serp4j-testkit` baut darauf auf. Definitionen werden nur gegen **echte**,
+`MappingDefinitionContractTest` in `serp4j-testkit` baut darauf auf (Beispiel im Testkit-README). Definitionen werden nur gegen **echte**,
 anonymisierte Fixtures geschrieben (E-1).

@@ -9,6 +9,9 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
 
 ### Added
 
+- `serp4j-testkit`: `MappingDefinitionContractTest` (ADR-019) – Definition lädt, jeder Pfad trifft in einer Fixture,
+  „unbekannter Typ überlebt“, Golden-Output je Fixture (`SERP4J_UPDATE_GOLDEN=1`); nur aufgezeichnete Fixtures (E-1).
+  `serp4j-mapping` ist `compileOnly`.
 - `serp4j-mapping` (Java 8, nur `serp4j-core`): Response-Mapping in zwei Ebenen (ADR-019) – deklarative, versionierte
   Mapping-Definitionen mit strikter Validierung (`MappingDefinitions`), kleine Pfadsprache (`TreePath`), Sektionen
   `items`/`features`/`elements` mit Diskriminator, `fieldsByType`, Positionsmodi, Pflichtfeldern, Defaults und
