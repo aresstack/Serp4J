@@ -1,0 +1,77 @@
+{
+  "definition": "synthetic-a-web",
+  "version": 1,
+  "results": [
+    {
+      "id": "organic#1",
+      "type": "organic",
+      "url": "https://example.com",
+      "title": "Example",
+      "snippet": "Description",
+      "domain": "example.com",
+      "position": {
+        "rankInGroup": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "synthetic-a": {
+            "cached_page_link": "https://cache.example/1"
+          }
+        }
+      }
+    },
+    {
+      "id": "organic#2",
+      "type": "organic",
+      "url": "https://Second.Example.org/path",
+      "title": "Second",
+      "snippet": "Second description",
+      "domain": "second.example.org",
+      "position": {
+        "rankInGroup": 2,
+        "area": "main"
+      }
+    }
+  ],
+  "features": [
+    {
+      "id": "paa#1",
+      "type": "people_also_ask",
+      "class": "GenericSerpFeature",
+      "title": "What is an example?",
+      "content": {
+        "question": "What is an example?",
+        "answer": "An example is …",
+        "link": "https://example.com/faq"
+      },
+      "position": {
+        "rankInGroup": 1,
+        "area": "main"
+      }
+    },
+    {
+      "id": "related#1",
+      "type": "related_searches",
+      "class": "RelatedQueriesFeature",
+      "queries": [
+        {
+          "text": "example meaning"
+        },
+        {
+          "text": "example synonyms"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "originalQuery": "example",
+    "totalResultsEstimate": 1234567,
+    "extensions": {
+      "values": {
+        "synthetic-a:nextPage": "https://a.example/search?page=2"
+      }
+    }
+  },
+  "warnings": []
+}

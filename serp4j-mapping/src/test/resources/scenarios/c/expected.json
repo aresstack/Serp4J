@@ -1,0 +1,173 @@
+{
+  "definition": "synthetic-c-web",
+  "version": 1,
+  "results": [
+    {
+      "id": "serp#1",
+      "type": "organic",
+      "url": "https://example.com",
+      "title": "Example",
+      "snippet": "Description",
+      "displayUrl": "example.com › home",
+      "domain": "example.com",
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 2,
+        "area": "main"
+      }
+    },
+    {
+      "id": "serp#3",
+      "type": "paid",
+      "url": "https://ad.example",
+      "title": "Ad",
+      "snippet": "Buy now",
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 3,
+        "area": "sidebar"
+      }
+    },
+    {
+      "id": "serp#7",
+      "type": "organic",
+      "url": "https://second.example.org/path",
+      "title": "Second",
+      "snippet": "Second description",
+      "domain": "second.example.org",
+      "position": {
+        "rankInGroup": 2,
+        "rankAbsolute": 7,
+        "area": "main"
+      }
+    }
+  ],
+  "features": [
+    {
+      "id": "serp#2",
+      "type": "featured_snippet",
+      "class": "FeaturedSnippetFeature",
+      "text": "Snippet text",
+      "source": {
+        "url": "https://example.com/snippet",
+        "title": "Snippet title",
+        "domain": "example.com"
+      },
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 1,
+        "area": "main"
+      }
+    },
+    {
+      "id": "serp#4",
+      "type": "knowledge_panel",
+      "class": "KnowledgePanelFeature",
+      "title": "Example Corp",
+      "description": "A company.",
+      "facts": [
+        {
+          "key": "Founded",
+          "values": [
+            {
+              "text": "1999"
+            }
+          ]
+        }
+      ],
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 4,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "synthetic-c": {
+            "items": [
+              {
+                "type": "knowledge_graph_images_item",
+                "url": "https://img.example/logo.png"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#5",
+      "type": "people_also_ask",
+      "class": "QuestionAnswerFeature",
+      "questions": [
+        {
+          "question": "What is an example?",
+          "answer": "An example is …",
+          "source": {
+            "url": "https://example.com/faq"
+          }
+        }
+      ],
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 5,
+        "area": "main"
+      }
+    },
+    {
+      "id": "serp#8",
+      "type": "brand_new_widget_2027",
+      "class": "GenericSerpFeature",
+      "content": {
+        "type": "brand_new_widget_2027",
+        "rank_group": 1,
+        "rank_absolute": 8,
+        "payload": {
+          "anything": [
+            1,
+            2,
+            3
+          ]
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "originalQuery": "example",
+    "totalResultsEstimate": 987,
+    "providerRequestId": "t-1",
+    "cost": 0.002,
+    "currency": "USD",
+    "extensions": {
+      "unmapped": {
+        "synthetic-c": {
+          "status_code": 20000,
+          "tasks": [
+            {
+              "result": [
+                {
+                  "items": [
+                    {
+                      "type": "images",
+                      "rank_group": 1,
+                      "rank_absolute": 6,
+                      "items": [
+                        {
+                          "url": "https://img.example/1.png"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "warnings": [
+    {
+      "code": "unknown_element",
+      "message": "section 'serp': unknown element type 'brand_new_widget_2027' at $.tasks[0].result[0].items[7], kept as generic feature serp#8"
+    }
+  ]
+}

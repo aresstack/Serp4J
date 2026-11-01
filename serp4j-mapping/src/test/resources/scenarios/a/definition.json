@@ -1,0 +1,31 @@
+{
+  "id": "synthetic-a-web",
+  "version": 1,
+  "namespace": "synthetic-a",
+  "description": "Synthetic test definition (structure of example 1 from the mapping proposal); not a real provider.",
+  "metadata": {
+    "originalQuery": "$.search_information.query",
+    "totalResultsEstimate": "$.search_information.total_results",
+    "synthetic-a:nextPage": "$.pagination.next"
+  },
+  "sections": [
+    {
+      "id": "organic", "kind": "items", "path": "$.organic_results[*]", "type": "organic",
+      "fields": {
+        "title": ["title", "name"],
+        "url": ["link", "url"],
+        "snippet": ["snippet", "description"],
+        "rankInGroup": ["position", "rank"],
+        "domain": { "from": ["link", "url"], "convert": "host" }
+      }
+    },
+    {
+      "id": "paa", "kind": "features", "path": "$.related_questions[*]", "type": "people_also_ask", "position": "index",
+      "fields": { "title": "question" }
+    },
+    {
+      "id": "related", "kind": "features", "path": "$.related_searches", "type": "related_searches", "position": "none",
+      "fields": { "queries": "$[*].query" }
+    }
+  ]
+}

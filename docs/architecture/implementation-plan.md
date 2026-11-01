@@ -148,10 +148,14 @@ Zusätzlich:
 - J1 in `serp4j-json`: `JsonTrees.read/write` (JSON-Text ↔ `StructuredValue`), einzige Gson-Stelle.
 - `serp4j-testkit`: `MappingDefinitionContractTest` (Definition lädt, jeder Pfad trifft in mindestens einer Fixture,
   Golden-Output, „unbekannter Typ überlebt").
-- Referenz für die Semantik: `spikes/mapping-prototype` (wird nach MP gelöscht oder als Beispiel nach `serp4j-examples`
-  übernommen).
+- Referenz für die Semantik war `spikes/mapping-prototype`; mit MP gelöscht, die drei Strukturen sind synthetische
+  Testszenarien in `serp4j-mapping`.
 - **Fertig, wenn:** Unit-Tests grün; eine Beispieldefinition im Testkit gegen eine **echte** DataForSEO-Fixture (E-1)
   läuft; ArchUnit: `serp4j-mapping` ohne Gson; Javadoc der öffentlichen API.
+- **Stand (2026-10-31):** umgesetzt (`serp4j-mapping`, `serp4j-json` mit `JsonTrees`), Unit-Tests und
+  Regressionstest grün auf JDK 21 und 8, ArchUnit ohne Gson, Javadoc. Die Prüflogik des Contract-Tests liegt
+  JUnit-frei in `com.aresstack.serp4j.mapping.verify`; `MappingDefinitionContractTest` im Testkit folgt nach E.
+  **Offen:** Lauf gegen eine echte DataForSEO-Fixture, die noch in keinem Repository liegt (E-1).
 
 ### E – Testkit & Mock-Provider
 

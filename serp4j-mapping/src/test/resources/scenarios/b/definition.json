@@ -1,0 +1,30 @@
+{
+  "id": "synthetic-b-web",
+  "version": 1,
+  "namespace": "synthetic-b",
+  "description": "Synthetic test definition (structure of example 2 from the mapping proposal); not a real provider.",
+  "metadata": {
+    "originalQuery": "$.meta.q",
+    "durationMillis": "$.meta.took_ms"
+  },
+  "sections": [
+    {
+      "id": "organic", "kind": "items", "path": "$.results[*]", "type": "organic", "position": "index",
+      "fields": {
+        "title": ["title", "name"],
+        "url": { "from": ["link", "url"], "required": true },
+        "snippet": { "from": ["snippet", "description"], "convert": "stripHtml" },
+        "additionalSnippets": "extra",
+        "rankAbsolute": "rank",
+        "domain": { "from": "url", "convert": "host" },
+        "thumbnail": "thumbnail.src",
+        "synthetic-b:thumbnailWidth": { "from": "thumbnail.width", "convert": "int" }
+      }
+    },
+    {
+      "id": "infobox", "kind": "features", "path": "$.info_box", "type": "knowledge_panel", "position": "none",
+      "fields": { "title": "label", "description": "long_desc" }
+    },
+    { "id": "experimental", "kind": "features", "path": "$.experimental_block", "type": "experimental_block", "position": "none" }
+  ]
+}
