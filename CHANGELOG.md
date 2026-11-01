@@ -58,6 +58,12 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
   zurück; Thread-Sicherheit von `close()` in den Port-Javadocs (ADR-017 Regel 8); Tests für alle bisher ungetesteten
   Wertklassen. Angleichung an WP1: `ProviderUsage.getCredits()` (`Optional<BigDecimal>`, ersetzt `getCreditsUsed()`),
   `ResultProvenance.builder(provider, engine)` mit Pflicht-Engine, `ExecutionInfo` ohne `cached`.
+- `serp4j-http-ahc` (Java 8, Paket T): `AhcHttpTransport` und `AhcHttpTransportOptions` auf async-http-client 2.16.
+  `create(...)` besitzt seinen Client, `wrap(client, ...)` leiht ihn nur (ADR-017). Jede Serverantwort ist eine
+  `HttpResponse`; Transportfehler werden nach `HttpTransportException.Kind` klassifiziert, ohne Bodies, Header-Werte
+  oder unmaskierte URLs in Meldungen und Ursachen. Default-User-Agent `Serp4J/<version>`. Redirects übernimmt der
+  Transport selbst und entfernt beim Wechsel des Origins alle sensitiven Header und Credential-Query-Parameter.
+  Requests über dem Verbindungslimit warten, statt wie bei AHC mit `TooManyConnectionsException` zu scheitern.
 
 ### Fixed
 
