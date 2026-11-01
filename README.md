@@ -5,7 +5,7 @@ Suchanbieter und – in späteren Arbeitspaketen – Adapter für Cloud-APIs (Br
 die Suche im Browser.
 
 **Status:** `0.1.0-SNAPSHOT`, in Entwicklung. Umgesetzt sind Paket A (Build-Gerüst, Core-Domain, Ports,
-HTTP-Port) und Paket F (Browser-Port und Playwright-Adapter). Die verbindliche Architektur steht in [docs/architecture](docs/architecture/architecture.md), die
+HTTP-Port), Paket E (Testkit) und Paket F (Browser-Port und Playwright-Adapter). Die verbindliche Architektur steht in [docs/architecture](docs/architecture/architecture.md), die
 Entscheidungen in den [ADRs](docs/architecture/adr), die Reihenfolge der Arbeitspakete im
 [Implementierungsplan](docs/architecture/implementation-plan.md).
 
@@ -18,6 +18,7 @@ Entscheidungen in den [ADRs](docs/architecture/adr), die Reihenfolge der Arbeits
 | `serp4j-http-ahc` | 8 | `AhcHttpTransport`: `HttpTransport` auf async-http-client 2.x, geteilter Client, Redirects ohne Credential-Weitergabe an fremde Hosts, Warteschlange statt Ablehnung bei Verbindungslimit | `serp4j-http-api`, async-http-client 2.16 (Netty) |
 | `serp4j-mapping` | 8 | Response-Mapping: deklarative Mapping-Definitionen, `MappingEngine`, Custom Mapper je Definition, Prüfbausteine für Fixture-Tests ([Format](docs/mapping/mapping-definition-format.md)) | `serp4j-core` |
 | `serp4j-json` | 8 | `JsonTrees`: JSON-Text ↔ `StructuredValue` (einzige Stelle mit Gson) | `serp4j-core`, Gson |
+| `serp4j-testkit` | 8 | Test-Scope: `MockSearchProvider`, `ScriptedSearchProvider`, `ScriptedConversationalProvider`, `FakeHttpTransport`, Fixtures mit Herkunftskennzeichnung und Secret-Scan, abstrakte Contract-Tests ([README](serp4j-testkit/README.md)) | core, http-api; JUnit 5 `compileOnly` |
 | `serp4j-browser-api` | 8 | Browser-Port `BrowserRuntime`/`BrowserSession`, Navigation, Warten, Skripte, Interaktion, Snapshots, Netzwerkbeobachtung, `UrlPolicy`, Fehlertypen; kennt den Core nicht | keine |
 | `serp4j-browser-testkit` | 8 | `FakeBrowserRuntime` und TCK `BrowserRuntimeContractTest` (JUnit 5) für jede Implementierung | `serp4j-browser-api` |
 | `serp4j-browser-playwright` | 8 | Adapter über Playwright Java: ein Owner-Thread je Browser, Kapazitätsgrenze, Probe, Remote-Server; ohne JS-Treiber | `serp4j-browser-api`, Playwright Java |
@@ -25,9 +26,8 @@ Entscheidungen in den [ADRs](docs/architecture/adr), die Reihenfolge der Arbeits
 | `serp4j-browser-playwright-driver-graal` | 21 | Treiber: playwright4j (Playwright-Treiber in GraalJS, ohne Node) | playwright4j |
 | `serp4j-bom` | – | Bill of Materials über alle publizierten Module (Lockstep-Version) | – |
 
-Die weiteren Module (`serp4j-orchestration`, `serp4j-http-*`, `serp4j-provider-*`,
-`serp4j-testkit`) sind in `settings.gradle.kts` bereits vorgesehen und kommen mit den Paketen
-B–H hinzu.
+Die weiteren Module (`serp4j-orchestration`, `serp4j-http-*`, `serp4j-provider-*`) sind in
+`settings.gradle.kts` bereits vorgesehen und kommen mit den Paketen B–H hinzu.
 
 ## Bauen
 

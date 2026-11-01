@@ -1,0 +1,7 @@
+{
+  "status": "ok",
+  "results": [
+    {"title": "Synthetic result 1", "url": "https://example.invalid/testkit/1"},
+    {"title": "Synthetic result 2", "url": "https://example.invalid/testkit/2"}
+  ]
+}
