@@ -5,7 +5,7 @@
 > Grundlage: [architecture.md](architecture.md), [ADRs](adr/README.md), Paketschnitt A–H aus Angelos Auftrag.
 > **Nachtrag 2026-11-02 ([ADR-020](adr/ADR-020-browser-uebergabe-playwright.md)):** Paket F wurde umgesetzt und wieder
 > entfernt; S1–S4, G1 und G2 entfallen. An ihre Stelle tritt `serp4j-playwright` (Host übergibt den Browser) und
-> `askai-playwright-google` in AskAI.
+> `serp4j-playwright-google` in AskAI.
 
 ## 1. Überblick
 
