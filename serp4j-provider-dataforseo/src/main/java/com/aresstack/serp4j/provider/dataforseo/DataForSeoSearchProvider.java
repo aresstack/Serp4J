@@ -29,6 +29,7 @@ import com.aresstack.serp4j.http.HttpTransport;
 import com.aresstack.serp4j.http.HttpTransportException;
 import com.aresstack.serp4j.http.RequestAuthentication;
 import com.aresstack.serp4j.http.resolve.GoogleGotoUrlResolver;
+import com.aresstack.serp4j.http.resolve.ResultUrlEnricher;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -72,7 +73,7 @@ public final class DataForSeoSearchProvider implements SearchProvider {
     private final DataForSeoRequestMapper requestMapper;
     private final DataForSeoResponseMapper responseMapper;
     /** Null when {@code resolveGoogleGotoUrls} is off. */
-    private final DataForSeoResultUrlEnricher urlEnricher;
+    private final ResultUrlEnricher urlEnricher;
     private final AtomicBoolean closed = new AtomicBoolean();
     private final Set<CompletableFuture<SearchResponse>> running =
             Collections.newSetFromMap(new ConcurrentHashMap<CompletableFuture<SearchResponse>, Boolean>());
@@ -91,7 +92,7 @@ public final class DataForSeoSearchProvider implements SearchProvider {
         this.requestMapper = new DataForSeoRequestMapper(b.id, b.function, b.defaultLocationCode, b.defaultLanguageCode);
         this.responseMapper = new DataForSeoResponseMapper(b.id);
         this.urlEnricher = b.resolveGoogleGotoUrls
-                ? new DataForSeoResultUrlEnricher(b.id, new GoogleGotoUrlResolver(b.transport), b.urlResolveTimeout,
+                ? new ResultUrlEnricher(b.id, new GoogleGotoUrlResolver(b.transport), b.urlResolveTimeout,
                 b.clock)
                 : null;
     }
@@ -215,13 +216,7 @@ public final class DataForSeoSearchProvider implements SearchProvider {
                     return;
                 }
                 // Optional enrichment outside the mapper: never fails the search, falls back to the mapped answer.
-                CompletableFuture<SearchResponse> enriched = urlEnricher.enrich(mapped, context::getRemainingTime);
-                future.whenComplete((r, e) -> {
-                    if (!enriched.isDone()) {
-                        enriched.cancel(true);
-                    }
-                });
-                enriched.whenComplete((r, e) -> future.complete(e == null ? r : mapped));
+                urlEnricher.completeWith(future, mapped, context);
             } catch (SearchProviderException e) {
                 future.completeExceptionally(e);
             } catch (RuntimeException e) {

@@ -1,6 +1,7 @@
 package com.aresstack.serp4j.provider.serpapi;
 
 import com.aresstack.serp4j.core.model.SearchLocale;
+import com.aresstack.serp4j.http.resolve.GoogleGotoUrlResolver;
 
 import java.time.Duration;
 import java.util.Objects;
@@ -26,6 +27,8 @@ public final class SerpApiSearchOptions {
     private final String googleDomain;
     private final boolean noCache;
     private final Duration timeout;
+    private final boolean resolveGoogleGotoUrls;
+    private final Duration urlResolveTimeout;
 
     private SerpApiSearchOptions(Builder builder) {
         this.baseUrl = builder.baseUrl;
@@ -35,6 +38,8 @@ public final class SerpApiSearchOptions {
         this.googleDomain = builder.googleDomain;
         this.noCache = builder.noCache;
         this.timeout = builder.timeout;
+        this.resolveGoogleGotoUrls = builder.resolveGoogleGotoUrls;
+        this.urlResolveTimeout = builder.urlResolveTimeout;
     }
 
     public static SerpApiSearchOptions defaults() {
@@ -83,6 +88,21 @@ public final class SerpApiSearchOptions {
         return timeout;
     }
 
+    /**
+     * Whether Google {@code /goto?url=…} result URLs are resolved to their targets after mapping; default
+     * {@code true}. Each distinct redirect URL costs one extra {@code GET} to Google (no redirects followed, target
+     * never fetched, no SerpApi key sent), at most four at a time, each bounded by {@link #getUrlResolveTimeout()}
+     * and the search deadline. Bing answers are never touched.
+     */
+    public boolean isResolveGoogleGotoUrls() {
+        return resolveGoogleGotoUrls;
+    }
+
+    /** Timeout of one redirect resolution; at most and by default three seconds. */
+    public Duration getUrlResolveTimeout() {
+        return urlResolveTimeout;
+    }
+
     public Builder toBuilder() {
         Builder builder = new Builder();
         builder.baseUrl = baseUrl;
@@ -92,6 +112,8 @@ public final class SerpApiSearchOptions {
         builder.googleDomain = googleDomain;
         builder.noCache = noCache;
         builder.timeout = timeout;
+        builder.resolveGoogleGotoUrls = resolveGoogleGotoUrls;
+        builder.urlResolveTimeout = urlResolveTimeout;
         return builder;
     }
 
@@ -108,19 +130,23 @@ public final class SerpApiSearchOptions {
                 && Objects.equals(defaultCountry, that.defaultCountry)
                 && Objects.equals(defaultLanguage, that.defaultLanguage)
                 && Objects.equals(defaultLocation, that.defaultLocation)
-                && Objects.equals(googleDomain, that.googleDomain) && timeout.equals(that.timeout);
+                && Objects.equals(googleDomain, that.googleDomain) && timeout.equals(that.timeout)
+                && resolveGoogleGotoUrls == that.resolveGoogleGotoUrls
+                && urlResolveTimeout.equals(that.urlResolveTimeout);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(baseUrl, defaultCountry, defaultLanguage, defaultLocation, googleDomain, noCache, timeout);
+        return Objects.hash(baseUrl, defaultCountry, defaultLanguage, defaultLocation, googleDomain, noCache, timeout,
+                resolveGoogleGotoUrls, urlResolveTimeout);
     }
 
     @Override
     public String toString() {
         return "SerpApiSearchOptions{baseUrl=" + baseUrl + ", country=" + defaultCountry + ", language="
                 + defaultLanguage + ", location=" + defaultLocation + ", googleDomain=" + googleDomain
-                + ", noCache=" + noCache + ", timeout=" + timeout + '}';
+                + ", noCache=" + noCache + ", timeout=" + timeout + ", resolveGoogleGotoUrls=" + resolveGoogleGotoUrls
+                + ", urlResolveTimeout=" + urlResolveTimeout + '}';
     }
 
     public static final class Builder {
@@ -131,6 +157,8 @@ public final class SerpApiSearchOptions {
         private String googleDomain;
         private boolean noCache;
         private Duration timeout = DEFAULT_TIMEOUT;
+        private boolean resolveGoogleGotoUrls = true;
+        private Duration urlResolveTimeout = GoogleGotoUrlResolver.DEFAULT_TIMEOUT;
 
         private Builder() {
         }
@@ -170,6 +198,18 @@ public final class SerpApiSearchOptions {
             return this;
         }
 
+        /** See {@link SerpApiSearchOptions#isResolveGoogleGotoUrls()}; {@code false} sends no extra request. */
+        public Builder resolveGoogleGotoUrls(boolean resolve) {
+            this.resolveGoogleGotoUrls = resolve;
+            return this;
+        }
+
+        /** Positive and at most three seconds. */
+        public Builder urlResolveTimeout(Duration urlResolveTimeout) {
+            this.urlResolveTimeout = Objects.requireNonNull(urlResolveTimeout, "urlResolveTimeout");
+            return this;
+        }
+
         /** @throws IllegalArgumentException for an invalid base URL, country, language, domain or timeout */
         public SerpApiSearchOptions build() {
             String url = baseUrl.trim();
@@ -196,6 +236,11 @@ public final class SerpApiSearchOptions {
             }
             if (timeout.isZero() || timeout.isNegative()) {
                 throw new IllegalArgumentException("timeout must be positive: " + timeout);
+            }
+            if (urlResolveTimeout.isZero() || urlResolveTimeout.isNegative()
+                    || urlResolveTimeout.compareTo(GoogleGotoUrlResolver.DEFAULT_TIMEOUT) > 0) {
+                throw new IllegalArgumentException("urlResolveTimeout must be positive and at most "
+                        + GoogleGotoUrlResolver.DEFAULT_TIMEOUT + ": " + urlResolveTimeout);
             }
             return new SerpApiSearchOptions(this);
         }

@@ -80,7 +80,9 @@ class SerpApiRecordedFixtureTest {
         SearchEngineId engine = name.startsWith("bing") ? SearchEngineId.BING : SearchEngineId.GOOGLE;
         try (FakeHttpTransport transport = FakeHttpTransport.create();
              SerpApiSearchProvider provider = SerpApiSearchProvider.builder().transport(transport)
-                     .apiKey("unit-test-serpapi-key-0042").build()) {
+                     .apiKey("unit-test-serpapi-key-0042")
+                     // mapper end to end; /goto resolution is covered by SerpApiGotoUrlResolutionTest
+                     .options(SerpApiSearchOptions.builder().resolveGoogleGotoUrls(false).build()).build()) {
             transport.onAnyRequest(FakeHttpStep.respond(Fixtures.load("serpapi", name).toHttpResponse()));
 
             SearchResponse response = provider.search(SearchRequest.builder("serp4j java search library")

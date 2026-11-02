@@ -9,6 +9,7 @@ import com.aresstack.serp4j.core.port.SearchContext;
 import com.aresstack.serp4j.core.port.credential.EnvironmentCredentialProvider;
 import com.aresstack.serp4j.http.ahc.AhcHttpTransport;
 import com.aresstack.serp4j.http.resolve.GoogleGotoUrlResolver;
+import com.aresstack.serp4j.http.resolve.ResultUrlEnricher;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -65,14 +66,14 @@ class DataForSeoLiveTest {
             for (com.aresstack.serp4j.core.model.data.SearchResultItem item : response.getData().getResults()) {
                 if (GoogleGotoUrlResolver.isGoogleGotoUrl(item.getUrl())) {
                     unresolved = true;
-                } else if (item.getExtensions().contains(DataForSeoResultUrlEnricher.ORIGINAL_URL)) {
+                } else if (item.getExtensions().contains(ResultUrlEnricher.ORIGINAL_URL)) {
                     assertThat(item.getUrl()).startsWith("http");
                     assertThat(item.getUrl()).doesNotContain("google.com/goto");
                 }
             }
             if (unresolved) {
                 assertThat(response.getMetadata().get().getWarnings()).extracting(w -> w.getCode())
-                        .contains(DataForSeoResultUrlEnricher.WARNING_CODE);
+                        .contains(ResultUrlEnricher.WARNING_CODE);
             }
         }
     }
