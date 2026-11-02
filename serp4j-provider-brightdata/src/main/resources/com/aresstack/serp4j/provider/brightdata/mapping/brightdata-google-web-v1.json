@@ -1,0 +1,86 @@
+{
+  "id": "brightdata-google-web",
+  "version": 1,
+  "namespace": "brightdata",
+  "description": "Bright Data SERP API, POST /request with format=json and data_format=parsed, Google web search. Written against the recorded response in fixtures/brightdata/google-web-pizza.json. rank = position within its section, global_rank = position on the whole SERP.",
+  "metadata": {
+    "originalQuery": "$.general.query",
+    "totalResultsEstimate": "$.general.results_cnt",
+    "providerRequestId": "$.input.request_id",
+    "pageNumber": "$.pagination.current_page",
+    "brightdata:nextPageStart": { "from": "$.pagination.next_page_start", "convert": "int" },
+    "brightdata:searchEngine": "$.general.search_engine",
+    "brightdata:searchType": "$.general.search_type",
+    "brightdata:language": "$.general.language",
+    "brightdata:countryCode": "$.general.country_code",
+    "brightdata:gl": "$.general.gl",
+    "brightdata:location": "$.general.location",
+    "brightdata:mobile": "$.general.mobile",
+    "brightdata:originalUrl": "$.input.original_url",
+    "brightdata:timestamp": { "from": "$.general.timestamp", "convert": "isoDate" }
+  },
+  "sections": [
+    {
+      "id": "organic", "kind": "items", "path": "$.organic[*]", "type": "organic",
+      "fields": {
+        "url": "link",
+        "title": "title",
+        "snippet": "description",
+        "displayUrl": "display_link",
+        "siteName": "source",
+        "thumbnail": "image_url",
+        "domain": { "from": "link", "convert": "host" },
+        "rankInGroup": "rank",
+        "rankAbsolute": "global_rank"
+      }
+    },
+    {
+      "id": "videos", "kind": "items", "path": "$.videos[*]", "type": "video",
+      "fields": {
+        "url": "link",
+        "title": "title",
+        "siteName": "source",
+        "domain": { "from": "link", "convert": "host" },
+        "rankInGroup": "rank",
+        "rankAbsolute": "global_rank",
+        "brightdata:durationSec": { "from": "duration_sec", "convert": "int" }
+      }
+    },
+    {
+      "id": "short_videos", "kind": "items", "path": "$.short_videos[*]", "type": "short_video",
+      "fields": {
+        "url": "link",
+        "title": "title",
+        "siteName": "source",
+        "domain": { "from": "link", "convert": "host" },
+        "rankInGroup": "rank",
+        "rankAbsolute": "global_rank",
+        "brightdata:durationSec": { "from": "duration_sec", "convert": "int" }
+      }
+    },
+    {
+      "id": "knowledge", "kind": "features", "path": "$.knowledge", "type": "knowledge_panel", "position": "none",
+      "fields": {
+        "title": "name",
+        "subtitle": "subtitle",
+        "description": "description"
+      }
+    },
+    {
+      "id": "overview", "kind": "features", "path": "$.overview", "type": "overview", "position": "none",
+      "fields": { "title": "title" }
+    },
+    {
+      "id": "people_also_ask", "kind": "features", "path": "$.people_also_ask[*]", "type": "people_also_ask",
+      "fields": {
+        "title": "question",
+        "rankInGroup": "rank",
+        "rankAbsolute": "global_rank"
+      }
+    },
+    {
+      "id": "related", "kind": "features", "path": "$.related", "type": "related_searches", "position": "none",
+      "fields": { "queries": "$[*].text" }
+    }
+  ]
+}
