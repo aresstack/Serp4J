@@ -4,7 +4,7 @@ import com.aresstack.serp4j.core.error.SearchErrorCategory;
 import com.aresstack.serp4j.core.error.SearchProviderException;
 import com.aresstack.serp4j.core.model.id.ProviderId;
 
-/** Failures a {@link PlaywrightSearchEngine} reports; detail keys are stable for hosts. */
+/** Failures a {@link PlaywrightSearchProvider} reports; detail keys are stable for hosts. */
 public final class PlaywrightSearchFailures {
 
     /** Detail key naming the obstacle kind, for example {@code consent}, {@code captcha} or {@code js_required}. */
