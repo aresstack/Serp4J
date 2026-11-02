@@ -135,7 +135,7 @@ class SerpApiSearchProviderTest {
         String url = transport.getLastRequest().getUrl();
         assertThat(url).contains("engine=bing").contains("cc=DE").contains("mkt=de-DE")
                 .contains("count=10").contains("first=11").contains("safeSearch=Off")
-                .contains("filters=ex1%3A%22ez5_20362_20392%22")
+                .contains("filters=ex1%3A%22ez5_20727_20757%22")
                 .doesNotContain("num=").doesNotContain("gl=");
     }
 
