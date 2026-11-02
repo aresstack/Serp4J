@@ -35,12 +35,12 @@
     {
       "id": "ads", "kind": "items", "path": "$.ads[*]", "type": "paid",
       "fields": {
-        "url": "link",
+        "url": ["link", "tracking_link"],
         "title": "title",
         "snippet": "description",
         "displayUrl": "displayed_link",
         "siteName": "source",
-        "domain": { "from": "link", "convert": "host" },
+        "domain": { "from": ["link", "tracking_link"], "convert": "host" },
         "rankInGroup": { "from": "position", "convert": "int" },
         "serpapi:blockPosition": "block_position"
       }

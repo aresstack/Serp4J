@@ -58,7 +58,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * <ul>
  *   <li>Targets {@code google/web} (default when the request names no target) and {@code bing/web}. Google:
- *       {@code num} up to 100, {@code start} = offset. Bing: {@code count} up to 50, {@code first} = offset + 1.</li>
+ *       pages of about 10 results ({@code num} is no longer honoured by Google, other limits get a warning or
+ *       {@code UNSUPPORTED}), {@code start} = offset. Bing: {@code count} up to 50, {@code first} = offset + 1.</li>
  *   <li>The key is resolved per search from the {@link CredentialProvider} and sent as the URL parameter
  *       {@code api_key}, as SerpApi requires. It is registered as a sensitive query parameter and therefore masked in
  *       {@code getRedactedUrl()}, {@code toString()}, {@code ExecutionInfo.sourceUrl} and error messages.</li>
@@ -123,7 +124,7 @@ public final class SerpApiSearchProvider implements SearchProvider {
                 .responseFeatures(ResponseFeature.ORGANIC_RESULTS, ResponseFeature.SERP_FEATURES,
                         ResponseFeature.KNOWLEDGE_GRAPH, ResponseFeature.RELATED_QUERIES,
                         ResponseFeature.TOTAL_RESULT_COUNT, ResponseFeature.RAW_PAYLOAD)
-                .maxResultsPerRequest(SerpApiRequestFactory.MAX_GOOGLE_NUM)
+                .maxResultsPerRequest(SerpApiRequestFactory.MAX_BING_COUNT)
                 .build();
     }
 
@@ -173,6 +174,10 @@ public final class SerpApiSearchProvider implements SearchProvider {
                     ignoredFeatureWarnings(check));
         } catch (SearchProviderException e) {
             return failed(e);
+        } catch (RuntimeException e) {
+            // Never throw synchronously from search(); unexpected preparation errors complete the future.
+            return failed(new SearchProviderException(id, SearchErrorCategory.INTERNAL,
+                    "could not prepare the SerpApi request: " + e.getClass().getSimpleName()));
         } finally {
             if (key != null) {
                 Arrays.fill(key, '\0');

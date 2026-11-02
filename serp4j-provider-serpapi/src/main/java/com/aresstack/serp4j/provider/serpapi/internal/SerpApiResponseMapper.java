@@ -91,10 +91,8 @@ public final class SerpApiResponseMapper {
 
         SearchMetadata.Builder metadata = result.applyTo(SearchMetadata.forProvider(providerId, engine,
                 SearchVertical.WEB, queryInfo(request.getQuery(), mapped, engine)));
-        PageInfo.Builder page = PageInfo.builder(request.getPaging().getOffset(), prepared.getCount());
-        if (mapped.getPageNumber().isPresent()) {
-            page.pageNumber(mapped.getPageNumber().getAsInt());
-        }
+        PageInfo.Builder page = mapped.applyTo(PageInfo.builder(request.getPaging().getOffset(),
+                prepared.getCount()));
         page.hasMore(hasNextPage(tree));
         metadata.page(page.build())
                 .execution(ExecutionInfo.builder()

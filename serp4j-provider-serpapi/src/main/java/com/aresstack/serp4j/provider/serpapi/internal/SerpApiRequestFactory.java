@@ -43,8 +43,12 @@ public final class SerpApiRequestFactory {
 
     public static final String SEARCH_PATH = "/search.json";
     public static final String API_KEY_PARAMETER = "api_key";
-    /** Google accepts {@code num} up to 100, Bing {@code count} up to 50. */
-    public static final int MAX_GOOGLE_NUM = 100;
+    /**
+     * Google no longer honours {@code num} (since September 2025): a page always has about ten organic results, so
+     * the adapter does not send {@code num} and treats other limits as not expressible. Bing accepts {@code count}
+     * up to 50.
+     */
+    public static final int GOOGLE_PAGE_SIZE = 10;
     public static final int MAX_BING_COUNT = 50;
     /** Google cuts queries at 2048 characters; longer ones are rejected before spending a search. */
     public static final int MAX_QUERY_CHARS = 2048;
@@ -126,19 +130,19 @@ public final class SerpApiRequestFactory {
         boolean google = engine.equals(SearchEngineId.GOOGLE);
 
         Paging paging = request.getPaging();
-        int max = google ? MAX_GOOGLE_NUM : MAX_BING_COUNT;
         int count = paging.getLimit();
-        if (count > max) {
-            String message = "SerpApi " + engine + " returns at most " + max + " results per request; asked for "
-                    + count;
+        if (google ? count != GOOGLE_PAGE_SIZE : count > MAX_BING_COUNT) {
+            int served = google ? GOOGLE_PAGE_SIZE : MAX_BING_COUNT;
+            String message = google
+                    ? "Google ignores num; SerpApi returns pages of about " + GOOGLE_PAGE_SIZE + " results, asked for "
+                    + count
+                    : "SerpApi bing returns at most " + MAX_BING_COUNT + " results per request; asked for " + count;
             if (request.getRequirementLevel(SearchFeature.MAX_RESULTS) == RequirementLevel.REQUIRED) {
                 throw new SearchProviderException(providerId, SearchErrorCategory.UNSUPPORTED, message);
             }
-            // For Google the capability check already reported it; Bing's lower limit is reported here.
-            if (!google) {
-                warnings.add(SearchWarning.of(SearchWarning.FEATURE_IGNORED, message + "; capped", providerId));
-            }
-            count = max;
+            warnings.add(SearchWarning.of(SearchWarning.FEATURE_IGNORED, message + "; page size " + served
+                    + " used", providerId));
+            count = served;
         }
         int offset = paging.getOffset();
 
@@ -175,8 +179,7 @@ public final class SerpApiRequestFactory {
                     : options.getGoogleDomain().orElse(null);
             url.paramIfPresent("google_domain", domain)
                     .paramIfPresent("gl", country == null ? null : country.toLowerCase(Locale.ROOT))
-                    .paramIfPresent("hl", language)
-                    .param("num", count);
+                    .paramIfPresent("hl", language);
             if (offset > 0) {
                 url.param("start", offset);
             }
@@ -190,6 +193,15 @@ public final class SerpApiRequestFactory {
             url.paramIfPresent("cc", country == null ? null : country.toUpperCase(Locale.ROOT));
             if (language != null && country != null) {
                 url.param("mkt", language.toLowerCase(Locale.ROOT) + "-" + country.toUpperCase(Locale.ROOT));
+            } else if (language != null) {
+                // Bing takes the language only as part of the market (mkt=<lang>-<COUNTRY>).
+                String message = "Bing needs a country to express the language '" + language + "' as market (mkt)";
+                if (request.getRequirementLevel(SearchFeature.LANGUAGE) == RequirementLevel.REQUIRED) {
+                    throw new SearchProviderException(providerId, SearchErrorCategory.UNSUPPORTED, message);
+                }
+                warnings.add(SearchWarning.of(SearchWarning.FEATURE_IGNORED, message + "; searched without it",
+                        providerId));
+                locale = locale.toBuilder().languageCode(null).build();
             }
             url.param("count", count);
             if (offset > 0) {

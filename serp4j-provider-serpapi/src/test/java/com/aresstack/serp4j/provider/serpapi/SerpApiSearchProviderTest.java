@@ -100,7 +100,7 @@ class SerpApiSearchProviderTest {
         search(SearchRequest.builder("serp4j  java")
                 .locale(SearchLocale.builder().countryCode("DE").languageCode("de")
                         .location(GeoLocation.named("Berlin,Germany")).build())
-                .limit(20).offset(40)
+                .offset(40)
                 .safeSearch(SafeSearch.STRICT)
                 .timeRange(TimeRange.pastWeek())
                 .build());
@@ -109,7 +109,7 @@ class SerpApiSearchProviderTest {
         assertThat(request.getUrl()).startsWith("https://serpapi.com/search.json?")
                 .contains("engine=google").contains("q=serp4j")
                 .contains("gl=de").contains("hl=de").contains("location=Berlin%2CGermany")
-                .contains("num=20").contains("start=40")
+                .doesNotContain("num=").contains("start=40")
                 .contains("safe=active").contains("tbs=qdr%3Aw")
                 .contains("api_key=" + KEY)
                 .doesNotContain("no_cache");
@@ -152,6 +152,42 @@ class SerpApiSearchProviderTest {
     void bingCountAboveFiftyIsUnsupportedWhenRequired() {
         assertEquals(SearchErrorCategory.UNSUPPORTED, searchFails(SearchRequest.builder("q").target(BING).limit(80)
                 .require(SearchFeature.MAX_RESULTS).build()).getCategory());
+        assertEquals(0, transport.getRequestCount());
+    }
+
+    @Test
+    void googleLimitOtherThanTheFixedPageSizeIsIgnoredWithWarning() {
+        respondWith("google-web-synthetic.json");
+        SearchResponse response = search(SearchRequest.builder("q").limit(30).build());
+        assertThat(transport.getLastRequest().getUrl()).doesNotContain("num=");
+        assertThat(response.getMetadata().get().getWarnings()).extracting(SearchWarning::getCode)
+                .contains(SearchWarning.FEATURE_IGNORED);
+        assertEquals(10, response.getMetadata().get().getPage().get().getRequestedCount());
+    }
+
+    @Test
+    void requiredGoogleLimitOtherThanTheFixedPageSizeIsUnsupported() {
+        assertEquals(SearchErrorCategory.UNSUPPORTED, searchFails(SearchRequest.builder("q").limit(5)
+                .require(SearchFeature.MAX_RESULTS).build()).getCategory());
+        assertEquals(0, transport.getRequestCount());
+    }
+
+    @Test
+    void bingLanguageWithoutCountryIsIgnoredWithWarningWhenOptional() {
+        respondWith("bing-web-synthetic.json");
+        SearchResponse response = search(SearchRequest.builder("q").target(BING)
+                .locale(SearchLocale.builder().languageCode("de").build()).build());
+        assertThat(transport.getLastRequest().getUrl()).doesNotContain("mkt=");
+        assertThat(response.getMetadata().get().getWarnings()).extracting(SearchWarning::getCode)
+                .contains(SearchWarning.FEATURE_IGNORED);
+        assertThat(response.getMetadata().get().getLocale().flatMap(SearchLocale::getLanguageCode)).isEmpty();
+    }
+
+    @Test
+    void bingLanguageWithoutCountryIsUnsupportedWhenRequired() {
+        assertEquals(SearchErrorCategory.UNSUPPORTED, searchFails(SearchRequest.builder("q").target(BING)
+                .locale(SearchLocale.builder().languageCode("de").build())
+                .require(SearchFeature.LANGUAGE).build()).getCategory());
         assertEquals(0, transport.getRequestCount());
     }
 
@@ -321,6 +357,7 @@ class SerpApiSearchProviderTest {
                 metadata.getQuery().getSpellCorrection().get().getType());
         assertEquals(Optional.of(true), metadata.getPage().get().getHasMore());
         assertEquals(1, metadata.getPage().get().getPageNumber().getAsInt());
+        assertEquals(12300L, metadata.getPage().get().getTotalResultsEstimate().getAsLong());
         assertEquals(Optional.of("Success"), metadata.getExtensions().get(SerpApiExtensions.STATUS));
         assertEquals(Optional.of(new BigDecimal("1.42")),
                 metadata.getExtensions().get(SerpApiExtensions.TOTAL_TIME_TAKEN));
@@ -354,6 +391,17 @@ class SerpApiSearchProviderTest {
         assertEquals(Optional.of(SearchEngineId.BING), response.getMetadata().get().getEngine());
         assertThat(response.getData().getResults()).hasSize(2);
         assertEquals(Optional.of(true), response.getMetadata().get().getPage().get().getHasMore());
+        assertEquals(4560L, response.getMetadata().get().getPage().get().getTotalResultsEstimate().getAsLong());
+    }
+
+    @Test
+    void bingTextAdWithOnlyTrackingLinkIsKept() {
+        transport.onAnyRequest(FakeHttpStep.json(200, "{\"ads\":[{\"position\":1,\"block_position\":\"top\","
+                + "\"title\":\"Synthetic ad\",\"tracking_link\":\"https://www.bing.com/aclk?ld=synthetic\"}]}"));
+        SearchResponse response = search(SearchRequest.builder("q").target(BING).build());
+        assertThat(response.getData().getResults()).extracting(SearchResultItem::getType).containsExactly(ResultType.PAID);
+        assertEquals("https://www.bing.com/aclk?ld=synthetic", response.getData().getResults().get(0).getUrl());
+        assertThat(response.getMetadata().get().getWarnings()).isEmpty();
     }
 
     @Test
@@ -473,6 +521,9 @@ class SerpApiSearchProviderTest {
         assertThrows(IllegalArgumentException.class, () -> SerpApiSearchOptions.builder().defaultCountry("DEU").build());
         assertThrows(IllegalArgumentException.class, () -> SerpApiSearchOptions.builder().baseUrl("ftp://x").build());
         assertThrows(IllegalArgumentException.class, () -> SerpApiSearchOptions.builder().googleDomain("bing.com")
+                .build());
+        // Only languages that SearchLocale accepts, so the default can always be applied to a request.
+        assertThrows(IllegalArgumentException.class, () -> SerpApiSearchOptions.builder().defaultLanguage("pt-BR")
                 .build());
         assertThrows(IllegalStateException.class, () -> SerpApiSearchProvider.builder().apiKey("k").build());
     }

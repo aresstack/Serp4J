@@ -1,5 +1,7 @@
 package com.aresstack.serp4j.provider.serpapi;
 
+import com.aresstack.serp4j.core.model.SearchLocale;
+
 import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
@@ -181,11 +183,12 @@ public final class SerpApiSearchOptions {
                 throw new IllegalArgumentException("baseUrl must not contain a query or fragment: " + baseUrl);
             }
             baseUrl = url;
-            if (defaultCountry != null && !defaultCountry.matches("[A-Za-z]{2}")) {
-                throw new IllegalArgumentException("defaultCountry must be a two-letter code: " + defaultCountry);
+            // Same rules as SearchLocale, so an accepted default can always be applied to a request's locale.
+            if (defaultCountry != null) {
+                SearchLocale.builder().countryCode(defaultCountry).build();
             }
-            if (defaultLanguage != null && !defaultLanguage.matches("[A-Za-z]{2,3}([-_][A-Za-z0-9]{2,8})*")) {
-                throw new IllegalArgumentException("defaultLanguage must be a language tag: " + defaultLanguage);
+            if (defaultLanguage != null) {
+                SearchLocale.builder().languageCode(defaultLanguage).build();
             }
             if (googleDomain != null && !googleDomain.matches("([a-z0-9-]+\\.)*google\\.[a-z.]{2,10}")) {
                 throw new IllegalArgumentException("googleDomain must be a Google domain like google.de: "

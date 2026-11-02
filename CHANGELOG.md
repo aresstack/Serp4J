@@ -46,8 +46,8 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
   bis eine aufgezeichnete Antwort vorliegt (E-1). Noch nicht enthalten: Standard-Task-Ablauf, HTML, Locations/Languages.
 - `serp4j-provider-serpapi` (Java 8, fünfter Provider, gegen die SerpApi-Dokumentation vom 2026-11-02):
   `SerpApiSearchProvider` für `GET https://serpapi.com/search.json` mit `engine=google` (Standard) und
-  `engine=bing`. Google: `q`, `gl`, `hl`, `location`, `google_domain`, `num` ≤ 100, `start`, `safe`, `tbs`
-  (`qdr:*` bzw. `cdr:1,cd_min,cd_max`); Bing: `cc`, `mkt`, `count` ≤ 50 (sonst gekappt mit Warnung bzw.
+  `engine=bing`. Google: `q`, `gl`, `hl`, `location`, `google_domain`, `start`, `safe`, `tbs` (kein `num` – Google wertet ihn seit 09/2025 nicht mehr aus; andere Limits als 10 ergeben eine Warnung bzw. `UNSUPPORTED`)
+  (`qdr:*` bzw. `cdr:1,cd_min,cd_max`); Bing: `cc`, `mkt` (Sprache ohne Land → Warnung bzw. `UNSUPPORTED`), `count` ≤ 50 (sonst gekappt mit Warnung bzw.
   `UNSUPPORTED`), `first` = offset + 1, `safeSearch`, `filters` (`ez1`–`ez3`, sonst `ez5_<von>_<bis>`). Der Key
   kommt aus dem `CredentialProvider` (`<id>.api-key`) und geht – weil SerpApi ihn nur so annimmt – als URL-Parameter
   `api_key` über `RequestAuthentication.queryParameter`: maskiert in `getRedactedUrl()`/`toString()`/
@@ -56,7 +56,7 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
   (`no_cache`, `device`, `location`, `google_domain`, weitere Parameter ohne die reservierten Namen); falscher
   Optionstyp → `INVALID_REQUEST` vor Credential-Abruf und HTTP-Aufruf. Mapping-Definitionen `serpapi-google` und
   `serpapi-bing` v1 (organic, ads, top_stories, knowledge_graph, answer_box, related_questions, related_searches;
-  `search_metadata.id` → `providerRequestId`, `serpapi_pagination.next` → `hasMore`). Fehler: 401/403/„Invalid API
+  `search_metadata.id` → `providerRequestId`, `total_results` → `PageInfo.totalResultsEstimate`, `serpapi_pagination.next` → `hasMore`, Anzeigen-URL mit Fallback `tracking_link`). Fehler: 401/403/„Invalid API
   key“ → `AUTHENTICATION`, „run out of searches“ → `QUOTA_EXHAUSTED`, sonst 429 → `RATE_LIMITED`, 400 →
   `INVALID_REQUEST`, 5xx und `status=Error` → `UNAVAILABLE`; „hasn't returned any results“ ist eine leere
   Erfolgsantwort. SerpApi-Cache bleibt standardmäßig an (gecachte Antworten kosten kein Kontingent).
