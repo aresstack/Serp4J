@@ -1,0 +1,266 @@
+{
+  "definition": "dataforseo-serp-organic",
+  "version": 1,
+  "results": [
+    {
+      "id": "serp#1",
+      "type": "paid",
+      "url": "https://ads.example.com/pizza",
+      "title": "Pizza delivery",
+      "snippet": "Order now.",
+      "displayUrl": "ads.example.com",
+      "domain": "ads.example.com",
+      "siteName": "Example Pizza",
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 1,
+        "page": 1,
+        "area": "sidebar"
+      }
+    },
+    {
+      "id": "serp#9",
+      "type": "organic",
+      "url": "https://food.example.net/berlin-pizza",
+      "title": "Best pizza in Berlin",
+      "snippet": "A synthetic list.",
+      "displayUrl": "food.example.net › berlin",
+      "domain": "food.example.net",
+      "siteName": "Food Example",
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 9,
+        "page": 1,
+        "area": "main"
+      }
+    }
+  ],
+  "features": [
+    {
+      "id": "serp#2",
+      "type": "answer_box",
+      "class": "AnswerBoxFeature",
+      "text": "Open daily 11:00–23:00",
+      "source": {
+        "url": "https://example.com/hours",
+        "title": "Opening hours"
+      },
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 2,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "position": "left"
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#3",
+      "type": "ai_overview",
+      "class": "GenericSerpFeature",
+      "title": "AI overview",
+      "content": {
+        "type": "ai_overview",
+        "rank_group": 1,
+        "rank_absolute": 3,
+        "title": "AI overview",
+        "items": [
+          {
+            "type": "ai_overview_element",
+            "text": "Synthetic overview text."
+          }
+        ],
+        "page": 1,
+        "position": "left"
+      },
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 3,
+        "page": 1,
+        "area": "main"
+      }
+    },
+    {
+      "id": "serp#4",
+      "type": "local_pack",
+      "class": "GenericSerpFeature",
+      "title": "Pizzeria Example",
+      "content": {
+        "type": "local_pack",
+        "rank_group": 1,
+        "rank_absolute": 4,
+        "title": "Pizzeria Example",
+        "domain": "pizzeria.example",
+        "page": 1,
+        "position": "left"
+      },
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 4,
+        "page": 1,
+        "area": "main"
+      }
+    },
+    {
+      "id": "serp#5",
+      "type": "top_stories",
+      "class": "GenericSerpFeature",
+      "title": "Top stories",
+      "content": {
+        "type": "top_stories",
+        "rank_group": 1,
+        "rank_absolute": 5,
+        "title": "Top stories",
+        "items": [],
+        "page": 1,
+        "position": "left"
+      },
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 5,
+        "page": 1,
+        "area": "main"
+      }
+    },
+    {
+      "id": "serp#6",
+      "type": "images",
+      "class": "GenericSerpFeature",
+      "title": "Images",
+      "content": {
+        "type": "images",
+        "rank_group": 1,
+        "rank_absolute": 6,
+        "title": "Images",
+        "items": [],
+        "page": 1,
+        "position": "left"
+      },
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 6,
+        "page": 1,
+        "area": "main"
+      }
+    },
+    {
+      "id": "serp#7",
+      "type": "video_carousel",
+      "class": "GenericSerpFeature",
+      "title": "Videos",
+      "content": {
+        "type": "video",
+        "rank_group": 1,
+        "rank_absolute": 7,
+        "title": "Videos",
+        "items": [],
+        "page": 1,
+        "position": "left"
+      },
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 7,
+        "page": 1,
+        "area": "main"
+      }
+    },
+    {
+      "id": "serp#8",
+      "type": "discussions",
+      "class": "GenericSerpFeature",
+      "title": "Discussions and forums",
+      "content": {
+        "type": "discussions_and_forums",
+        "rank_group": 1,
+        "rank_absolute": 8,
+        "title": "Discussions and forums",
+        "items": [],
+        "page": 1,
+        "position": "left"
+      },
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 8,
+        "page": 1,
+        "area": "main"
+      }
+    }
+  ],
+  "metadata": {
+    "totalResultsEstimate": 4560000,
+    "providerRequestId": "11011234-0000-0000-0000-000000000002",
+    "cost": 0.002,
+    "currency": "USD",
+    "extensions": {
+      "unmapped": {
+        "dataforseo": {
+          "version": "0.1.20261101",
+          "status_code": 20000,
+          "status_message": "Ok.",
+          "time": "4.1234 sec.",
+          "cost": 0.002,
+          "tasks_count": 1,
+          "tasks_error": 0,
+          "tasks": [
+            {
+              "status_code": 20000,
+              "status_message": "Ok.",
+              "time": "4.0512 sec.",
+              "result_count": 1,
+              "path": [
+                "v3",
+                "serp",
+                "google",
+                "organic",
+                "live",
+                "advanced"
+              ],
+              "data": {
+                "api": "serp",
+                "function": "live",
+                "se": "google",
+                "se_type": "organic",
+                "keyword": "pizza berlin",
+                "location_code": 2840,
+                "language_code": "en",
+                "device": "desktop",
+                "os": "windows",
+                "depth": 10
+              },
+              "result": [
+                {
+                  "keyword": "pizza berlin",
+                  "type": "organic",
+                  "se_domain": "google.com",
+                  "location_code": 2840,
+                  "language_code": "en",
+                  "check_url": "https://www.google.com/search?q=pizza%20berlin",
+                  "datetime": "2026-11-01 07:00:00 +00:00",
+                  "item_types": [
+                    "ai_overview",
+                    "answer_box",
+                    "discussions_and_forums",
+                    "images",
+                    "local_pack",
+                    "organic",
+                    "paid",
+                    "top_stories",
+                    "video"
+                  ],
+                  "pages_count": 1,
+                  "items_count": 9
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "warnings": []
+}

@@ -1,0 +1,279 @@
+{
+  "definition": "dataforseo-serp-organic",
+  "version": 1,
+  "results": [
+    {
+      "id": "serp#2",
+      "type": "organic",
+      "url": "https://example.org/wiki/albert-einstein",
+      "title": "Albert Einstein",
+      "snippet": "German-born theoretical physicist.",
+      "additionalSnippets": [
+        "Best known for the theory of relativity."
+      ],
+      "displayUrl": "https://example.org › wiki",
+      "domain": "example.org",
+      "siteName": "Example Encyclopedia",
+      "publishedDate": {
+        "instant": "2026-10-30T12:00:00Z"
+      },
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 2,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "xpath": "/html[1]/body[1]/div[2]",
+            "highlighted": [
+              "Albert Einstein"
+            ],
+            "is_featured_snippet": false
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#5",
+      "type": "organic",
+      "url": "https://physics.example.net/einstein",
+      "title": "Einstein biography",
+      "snippet": "A synthetic biography.",
+      "displayUrl": "physics.example.net",
+      "domain": "physics.example.net",
+      "position": {
+        "rankInGroup": 2,
+        "rankAbsolute": 5,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "xpath": "/html[1]/body[1]/div[5]"
+          }
+        }
+      }
+    }
+  ],
+  "features": [
+    {
+      "id": "serp#1",
+      "type": "featured_snippet",
+      "class": "FeaturedSnippetFeature",
+      "text": "Albert Einstein was a theoretical physicist.",
+      "source": {
+        "url": "https://example.org/wiki/albert-einstein",
+        "title": "Albert Einstein – Example Encyclopedia",
+        "domain": "example.org"
+      },
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 1,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "position": "left",
+            "xpath": "/html[1]/body[1]/div[1]"
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#3",
+      "type": "knowledge_panel",
+      "class": "KnowledgePanelFeature",
+      "title": "Albert Einstein",
+      "subtitle": "Theoretical physicist",
+      "description": "A synthetic description.",
+      "facts": [
+        {
+          "key": "Born",
+          "values": [
+            {
+              "text": "14 March 1879"
+            }
+          ]
+        }
+      ],
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 3,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "position": "right",
+            "xpath": "/html[1]/body[1]/div[3]"
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#4",
+      "type": "people_also_ask",
+      "class": "QuestionAnswerFeature",
+      "questions": [
+        {
+          "question": "What is Einstein famous for?",
+          "answer": "The theory of relativity.",
+          "source": {
+            "url": "https://example.com/einstein-faq"
+          }
+        }
+      ],
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 4,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "position": "left",
+            "xpath": "/html[1]/body[1]/div[4]",
+            "items": [
+              {
+                "expanded_element": [
+                  {
+                    "type": "people_also_ask_expanded_element",
+                    "domain": "example.com",
+                    "title": "FAQ"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#6",
+      "type": "related_searches",
+      "class": "RelatedQueriesFeature",
+      "queries": [
+        {
+          "text": "albert einstein quotes"
+        },
+        {
+          "text": "albert einstein iq"
+        }
+      ],
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 6,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "position": "left",
+            "xpath": "/html[1]/body[1]/div[6]"
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#7",
+      "type": "brand_new_widget_2027",
+      "class": "GenericSerpFeature",
+      "content": {
+        "type": "brand_new_widget_2027",
+        "rank_group": 1,
+        "rank_absolute": 7,
+        "page": 1,
+        "position": "left",
+        "payload": {
+          "anything": [
+            1,
+            2,
+            3
+          ]
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "totalResultsEstimate": 123000000,
+    "providerRequestId": "11011234-0000-0000-0000-000000000001",
+    "cost": 0.002,
+    "currency": "USD",
+    "extensions": {
+      "unmapped": {
+        "dataforseo": {
+          "version": "0.1.20261101",
+          "status_code": 20000,
+          "status_message": "Ok.",
+          "time": "4.1234 sec.",
+          "cost": 0.002,
+          "tasks_count": 1,
+          "tasks_error": 0,
+          "tasks": [
+            {
+              "status_code": 20000,
+              "status_message": "Ok.",
+              "time": "4.0512 sec.",
+              "result_count": 1,
+              "path": [
+                "v3",
+                "serp",
+                "google",
+                "organic",
+                "live",
+                "advanced"
+              ],
+              "data": {
+                "api": "serp",
+                "function": "live",
+                "se": "google",
+                "se_type": "organic",
+                "keyword": "albert einstein",
+                "location_code": 2840,
+                "language_code": "en",
+                "device": "desktop",
+                "os": "windows",
+                "depth": 10
+              },
+              "result": [
+                {
+                  "keyword": "albert einstein",
+                  "type": "organic",
+                  "se_domain": "google.com",
+                  "location_code": 2840,
+                  "language_code": "en",
+                  "check_url": "https://www.google.com/search?q=albert%20einstein&num=10&hl=en&gl=US",
+                  "datetime": "2026-11-01 07:00:00 +00:00",
+                  "item_types": [
+                    "featured_snippet",
+                    "organic",
+                    "knowledge_graph",
+                    "people_also_ask",
+                    "related_searches",
+                    "top_stories"
+                  ],
+                  "pages_count": 1,
+                  "items_count": 7
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "warnings": [
+    {
+      "code": "unknown_element",
+      "message": "section 'serp': unknown element type 'brand_new_widget_2027' at $.tasks[0].result[0].items[6], kept as generic feature serp#7"
+    }
+  ]
+}
