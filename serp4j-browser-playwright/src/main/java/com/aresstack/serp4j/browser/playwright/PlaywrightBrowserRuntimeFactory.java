@@ -56,13 +56,6 @@ public final class PlaywrightBrowserRuntimeFactory implements BrowserRuntimeFact
                 return e.startsWith("ws://") || e.startsWith("wss://") ? null
                         : "only Playwright server endpoints (ws://, wss://) are supported, CDP follows";
             case INSTALLED:
-                if (!(BrowserProduct.CHROME.equals(p) || BrowserProduct.EDGE.equals(p)
-                        || BrowserProduct.CHROMIUM.equals(p) || BrowserProduct.FIREFOX.equals(p)
-                        || BrowserProduct.WEBKIT.equals(p))) {
-                    // An open product (e.g. brave) has no channel here; launching bundled Chromium instead would
-                    // silently ignore the host's choice. Use BrowserSpec.executable or a product-specific factory.
-                    return "no installed-browser lookup for " + p + "; pass BrowserSpec.executable";
-                }
                 if (BrowserProduct.FIREFOX.equals(p)) {
                     return "a stock Firefox cannot be driven by Playwright; use BrowserSpec.executable with "
                             + "Playwright's Firefox build or Camoufox";

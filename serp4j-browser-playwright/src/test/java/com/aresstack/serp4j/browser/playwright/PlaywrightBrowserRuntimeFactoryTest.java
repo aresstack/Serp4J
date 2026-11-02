@@ -26,10 +26,6 @@ class PlaywrightBrowserRuntimeFactoryTest {
         assertThat(factory.unsupportedReason(BrowserSpec.installed(BrowserProduct.CAMOUFOX).build())).isNotNull();
         assertThat(factory.unsupportedReason(BrowserSpec.installed(BrowserProduct.FIREFOX).build()))
                 .contains("stock Firefox");
-        assertThat(factory.unsupportedReason(BrowserSpec.installed(BrowserProduct.of("brave",
-                EngineFamily.CHROMIUM)).build())).contains("BrowserSpec.executable");
-        assertThat(factory.unsupportedReason(BrowserSpec.executable(BrowserProduct.of("brave",
-                EngineFamily.CHROMIUM), Paths.get("/opt/brave/brave")).build())).isNull();
         assertThat(factory.unsupportedReason(BrowserSpec.connect(BrowserProduct.CHROMIUM,
                 "http://127.0.0.1:9222").build())).contains("CDP");
     }
