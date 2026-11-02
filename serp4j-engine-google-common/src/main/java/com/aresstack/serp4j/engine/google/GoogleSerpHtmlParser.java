@@ -51,7 +51,7 @@ public final class GoogleSerpHtmlParser {
         Set<Element> usedBlocks = new LinkedHashSet<Element>();
         Set<String> seen = new LinkedHashSet<String>();
         for (Element anchor : root.select("a[href]:has(> h3)")) {
-            if (isInsideAds(anchor) || !anchor.parents().select("table").isEmpty()) {
+            if (isInsideAds(anchor) || hasAncestorTag(anchor, "table")) {
                 continue; // ads, or sitelinks of the previous result
             }
             String url = absolute(anchor.attr("href"));
@@ -134,6 +134,15 @@ public final class GoogleSerpHtmlParser {
     private static boolean isInsideAds(Element element) {
         return hasAncestorId(element, "tads") || hasAncestorId(element, "tadsb") || hasAncestorId(element, "bottomads")
                 || hasAncestorId(element, "taw");
+    }
+
+    private static boolean hasAncestorTag(Element element, String tag) {
+        for (Element parent : element.parents()) {
+            if (tag.equals(parent.normalName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean hasAncestorId(Element element, String id) {
