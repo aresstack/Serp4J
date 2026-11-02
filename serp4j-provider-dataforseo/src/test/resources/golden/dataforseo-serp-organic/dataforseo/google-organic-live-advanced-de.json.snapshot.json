@@ -108,6 +108,20 @@
       "displayUrl": "4 Antworten  ·  vor 14 Jahren",
       "domain": "google.com",
       "siteName": "Stack Overflow",
+      "siteLinks": [
+        {
+          "url": "https://google.com/goto?url=ANONYMIZED-REDIRECT-TOKEN-04",
+          "title": "How do I include the sat4j library in eclipse java IDE?"
+        },
+        {
+          "url": "https://stackoverflow.com/questions/34248706/extending-eclipse-java-search",
+          "title": "Extending Eclipse Java Search - Stack Overflow"
+        },
+        {
+          "url": "https://www.google.com/search?q=serp4j+java+search+library+site:stackoverflow.com&sca_esv=ANONYMIZED",
+          "title": "Weitere Ergebnisse von stackoverflow.com"
+        }
+      ],
       "position": {
         "rankInGroup": 4,
         "rankAbsolute": 4,
@@ -123,27 +137,7 @@
             "is_featured_snippet": false,
             "is_malicious": false,
             "is_web_story": false,
-            "amp_version": false,
-            "links": [
-              {
-                "type": "link_element",
-                "title": "How do I include the sat4j library in eclipse java IDE?",
-                "url": "https://google.com/goto?url=ANONYMIZED-REDIRECT-TOKEN-04",
-                "domain": "google.com"
-              },
-              {
-                "type": "link_element",
-                "title": "Extending Eclipse Java Search - Stack Overflow",
-                "url": "https://stackoverflow.com/questions/34248706/extending-eclipse-java-search",
-                "domain": "stackoverflow.com"
-              },
-              {
-                "type": "link_element",
-                "title": "Weitere Ergebnisse von stackoverflow.com",
-                "url": "https://www.google.com/search?q=serp4j+java+search+library+site:stackoverflow.com&sca_esv=ANONYMIZED",
-                "domain": "www.google.com"
-              }
-            ]
+            "amp_version": false
           }
         }
       }

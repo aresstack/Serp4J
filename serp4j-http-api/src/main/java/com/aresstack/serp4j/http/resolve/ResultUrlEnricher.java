@@ -4,6 +4,8 @@ import com.aresstack.serp4j.core.model.SearchResponse;
 import com.aresstack.serp4j.core.model.data.SearchData;
 import com.aresstack.serp4j.core.model.data.SearchResultItem;
 import com.aresstack.serp4j.core.model.ext.ExtensionKey;
+import com.aresstack.serp4j.core.model.ext.StructuredValue;
+import com.aresstack.serp4j.core.model.feature.SerpFeature;
 import com.aresstack.serp4j.core.model.id.ProviderId;
 import com.aresstack.serp4j.core.model.metadata.SearchMetadata;
 import com.aresstack.serp4j.core.model.metadata.SearchWarning;
@@ -30,8 +32,10 @@ import java.util.concurrent.CompletionException;
  * Provider-neutral post-processing step after a provider's JSON mapping: finds result URLs a {@link UrlResolver}
  * supports (e.g. Google {@code /goto} redirects via {@link GoogleGotoUrlResolver}), resolves each distinct URL once –
  * at most {@link #MAX_CONCURRENT} at a time – and replaces {@code url} and {@code domain} of the results whose URL
- * was resolved. Everything else of the response (order, ids, positions, provenance, features, metadata, raw
- * payload) stays as mapped. Used by the DataForSEO and SerpApi providers; no network access happens in a mapper.
+ * was resolved. Nested URLs (site links, sources of answer boxes, featured snippets, generated answers and question
+ * answers, knowledge-panel links, see {@code ResponseUrls}) are resolved in the same run – the limits below apply
+ * to all URLs of one response together – and traced in {@link #NESTED_URL_RESOLUTIONS}. Everything else of the
+ * response (order, ids, positions, provenance, metadata, raw payload) stays as mapped. Used by the DataForSEO and SerpApi providers; no network access happens in a mapper.
  *
  * <p>Traceability on every touched result:</p>
  * <ul>
@@ -59,6 +63,15 @@ public final class ResultUrlEnricher {
     /** Resolution status of a result whose URL was attempted: {@link #RESOLVED} or the failure reason. */
     public static final ExtensionKey<String> URL_RESOLUTION =
             ExtensionKey.of("serp4j", "url_resolution", String.class);
+    /**
+     * Trace of nested URLs (site links, feature sources, knowledge-panel links) on their owning result or feature:
+     * an array of objects {@code {field, original_url, url_resolution, url?}} – {@code field} names the location
+     * (e.g. {@code siteLinks[0]}, {@code source}, {@code questions[2].source}), {@code url_resolution} is
+     * {@link #RESOLVED} or the failure reason and {@code url} the resolved target. A nested URL with a failure
+     * status stays the unresolved redirect and must not be treated as a verified source.
+     */
+    public static final ExtensionKey<StructuredValue> NESTED_URL_RESOLUTIONS =
+            ExtensionKey.of("serp4j", "nested_url_resolutions", StructuredValue.class);
     /** {@link #URL_RESOLUTION} value of a successfully resolved result. */
     public static final String RESOLVED = "resolved";
 
@@ -115,10 +128,18 @@ public final class ResultUrlEnricher {
      */
     public CompletableFuture<SearchResponse> enrich(final SearchResponse response,
                                              final java.util.function.Function<Instant, Optional<Duration>> remaining) {
-        List<String> distinct = new ArrayList<String>();
+        List<String> all = new ArrayList<String>();
         for (SearchResultItem item : response.getData().getResults()) {
-            if (resolver.supports(item.getUrl()) && !distinct.contains(item.getUrl())) {
-                distinct.add(item.getUrl());
+            all.add(item.getUrl());
+            ResponseUrls.collect(item, all);
+        }
+        for (SerpFeature feature : response.getData().getFeatures()) {
+            ResponseUrls.collect(feature, all);
+        }
+        List<String> distinct = new ArrayList<String>();
+        for (String url : all) {
+            if (resolver.supports(url) && !distinct.contains(url)) {
+                distinct.add(url);
             }
         }
         if (distinct.isEmpty()) {
@@ -135,10 +156,25 @@ public final class ResultUrlEnricher {
         return result;
     }
 
-    private SearchResponse apply(SearchResponse response, Run run) {
+    private SearchResponse apply(SearchResponse response, final Run run) {
         SearchData.Builder data = SearchData.builder();
         boolean changed = false;
-        for (SearchResultItem item : response.getData().getResults()) {
+        ResponseUrls.Mapping nested = new ResponseUrls.Mapping() {
+            @Override
+            public String map(String url, String field, ResponseUrls.Owner owner) {
+                String target = run.resolved.get(url);
+                String failure = run.failedUrls.get(url);
+                if (target != null) {
+                    owner.add(field, url, RESOLVED, target);
+                } else if (failure != null) {
+                    owner.add(field, url, failure, null);
+                }
+                return target;
+            }
+        };
+        for (SearchResultItem original : response.getData().getResults()) {
+            SearchResultItem item = ResponseUrls.rewriteNested(original, nested);
+            changed |= item != original;
             String target = run.resolved.get(item.getUrl());
             String failure = run.failedUrls.get(item.getUrl());
             if (target != null) {
@@ -157,7 +193,11 @@ public final class ResultUrlEnricher {
                 data.result(item);
             }
         }
-        data.features(response.getData().getFeatures());
+        for (SerpFeature feature : response.getData().getFeatures()) {
+            SerpFeature rewritten = ResponseUrls.rewrite(feature, nested);
+            changed |= rewritten != feature;
+            data.feature(rewritten);
+        }
         if (!changed && run.failures.isEmpty()) {
             return response;
         }
@@ -184,7 +224,7 @@ public final class ResultUrlEnricher {
                 + " redirect URLs could not be resolved and were kept unchanged (" + reasons + ")", provider);
     }
 
-    private static Optional<String> host(String url) {
+    static Optional<String> host(String url) {
         try {
             return Optional.ofNullable(new URI(url).getHost());
         } catch (java.net.URISyntaxException e) {

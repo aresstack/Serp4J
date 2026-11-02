@@ -317,6 +317,11 @@ public final class SearchResultItem implements SearchElement {
             return this;
         }
 
+        public Builder clearSiteLinks() {
+            siteLinks.clear();
+            return this;
+        }
+
         public Builder siteLinks(Collection<SiteLink> links) {
             for (SiteLink link : Preconditions.requireNonNull(links, "links")) {
                 siteLink(link);

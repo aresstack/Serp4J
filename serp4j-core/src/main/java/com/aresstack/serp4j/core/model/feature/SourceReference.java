@@ -64,6 +64,13 @@ public final class SourceReference {
         return Optional.ofNullable(matchingResult);
     }
 
+    /** A copy pointing to {@code url}; {@code domain} replaces the domain if not {@code null}. */
+    public SourceReference withUrl(String url, String domain) {
+        Builder b = builder(url).title(title).snippet(snippet).domain(domain != null ? domain : this.domain)
+                .sourceName(sourceName).matchingResult(matchingResult);
+        return b.build();
+    }
+
     public Builder toBuilder() {
         Builder builder = new Builder(url);
         builder.title = title;

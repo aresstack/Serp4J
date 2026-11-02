@@ -26,6 +26,7 @@
         "displayUrl": "displayed_link",
         "siteName": "source",
         "thumbnail": "thumbnail",
+        "siteLinks": { "from": ["sitelinks.inline[*]", "sitelinks.expanded[*]", "sitelinks.list[*]"] },
         "domain": { "from": "link", "convert": "host" },
         "rankInGroup": { "from": "position", "convert": "int" },
         "serpapi:date": "date",

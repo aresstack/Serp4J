@@ -111,6 +111,16 @@ public final class MappingSnapshot {
         if (item.getThumbnail().isPresent()) {
             b.put("thumbnail", item.getThumbnail().get().getUrl());
         }
+        if (!item.getSiteLinks().isEmpty()) {
+            StructuredValue.ArrayBuilder links = StructuredValue.arrayBuilder();
+            for (com.aresstack.serp4j.core.model.data.SiteLink link : item.getSiteLinks()) {
+                StructuredValue.ObjectBuilder l = StructuredValue.objectBuilder().put("url", link.getUrl());
+                opt(l, "title", link.getTitle());
+                opt(l, "description", link.getDescription());
+                links.add(l.build());
+            }
+            b.put("siteLinks", links.build());
+        }
         position(b, item.getPosition());
         extensions(b, item.getExtensions());
         return b.build();

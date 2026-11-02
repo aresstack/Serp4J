@@ -4,6 +4,7 @@ import com.aresstack.serp4j.core.model.SearchLocale;
 import com.aresstack.serp4j.core.model.SearchRequest;
 import com.aresstack.serp4j.core.model.SearchResponse;
 import com.aresstack.serp4j.core.model.data.SearchResultItem;
+import com.aresstack.serp4j.core.model.ext.StructuredValue;
 import com.aresstack.serp4j.core.model.ext.RawPayloadPolicy;
 import com.aresstack.serp4j.core.model.id.SearchEngineId;
 import com.aresstack.serp4j.core.model.id.SearchTarget;
@@ -150,7 +151,8 @@ class DataForSeoGotoUrlResolutionTest {
                 assertThat(a.getDomain()).hasValue("target.example");
                 assertThat(a.getExtensions().get(ResultUrlEnricher.ORIGINAL_URL)).hasValue(b.getUrl());
                 // every other field is kept
-                SearchResultItem restored = a.toBuilder().url(b.getUrl()).extensions(b.getExtensions()).build();
+                SearchResultItem restored = a.toBuilder().url(b.getUrl()).extensions(b.getExtensions())
+                        .clearSiteLinks().siteLinks(b.getSiteLinks()).build();
                 assertThat(b.getDomain().isPresent() ? restored.toBuilder().domain(b.getDomain().get()).build()
                         : restored).isEqualTo(b);
                 assertThat(a.getDisplayUrl()).isEqualTo(b.getDisplayUrl());
@@ -161,7 +163,8 @@ class DataForSeoGotoUrlResolutionTest {
         }
         // 7 of the 10 organic results of the recorded answer are /goto redirects
         assertThat(resolved).isEqualTo(7);
-        assertThat(transport.gotoRequests).hasSize(7);
+        // plus one /goto site link of result 4 (stackoverflow.com) – nested URLs share the same run
+        assertThat(transport.gotoRequests).hasSize(8);
         assertThat(response.getData().getFeatures()).isEqualTo(unresolved.getData().getFeatures());
         assertThat(response.getMetadata().get().getWarnings()).isEqualTo(unresolved.getMetadata().get().getWarnings());
         assertThat(response.getMetadata().get().getEngine()).contains(SearchEngineId.GOOGLE);
@@ -191,8 +194,38 @@ class DataForSeoGotoUrlResolutionTest {
             transport.releaseAll();
         }
         assertThat(transport.maxConcurrent.get()).isEqualTo(4);
-        assertThat(transport.gotoRequests).hasSize(7);
+        assertThat(transport.gotoRequests).as("7 result URLs + 1 site link, limit shared").hasSize(8);
         assertThat(f.get().getData().getResults().get(0).getUrl()).isEqualTo("https://target.example/x");
+    }
+
+    @Test
+    void recordedGotoSiteLinkIsResolvedAndTracedOnItsResult() throws Exception {
+        recordedApiAnswer();
+        RedirectingTransport transport = new RedirectingTransport(http);
+        provider = DataForSeoSearchProvider.builder(transport, DataForSeoSearchProviderContractTest.credentials())
+                .build();
+
+        SearchResponse response = search(request());
+
+        SearchResultItem owner = response.getData().getResults().get(3);
+        assertThat(owner.getSiteLinks()).hasSize(3);
+        String gotoLink = "https://google.com/goto?url=ANONYMIZED-REDIRECT-TOKEN-04";
+        assertThat(owner.getSiteLinks().get(0).getUrl()).isEqualTo(target(gotoLink));
+        assertThat(owner.getSiteLinks().get(0).getTitle())
+                .hasValue("How do I include the sat4j library in eclipse java IDE?");
+        assertThat(owner.getSiteLinks().get(1).getUrl())
+                .isEqualTo("https://stackoverflow.com/questions/34248706/extending-eclipse-java-search");
+        assertThat(owner.getSiteLinks().get(2).getUrl()).as("google.com/search is no redirect")
+                .startsWith("https://www.google.com/search?");
+        StructuredValue trace = owner.getExtensions().get(ResultUrlEnricher.NESTED_URL_RESOLUTIONS).get();
+        assertThat(trace.getElements()).hasSize(1);
+        assertThat(trace.path("0", "field").flatMap(StructuredValue::asText)).hasValue("siteLinks[0]");
+        assertThat(trace.get(0).get().get("original_url").flatMap(StructuredValue::asText)).hasValue(gotoLink);
+        assertThat(trace.get(0).get().get("url_resolution").flatMap(StructuredValue::asText))
+                .hasValue(ResultUrlEnricher.RESOLVED);
+        assertThat(trace.get(0).get().get("url").flatMap(StructuredValue::asText)).hasValue(target(gotoLink));
+        assertThat(response.getData().getResults()).filteredOn(i -> i != owner)
+                .allMatch(i -> !i.getExtensions().contains(ResultUrlEnricher.NESTED_URL_RESOLUTIONS));
     }
 
     @Test

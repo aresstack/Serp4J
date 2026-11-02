@@ -39,6 +39,7 @@
           "title": "title", "url": "url", "snippet": "description", "domain": "domain",
           "displayUrl": "breadcrumb", "siteName": "website_name",
           "additionalSnippets": "extended_snippet",
+          "siteLinks": "links[*]",
           "publishedDate": { "from": "timestamp", "convert": "dataforseoTimestamp" }
         },
         "paid": {
