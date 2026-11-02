@@ -66,6 +66,28 @@ SERP4J_DATAFORSEO_LOGIN=… SERP4J_DATAFORSEO_PASSWORD=… \
   ./gradlew :serp4j-provider-dataforseo:liveTest -Pserp4j.live=true -Pserp4j.recordFixtures=true
 ```
 
+Liegen die DataForSEO-Zugangsdaten als ein einzelner Base64-Wert `login:password` vor (so wie im
+`Authorization: Basic`-Header), zerlegt man ihn nur im laufenden Prozess. Nichts davon ausgeben, loggen oder speichern:
+
+```bash
+# Bash; DATA_FOR_SEO = Base64("login:password")
+pair="$(printf '%s' "$DATA_FOR_SEO" | base64 -d)"
+SERP4J_DATAFORSEO_LOGIN="${pair%%:*}" SERP4J_DATAFORSEO_PASSWORD="${pair#*:}" \
+  ./gradlew :serp4j-provider-dataforseo:liveTest -Pserp4j.live=true -Pserp4j.recordFixtures=true
+unset pair
+```
+
+```powershell
+# PowerShell
+$pair = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($env:DATA_FOR_SEO))
+$i = $pair.IndexOf(':'); if ($i -le 0) { throw 'DATA_FOR_SEO ist kein Base64(login:password)' }
+$env:SERP4J_DATAFORSEO_LOGIN = $pair.Substring(0, $i); $env:SERP4J_DATAFORSEO_PASSWORD = $pair.Substring($i + 1)
+try { .\gradlew.bat :serp4j-provider-dataforseo:liveTest -Pserp4j.live=true -Pserp4j.recordFixtures=true --no-daemon }
+finally { Remove-Item Env:SERP4J_DATAFORSEO_LOGIN, Env:SERP4J_DATAFORSEO_PASSWORD -ErrorAction SilentlyContinue; $pair = $null }
+```
+
+Ein Live-Lauf kostet etwas DataForSEO-Guthaben.
+
 ## Verwenden
 
 Die Artefakte erscheinen unter `com.aresstack:serp4j-*` auf Maven Central (siehe [PUBLISHING.md](PUBLISHING.md));

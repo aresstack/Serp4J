@@ -109,7 +109,10 @@ public final class BraveSearchProvider implements SearchProvider {
                 .target(SearchEngineId.BRAVE, SearchVertical.WEB)
                 .features(SearchFeature.QUERY_TEXT, SearchFeature.PAGINATION_OFFSET, SearchFeature.PAGINATION_PAGE,
                         SearchFeature.MAX_RESULTS, SearchFeature.COUNTRY, SearchFeature.LANGUAGE,
-                        SearchFeature.GEO_LOCATION, SearchFeature.FRESHNESS, SearchFeature.SAFE_SEARCH)
+                        SearchFeature.GEO_LOCATION, SearchFeature.FRESHNESS, SearchFeature.SAFE_SEARCH,
+                        // BraveResponseMapper attaches the raw body for ALWAYS/ON_ERROR; without this flag every
+                        // ALWAYS request got a misleading FEATURE_IGNORED warning (seen with the recorded answer).
+                        SearchFeature.RAW_RESPONSE)
                 .responseFeatures(ResponseFeature.ORGANIC_RESULTS, ResponseFeature.SERP_FEATURES,
                         ResponseFeature.KNOWLEDGE_GRAPH)
                 .maxResultsPerRequest(BraveRequestFactory.MAX_COUNT)
