@@ -42,3 +42,12 @@ Option D:
   geteilt; G1 kann früher starten.
 - AskAIs „Quick Web Search" nutzt später `google-http` mit `fallback` auf einen anderen Provider nach eigener Wahl; die
   Auswahl bleibt AskAI-Logik.
+
+## Nachtrag 2026-11-02 – Ergebnis Spike S0 und Umsetzung G1
+S0 ([Bericht](../../spikes/s0-google-http.md)): Der cookiefreie `GET /search` liefert keine Treffer (302 auf
+`consent.google.com` bzw. 200 mit JavaScript-Pflichtseite `/httpservice/retry/enablejs`). Umgesetzt sind
+`serp4j-engine-google-common` (`GoogleUrlBuilder`, `GoogleObstacleDetector`, `GoogleSerpHtmlParser`,
+`GoogleSerpMapper`, `GoogleSearchFailures`), `serp4j-engine-google-http` (`GoogleHttpSearchProvider`, meldet die
+Hindernisse als `BLOCKED` mit Detail `google_obstacle`) und bereits der Suchteil von `serp4j-engine-google-browser`
+(`GoogleBrowserSearchProvider`, ephemere Sitzung, kein Klick). AI Mode (`GoogleAiModeProvider`) folgt mit #7. Neuer
+`ProviderKind.ENGINE_HTTP` für direkte HTTP-Zugriffe auf eine Suchmaschinen-Oberfläche.
