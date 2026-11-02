@@ -53,6 +53,19 @@ Chromium (Serp4J lädt selbst keine Browser herunter):
 # vorhandenes Binary statt Download: SERP4J_BROWSER_EXECUTABLE=/pfad/zu/chrome
 ```
 
+### Echte Provider-Antworten aufzeichnen (E-1)
+
+Live-Tests laufen nur mit `-Pserp4j.live=true` und den Zugangsdaten als Umgebungsvariablen; Zugangsdaten gehen nur
+als HTTP-Header raus. Mit `-Pserp4j.recordFixtures=true` landet die Rohantwort unter
+`<modul>/build/recorded-fixtures/` samt Sidecar `anonymized=false`. Vor dem Übernehmen nach
+`src/test/resources/fixtures/` von Hand prüfen und anonymisieren, dann im Sidecar `anonymized=true` setzen.
+
+```bash
+SERP4J_BRAVE_API_KEY=… ./gradlew :serp4j-provider-brave:liveTest -Pserp4j.live=true -Pserp4j.recordFixtures=true
+SERP4J_DATAFORSEO_LOGIN=… SERP4J_DATAFORSEO_PASSWORD=… \
+  ./gradlew :serp4j-provider-dataforseo:liveTest -Pserp4j.live=true -Pserp4j.recordFixtures=true
+```
+
 ## Verwenden
 
 Die Artefakte erscheinen unter `com.aresstack:serp4j-*` auf Maven Central (siehe [PUBLISHING.md](PUBLISHING.md));
