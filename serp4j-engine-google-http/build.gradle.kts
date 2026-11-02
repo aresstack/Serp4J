@@ -1,5 +1,6 @@
 plugins {
     id("serp4j.java8")
+    id("serp4j.local-published")
 }
 
 // ADR-016/ADR-018, E-3/E-4: @Experimental, in 0.x NICHT publiziert.
