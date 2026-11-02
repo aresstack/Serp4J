@@ -188,6 +188,70 @@ class BraveSearchProviderTest {
     }
 
     @Test
+    void nonAsciiCityWithoutCoordinatesIsIgnoredWithWarningWhenOptional() {
+        respondWith("web-search-synthetic.json");
+        SearchResponse response = search(SearchRequest.builder("q")
+                .locale(SearchLocale.builder().location(GeoLocation.named("München")).build()).build());
+        assertThat(transport.getLastRequest().getHeaders().contains("X-Loc-City")).isFalse();
+        assertThat(response.getMetadata().get().getWarnings()).extracting(SearchWarning::getCode)
+                .contains(SearchWarning.FEATURE_IGNORED);
+        assertThat(response.getMetadata().get().getLocale().flatMap(SearchLocale::getLocation)).isEmpty();
+    }
+
+    @Test
+    void nonAsciiCityWithoutCoordinatesIsUnsupportedWhenRequired() {
+        assertEquals(SearchErrorCategory.UNSUPPORTED, searchFails(SearchRequest.builder("q")
+                .locale(SearchLocale.builder().location(GeoLocation.named("München")).build())
+                .require(SearchFeature.GEO_LOCATION).build()).getCategory());
+        assertEquals(0, transport.getRequestCount());
+    }
+
+    @Test
+    void slowCredentialLookupShortensTheHttpTimeout() throws Exception {
+        provider.close();
+        provider = BraveSearchProvider.builder().transport(transport).credentials(key -> {
+            try {
+                Thread.sleep(300);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return Optional.of(SecretValue.of(TOKEN));
+        }).build();
+        respondWith("web-search-synthetic.json");
+        SearchContext context = SearchContext.builder().timeout(Instant.now(), Duration.ofMillis(1000)).build();
+        provider.search(SearchRequest.builder("q").build(), context).get(5, TimeUnit.SECONDS);
+        assertThat(transport.getLastRequest().getTimeout().get()).isLessThanOrEqualTo(Duration.ofMillis(710));
+    }
+
+    @Test
+    void credentialLookupExhaustingTheDeadlineSendsNothing() {
+        provider.close();
+        provider = BraveSearchProvider.builder().transport(transport).credentials(key -> {
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return Optional.of(SecretValue.of(TOKEN));
+        }).build();
+        SearchContext context = SearchContext.builder().timeout(Instant.now(), Duration.ofMillis(50)).build();
+        ExecutionException e = assertThrows(ExecutionException.class,
+                () -> provider.search(SearchRequest.builder("q").build(), context).get(5, TimeUnit.SECONDS));
+        assertEquals(SearchErrorCategory.TIMEOUT, ((SearchProviderException) e.getCause()).getCategory());
+        assertEquals(0, transport.getRequestCount());
+    }
+
+    @Test
+    void successfulResponseAfterTheDeadlineIsATimeout() {
+        transport.onAnyRequest(FakeHttpStep.respond(Fixtures.load("brave", "web-search-synthetic.json")
+                .toHttpResponse()).after(Duration.ofMillis(300)));
+        SearchContext context = SearchContext.builder().timeout(Instant.now(), Duration.ofMillis(100)).build();
+        ExecutionException e = assertThrows(ExecutionException.class,
+                () -> provider.search(SearchRequest.builder("q").build(), context).get(5, TimeUnit.SECONDS));
+        assertEquals(SearchErrorCategory.TIMEOUT, ((SearchProviderException) e.getCause()).getCategory());
+    }
+
+    @Test
     void tooLongQueryIsInvalid() {
         StringBuilder words = new StringBuilder();
         for (int i = 0; i < 80; i++) {
@@ -267,6 +331,7 @@ class BraveSearchProviderTest {
         assertEquals(Optional.of("www.example.com"), first.getDomain());
         assertEquals(Optional.of("Example"), first.getSiteName());
         assertEquals(Optional.of("en"), first.getLanguage());
+        assertEquals(Optional.of(Instant.parse("2026-10-01T08:00:00Z")), first.getPublishedDate().get().getInstant());
         assertEquals(1, first.getPosition().get().getRankInGroup().getAsInt());
         assertEquals(Optional.of("October 1, 2026"), first.getExtensions().get(BraveExtensions.AGE));
         assertThat(first.getExtensions().getUnmapped("brave")).isPresent();

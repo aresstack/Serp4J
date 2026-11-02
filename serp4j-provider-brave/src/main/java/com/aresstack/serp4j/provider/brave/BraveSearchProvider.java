@@ -149,7 +149,13 @@ public final class BraveSearchProvider implements SearchProvider {
 
         final BraveRequestFactory.Prepared prepared;
         try {
-            prepared = requestFactory.prepare(request, resolveToken(), timeout(context, startedAt),
+            String token = resolveToken();
+            // Credential resolution may take time: measure the remaining deadline only now.
+            Instant beforeDispatch = clock.instant();
+            if (context.isExpired(beforeDispatch)) {
+                return failed(failure(SearchErrorCategory.TIMEOUT, "deadline passed before the request was sent"));
+            }
+            prepared = requestFactory.prepare(request, token, timeout(context, beforeDispatch),
                     ignoredFeatureWarnings(check));
         } catch (SearchProviderException e) {
             return failed(e);
@@ -184,6 +190,11 @@ public final class BraveSearchProvider implements SearchProvider {
                             "deadline passed while waiting for Brave").cause(failure).build();
                 }
                 result.completeExceptionally(failure);
+                return;
+            }
+            if (context.isExpired(finishedAt)) {
+                result.completeExceptionally(failure(SearchErrorCategory.TIMEOUT,
+                        "deadline passed while waiting for Brave"));
                 return;
             }
             try {

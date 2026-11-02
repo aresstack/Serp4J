@@ -4,6 +4,8 @@ import com.aresstack.serp4j.core.error.SearchErrorCategory;
 import com.aresstack.serp4j.core.error.SearchProviderException;
 import com.aresstack.serp4j.core.model.GeoLocation;
 import com.aresstack.serp4j.core.model.Paging;
+import com.aresstack.serp4j.core.model.RequirementLevel;
+import com.aresstack.serp4j.core.model.SearchFeature;
 import com.aresstack.serp4j.core.model.ProviderRequestOptions;
 import com.aresstack.serp4j.core.model.SafeSearch;
 import com.aresstack.serp4j.core.model.SearchLocale;
@@ -153,7 +155,16 @@ public final class BraveRequestFactory {
             http.header("api-version", options.getApiVersion().get());
         }
         if (locale.getLocation().isPresent()) {
-            applyLocation(http, locale.getLocation().get());
+            if (!applyLocation(http, locale.getLocation().get())) {
+                String message = "location " + locale.getLocation().get()
+                        + " has neither coordinates nor an ASCII city name that Brave's X-Loc-* headers can carry";
+                if (request.getRequirementLevel(SearchFeature.GEO_LOCATION) == RequirementLevel.REQUIRED) {
+                    throw new SearchProviderException(providerId, SearchErrorCategory.UNSUPPORTED, message);
+                }
+                warnings.add(SearchWarning.of(SearchWarning.FEATURE_IGNORED, message + "; searched without it",
+                        providerId));
+                locale = locale.toBuilder().location(null).build();
+            }
         }
         return new Prepared(http.build(), count, pageIndex, locale, warnings);
     }
@@ -188,8 +199,11 @@ public final class BraveRequestFactory {
         return builder.build();
     }
 
-    private static void applyLocation(HttpRequest.Builder http, GeoLocation location) {
+    /** @return whether at least one location header was set */
+    private static boolean applyLocation(HttpRequest.Builder http, GeoLocation location) {
+        boolean sent = false;
         if (location.getLatitude().isPresent() && location.getLongitude().isPresent()) {
+            sent = true;
             http.header("X-Loc-Lat", Double.toString(location.getLatitude().getAsDouble()));
             http.header("X-Loc-Long", Double.toString(location.getLongitude().getAsDouble()));
         }
@@ -198,8 +212,10 @@ public final class BraveRequestFactory {
             // Header values must not carry control characters; HttpHeaders rejects CR/LF anyway.
             if (name.chars().allMatch(c -> c >= 0x20 && c < 0x7f)) {
                 http.header("X-Loc-City", name);
+                sent = true;
             }
         }
+        return sent;
     }
 
     private static void applyOptions(UrlQueryBuilder url, BraveRequestOptions options) {

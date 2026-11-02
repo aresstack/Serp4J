@@ -26,7 +26,7 @@
         "domain": { "from": "url", "convert": "host" },
         "siteName": "profile.name",
         "language": "language",
-        "publishedDate": "page_age",
+        "publishedDate": { "from": "page_age", "convert": "isoDate" },
         "thumbnail": "thumbnail.src",
         "brave:age": "age",
         "brave:subtype": "subtype",
@@ -40,7 +40,7 @@
         "title": { "from": "title", "convert": "stripHtml" },
         "snippet": { "from": "description", "convert": "stripHtml" },
         "domain": { "from": "url", "convert": "host" },
-        "publishedDate": "page_age",
+        "publishedDate": { "from": "page_age", "convert": "isoDate" },
         "thumbnail": "thumbnail.src",
         "brave:age": "age"
       }
@@ -52,7 +52,7 @@
         "title": { "from": "title", "convert": "stripHtml" },
         "snippet": { "from": "description", "convert": "stripHtml" },
         "domain": { "from": "url", "convert": "host" },
-        "publishedDate": "page_age",
+        "publishedDate": { "from": "page_age", "convert": "isoDate" },
         "thumbnail": "thumbnail.src",
         "brave:age": "age"
       }
