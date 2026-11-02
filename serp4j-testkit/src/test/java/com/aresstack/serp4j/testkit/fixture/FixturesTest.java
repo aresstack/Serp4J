@@ -76,7 +76,9 @@ class FixturesTest {
 
     @Test
     void sidecarExampleFromTheReadmeLoadsAsWritten() throws IOException {
-        String readme = new String(Files.readAllBytes(java.nio.file.Paths.get("README.md")), StandardCharsets.UTF_8);
+        // Normalise line endings: a Windows checkout with core.autocrlf=true has CRLF in the README.
+        String readme = new String(Files.readAllBytes(java.nio.file.Paths.get("README.md")), StandardCharsets.UTF_8)
+                .replace("\r\n", "\n");
         int start = readme.indexOf("```properties\n") + "```properties\n".length();
         String example = readme.substring(start, readme.indexOf("```", start));
         write("fixtures/acme/example.json", "{}");
