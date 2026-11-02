@@ -103,6 +103,7 @@ jobs:
         run: >
           ./gradlew :serp4j-browser-playwright-driver-node:browserTest
           :serp4j-browser-playwright-driver-graal:browserTest
+          :serp4j-playwright:browserTest
           -Pserp4j.browserTests=true --stacktrace
 
       - name: Testberichte sichern
