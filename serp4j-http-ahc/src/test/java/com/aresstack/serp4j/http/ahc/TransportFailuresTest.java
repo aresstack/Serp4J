@@ -13,6 +13,7 @@ import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -49,6 +50,45 @@ class TransportFailuresTest {
                 .isEqualTo("java.util.concurrent.CompletionException <- java.io.IOException")
                 .doesNotContain("abc123");
         assertThat(translated.getCause().getCause()).isNull();
+    }
+
+    @Test
+    void refusedConnectionIsClassifiedAsRetryableConnect() {
+        // Deterministic stand-in for a refused socket: the shape async-http-client reports, independent of how the
+        // operating system answers a closed port.
+        HttpRequest request = HttpRequest.get("http://127.0.0.1:1/").build();
+        ConnectException refused = new ConnectException("Connection refused: /127.0.0.1:1");
+
+        HttpTransportException translated = TransportFailures.translate(
+                new ExecutionException(new CompletionException(refused)), request);
+
+        assertThat(translated.getKind()).isEqualTo(Kind.CONNECT);
+        assertThat(translated.isRetryable()).isTrue();
+        assertThat(TransportFailures.classify(new ConnectTimeoutException("connection timed out: /127.0.0.1:1")))
+                .as("a connect timeout stays TIMEOUT, not CONNECT")
+                .isEqualTo(Kind.TIMEOUT);
+    }
+
+    @Test
+    void connectFailureMessageIsRedacted() {
+        String secret = "s3cr3t-value-123";
+        HttpRequest request = HttpRequest.get("http://127.0.0.1:1/x?key=" + secret).build();
+        ConnectException refused = new ConnectException(
+                "Connection refused: http://127.0.0.1:1/x?key=" + secret);
+
+        HttpTransportException translated = TransportFailures.translate(new CompletionException(refused), request);
+
+        assertThat(translated.getKind()).isEqualTo(Kind.CONNECT);
+        assertThat(translated.getMessage()).contains("GET http://127.0.0.1:1/x?key=****");
+        assertThat(translated.getCause()).isInstanceOf(TransportFailures.SanitizedCause.class);
+        assertThat(translated.getCause().getMessage())
+                .isEqualTo("java.util.concurrent.CompletionException <- java.net.ConnectException");
+        assertThat(translated.getCause().getStackTrace()).isNotEmpty();
+        assertThat(translated.getCause().getCause()).isNull();
+        for (Throwable current = translated; current != null; current = current.getCause()) {
+            assertThat(String.valueOf(current.getMessage())).doesNotContain(secret);
+            assertThat(current.toString()).doesNotContain(secret);
+        }
     }
 
     @Test
