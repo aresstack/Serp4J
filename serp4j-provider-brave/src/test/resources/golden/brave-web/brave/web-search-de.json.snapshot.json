@@ -1,0 +1,710 @@
+{
+  "definition": "brave-web",
+  "version": 1,
+  "results": [
+    {
+      "id": "web#1",
+      "type": "organic",
+      "url": "https://github.com/rumpelstiltzkin/serpapi4j",
+      "title": "GitHub - rumpelstiltzkin/serpapi4j: A Java library to access SerpApi",
+      "snippet": "This Java package enables the scraping and parsing of search results using SerpApi from various search providers like Google, Bing, Baidu, etc.",
+      "additionalSnippets": [
+        "The default language version for this package is Java 16, but if a lower version package is required feel free to contact me at my email below. This code depends on GSON for efficient JSON processing. The HTTP responses are converted to JSON using GSON. There are two native clients available to talk SerpApi. The asynchronous client provides callbacks when search results are available.",
+        "This Java package enables the scraping and parsing of search results using SerpApi from various search providers like Google, Bing, Baidu, etc.",
+        "For an example usage either see the demo app, which uses the ParamsBasedSearch class, at: src/main/java/com/anandganesh/code/serpapi4j/demo/App.java or see the unit test, which uses the SerpApiSyncClient directly, at: src/test/java/com/anandganesh/code/serpapi4j/query/search/SearchParamsTest.java",
+        "This example runs a search for \"Coffee\" using your SerpApi key."
+      ],
+      "domain": "github.com",
+      "siteName": "GitHub",
+      "language": "en",
+      "thumbnail": "https://imgs.search.brave.com/Jn2RmUYfVuHgBx7dhw8VavROvDXuL3Aa2x2aqQFrub0/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9vcGVu/Z3JhcGguZ2l0aHVi/YXNzZXRzLmNvbS8y/NDhhYTAxMzQ4ZTky/MmQyMTE5MmVmYjY4/NGUxZTI3NTYwMDM5/ZWQxZDFmYjdkY2Vh/OGFkZjc5MjBlNzg3/NTJkL3J1bXBlbHN0/aWx0emtpbi9zZXJw/YXBpNGo",
+      "position": {
+        "rankInGroup": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "values": {
+          "brave:familyFriendly": true,
+          "brave:subtype": "software"
+        },
+        "unmapped": {
+          "brave": {
+            "is_source_local": false,
+            "is_source_both": false,
+            "profile": {
+              "url": "https://github.com/rumpelstiltzkin/serpapi4j",
+              "long_name": "github.com",
+              "img": "https://imgs.search.brave.com/xxsA4YxzaR0cl-DBsH9-lpv2gsif3KMYgM87p26bs_o/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvYWQyNWM1NjA5/ZjZmZjNlYzI2MDNk/N2VkNmJhYjE2MzZl/MDY5ZTMxMDUzZmY1/NmU3NWIzNWVmMjk0/NTBjMjJjZi9naXRo/dWIuY29tLw"
+            },
+            "type": "search_result",
+            "is_live": false,
+            "meta_url": {
+              "scheme": "https",
+              "netloc": "github.com",
+              "hostname": "github.com",
+              "favicon": "https://imgs.search.brave.com/xxsA4YxzaR0cl-DBsH9-lpv2gsif3KMYgM87p26bs_o/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvYWQyNWM1NjA5/ZjZmZjNlYzI2MDNk/N2VkNmJhYjE2MzZl/MDY5ZTMxMDUzZmY1/NmU3NWIzNWVmMjk0/NTBjMjJjZi9naXRo/dWIuY29tLw",
+              "path": "› rumpelstiltzkin  › serpapi4j"
+            },
+            "thumbnail": {
+              "original": "https://opengraph.githubassets.com/248aa01348e922d21192efb684e1e27560039ed1d1fb7dcea8adf7920e78752d/rumpelstiltzkin/serpapi4j",
+              "logo": false
+            },
+            "software": {
+              "name": "serpapi4j",
+              "author": "rumpelstiltzkin",
+              "is_npm": false,
+              "is_pypi": false,
+              "forks": 0,
+              "programmingLanguage": "Java 87.0% | HTML 12.0% | Java 87.0% | HTML 12.0%"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "web#2",
+      "type": "organic",
+      "url": "https://serpapi.com/integrations/java",
+      "title": "SerpApi: Java Integration",
+      "snippet": "parameter is a Map<String, String> with your search parameters (q, location, etc.). client.markdown(parameter) is new as of serpapi-java 1.2.0 - make sure your build.gradle dependency is at least that version · This library uses Gson for JSON and returns responses as Gson JsonObject / JsonArray.",
+      "additionalSnippets": [
+        "If you are upgrading from the legacy google-search-results-java library, here is a summary of what changed.",
+        "parameter is a Map<String, String> with your search parameters (q, location, etc.). client.markdown(parameter) is new as of serpapi-java 1.2.0 - make sure your build.gradle dependency is at least that version · This library uses Gson for JSON and returns responses as Gson JsonObject / JsonArray.",
+        "Consumers of the JitPack artifact should run a JVM whose version is at least the bytecode level of the release you depend on (releases from this branch target Java 21). Set defaults when creating a client, then override search parameters in individual calls:",
+        "Source code: src/test/java/serpapi/example/GoogleAIModeTest.java ... Scrape Bing web search results, including organic results, ads, related searches, and more."
+      ],
+      "domain": "serpapi.com",
+      "siteName": "SerpApi",
+      "language": "en",
+      "thumbnail": "https://imgs.search.brave.com/osNzkGo0HQY4T_fbdU7fKVasTeBS6a2yC2Yo0Ml5cCQ/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9zZXJw/YXBpLmNvbS9zZXJw/YXBpLXNvY2lhbC1p/bWFnZS5wbmc",
+      "position": {
+        "rankInGroup": 2,
+        "area": "main"
+      },
+      "extensions": {
+        "values": {
+          "brave:familyFriendly": true,
+          "brave:subtype": "generic"
+        },
+        "unmapped": {
+          "brave": {
+            "is_source_local": false,
+            "is_source_both": false,
+            "profile": {
+              "url": "https://serpapi.com/integrations/java",
+              "long_name": "serpapi.com",
+              "img": "https://imgs.search.brave.com/ZYJqgExXGm35wE4AU6Fg1NB-q2XPN_gDnNS5i8s6r8Q/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvODkwMzUxZjY3/MzFhODExN2ZjMDc1/YTEyNTIzZGRhNzJk/NzExZGM0ZDFkODky/YjY5YTk4YWU3MjE0/MGQ4NDVlYy9zZXJw/YXBpLmNvbS8"
+            },
+            "type": "search_result",
+            "is_live": false,
+            "meta_url": {
+              "scheme": "https",
+              "netloc": "serpapi.com",
+              "hostname": "serpapi.com",
+              "favicon": "https://imgs.search.brave.com/ZYJqgExXGm35wE4AU6Fg1NB-q2XPN_gDnNS5i8s6r8Q/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvODkwMzUxZjY3/MzFhODExN2ZjMDc1/YTEyNTIzZGRhNzJk/NzExZGM0ZDFkODky/YjY5YTk4YWU3MjE0/MGQ4NDVlYy9zZXJw/YXBpLmNvbS8",
+              "path": "› integrations  › java"
+            },
+            "thumbnail": {
+              "original": "https://serpapi.com/serpapi-social-image.png",
+              "logo": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "web#3",
+      "type": "organic",
+      "url": "https://github.com/serpapi/serpapi-java",
+      "title": "GitHub - serpapi/serpapi-java: Official Java wrapper for SerpApi HTTP endpoints",
+      "snippet": "Integrate search data into your Java application. This library is the official wrapper for SerpApi (https://serpapi.com).",
+      "additionalSnippets": [
+        "Integrate search data into your Java application. This library is the official wrapper for SerpApi (https://serpapi.com).",
+        "Now let retrieve the previous search from the archive.",
+        "The SSLv3 is buggy which leads to Java raising this exception: javax.net.ssl.SSLHandshakeException ... SerpApi serpapi = new SerpApi(); Map<String, String> parameter = new HashMap<String, String>(); parameter.put(\"q\", \"Austin\"); parameter.put(\"limit\", \"3\"); JsonArray location = serpapi.location(parameter); assertEquals(\"Austin, TX\", location.get(0).getAsJsonObject().get(\"name\").getAsString()); it prints the first 3 location matching Austin (Texas, Texas, Rochester) ... Let's run a search to get a search_id.",
+        "Map<String, String> auth = new HashMap<>(); auth.put(\"api_key\", \"your_api_key\"); SerpApi client = new SerpApi(auth); // run search Map<String, String> parameter = new HashMap<>(); parameter.put(\"engine\", \"bing\"); parameter.put(\"q\", \"coffee\"); JsonObject results = client.search(parameter); System.out.println(results.toString()); source code: src/test/java/serpapi/BingTest.java see: https://serpapi.com/bing-search-api"
+      ],
+      "domain": "github.com",
+      "siteName": "GitHub",
+      "language": "en",
+      "thumbnail": "https://imgs.search.brave.com/U4uh1L7zw8WAtguOKrXdy9gpafCHnTZexZtxf01yW5g/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9vcGVu/Z3JhcGguZ2l0aHVi/YXNzZXRzLmNvbS80/MzBjNzIwZGE0MDQz/ZWVhNGNiZDE0MTI3/ZDBlNWM5ODAwNmE2/Y2FkOGRlMDVlMDIz/ODRmYzUyNjdkYjVh/OTBjL3NlcnBhcGkv/c2VycGFwaS1qYXZh",
+      "position": {
+        "rankInGroup": 3,
+        "area": "main"
+      },
+      "extensions": {
+        "values": {
+          "brave:familyFriendly": true,
+          "brave:subtype": "software"
+        },
+        "unmapped": {
+          "brave": {
+            "is_source_local": false,
+            "is_source_both": false,
+            "profile": {
+              "url": "https://github.com/serpapi/serpapi-java",
+              "long_name": "github.com",
+              "img": "https://imgs.search.brave.com/xxsA4YxzaR0cl-DBsH9-lpv2gsif3KMYgM87p26bs_o/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvYWQyNWM1NjA5/ZjZmZjNlYzI2MDNk/N2VkNmJhYjE2MzZl/MDY5ZTMxMDUzZmY1/NmU3NWIzNWVmMjk0/NTBjMjJjZi9naXRo/dWIuY29tLw"
+            },
+            "type": "search_result",
+            "is_live": false,
+            "meta_url": {
+              "scheme": "https",
+              "netloc": "github.com",
+              "hostname": "github.com",
+              "favicon": "https://imgs.search.brave.com/xxsA4YxzaR0cl-DBsH9-lpv2gsif3KMYgM87p26bs_o/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvYWQyNWM1NjA5/ZjZmZjNlYzI2MDNk/N2VkNmJhYjE2MzZl/MDY5ZTMxMDUzZmY1/NmU3NWIzNWVmMjk0/NTBjMjJjZi9naXRo/dWIuY29tLw",
+              "path": "› serpapi  › serpapi-java"
+            },
+            "thumbnail": {
+              "original": "https://opengraph.githubassets.com/430c720da4043eea4cbd14127d0e5c98006a6cad8de05e02384fc5267db5a90c/serpapi/serpapi-java",
+              "logo": false
+            },
+            "software": {
+              "name": "serpapi-java",
+              "author": "serpapi",
+              "is_npm": false,
+              "is_pypi": false,
+              "stars": 2,
+              "programmingLanguage": "Java 97.5% | Makefile 2.5% | Java 97.5% | Makefile 2.5%"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "web#4",
+      "type": "organic",
+      "url": "https://github.com/serpapi/serpapi-java/blob/master/README.md",
+      "title": "serpapi-java/README.md at master · serpapi/serpapi-java · GitHub",
+      "snippet": "Integrate search data into your Java application. This library is the official wrapper for SerpApi.",
+      "additionalSnippets": [
+        "SerpApi Search API — parameters, engines, and response formats · After cloning, run ./gradlew javadoc and open build/docs/javadoc/index.html for this library’s Javadoc.",
+        "Integrate search data into your Java application. This library is the official wrapper for SerpApi.",
+        "If you are upgrading from the legacy google-search-results-java library, here is a summary of what changed.",
+        "This library uses Gson for JSON and returns responses as Gson JsonObject / JsonArray. This repository is built and tested with JDK 21 and the Gradle wrapper (./gradlew, currently Gradle 8.5). Use the wrapper so you do not need a separate Gradle install. Consumers of the JitPack artifact should run a JVM whose version is at least the bytecode level of the release you depend on (releases from this branch target Java 21)."
+      ],
+      "domain": "github.com",
+      "siteName": "GitHub",
+      "language": "en",
+      "thumbnail": "https://imgs.search.brave.com/Rvp_2GPVc9IcsPfv9ikfIBdZizA4m4jx3UG2fH_a4UQ/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9vcGVu/Z3JhcGguZ2l0aHVi/YXNzZXRzLmNvbS8x/YWUxOGQ2MWE1NmIz/MWY5ODU2NTdhOWJm/ZDgxNTdkNTUwNTlm/YThlYzE4MWI0ODMz/M2Q4NDA3YzM3YjYy/YjY3L3NlcnBhcGkv/c2VycGFwaS1qYXZh",
+      "position": {
+        "rankInGroup": 4,
+        "area": "main"
+      },
+      "extensions": {
+        "values": {
+          "brave:familyFriendly": true,
+          "brave:subtype": "software"
+        },
+        "unmapped": {
+          "brave": {
+            "is_source_local": false,
+            "is_source_both": false,
+            "profile": {
+              "url": "https://github.com/serpapi/serpapi-java/blob/master/README.md",
+              "long_name": "github.com",
+              "img": "https://imgs.search.brave.com/xxsA4YxzaR0cl-DBsH9-lpv2gsif3KMYgM87p26bs_o/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvYWQyNWM1NjA5/ZjZmZjNlYzI2MDNk/N2VkNmJhYjE2MzZl/MDY5ZTMxMDUzZmY1/NmU3NWIzNWVmMjk0/NTBjMjJjZi9naXRo/dWIuY29tLw"
+            },
+            "type": "search_result",
+            "is_live": false,
+            "meta_url": {
+              "scheme": "https",
+              "netloc": "github.com",
+              "hostname": "github.com",
+              "favicon": "https://imgs.search.brave.com/xxsA4YxzaR0cl-DBsH9-lpv2gsif3KMYgM87p26bs_o/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvYWQyNWM1NjA5/ZjZmZjNlYzI2MDNk/N2VkNmJhYjE2MzZl/MDY5ZTMxMDUzZmY1/NmU3NWIzNWVmMjk0/NTBjMjJjZi9naXRo/dWIuY29tLw",
+              "path": "› serpapi  › serpapi-java  › blob  › master  › README.md"
+            },
+            "thumbnail": {
+              "original": "https://opengraph.githubassets.com/1ae18d61a56b31f985657a9bfd8157d55059fa8ec181b48333d8407c37b62b67/serpapi/serpapi-java",
+              "logo": false
+            },
+            "software": {
+              "name": "serpapi-java",
+              "author": "serpapi",
+              "is_npm": false,
+              "is_pypi": false,
+              "programmingLanguage": ""
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "web#5",
+      "type": "organic",
+      "url": "https://github.com/aresstack/Serp4J/pull/18",
+      "title": "Paket C: Bright-Data-SERP-Provider (serp4j-provider-brightdata) by Miguel0888 · Pull Request #18 · aresstack/Serp4J · GitHub",
+      "snippet": "Neues Gradle-Subprojekt serp4j-provider-brightdata (Java 8), direkt gegen serp4j-brightdata-api-referenceV2.md implementiert. BrightDataSearchProvider: POST /request mit {zone, url, format: json, data_format: parsed[, country]}; Google-URL aus dem neutralen SearchRequest (q, start, hl, gl, uule, safe, tbs, brd_mobile, kein num).",
+      "additionalSnippets": [
+        "Fixed in b6165c7: a coordinate-only location now fails with UNSUPPORTED when GEO_LOCATION is required; when it is optional, the search runs and returns a FEATURE_IGNORED warning. Both cases are tested. ... Comment thread ...ghtdata/src/main/java/com/aresstack/serp4j/provider/brightdata/BrightDataSearchProvider.java Outdated",
+        "Comment thread ...ghtdata/src/main/java/com/aresstack/serp4j/provider/brightdata/BrightDataSearchProvider.java ... There was a problem hiding this comment. The reason will be displayed to describe this comment to others. Learn more. Cancel in-flight searches when closing the provider",
+        "Requested by Angelo · project thread Neues Gradle-Subprojekt serp4j-provider-brightdata (Java 8), direkt gegen serp4j-brightdata-api-referenceV2.md implementiert. BrightDataSearchProvider: POST /r...",
+        "Neues Gradle-Subprojekt serp4j-provider-brightdata (Java 8), direkt gegen serp4j-brightdata-api-referenceV2.md implementiert. BrightDataSearchProvider: POST /request mit {zone, url, format: json, data_format: parsed[, country]}; Google-URL aus dem neutralen SearchRequest (q, start, hl, gl, uule, safe, tbs, brd_mobile, kein num)."
+      ],
+      "domain": "github.com",
+      "siteName": "GitHub",
+      "language": "en",
+      "position": {
+        "rankInGroup": 5,
+        "area": "main"
+      },
+      "extensions": {
+        "values": {
+          "brave:familyFriendly": false,
+          "brave:subtype": "generic"
+        },
+        "unmapped": {
+          "brave": {
+            "is_source_local": false,
+            "is_source_both": false,
+            "profile": {
+              "url": "https://github.com/aresstack/Serp4J/pull/18",
+              "long_name": "github.com",
+              "img": "https://imgs.search.brave.com/xxsA4YxzaR0cl-DBsH9-lpv2gsif3KMYgM87p26bs_o/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvYWQyNWM1NjA5/ZjZmZjNlYzI2MDNk/N2VkNmJhYjE2MzZl/MDY5ZTMxMDUzZmY1/NmU3NWIzNWVmMjk0/NTBjMjJjZi9naXRo/dWIuY29tLw"
+            },
+            "type": "search_result",
+            "is_live": false,
+            "meta_url": {
+              "scheme": "https",
+              "netloc": "github.com",
+              "hostname": "github.com",
+              "favicon": "https://imgs.search.brave.com/xxsA4YxzaR0cl-DBsH9-lpv2gsif3KMYgM87p26bs_o/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvYWQyNWM1NjA5/ZjZmZjNlYzI2MDNk/N2VkNmJhYjE2MzZl/MDY5ZTMxMDUzZmY1/NmU3NWIzNWVmMjk0/NTBjMjJjZi9naXRo/dWIuY29tLw",
+              "path": "› aresstack  › Serp4J  › pull  › 18"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "web#6",
+      "type": "organic",
+      "url": "https://serpapi.com/blog/how-to-scrape-google-search-results/",
+      "title": "How to Scrape Google Search Results with Java",
+      "snippet": "We have moved the Java scraping library from google-search-results-java to serpapi-java.",
+      "additionalSnippets": [
+        "SerpApi will assume liability of scraping and parsing search engine results for both domestic and foreign companies (— “Legal US Shield” —) unless your usage is otherwise illegal. You can read more about our Terms of Service and what is included in the Legal US Shield here. Bonus: learn more about how we safeguard web scraping at SerpApi. One of the ways to scrape Google results is by building your solution with libraries like Jsoup in Java.",
+        "We have moved the Java scraping library from google-search-results-java to serpapi-java.",
+        "Disclaimer: this section includes an older library. See above steps for the latest one. ... repositories { maven { url \"https://jitpack.io\" } } dependencies { implementation 'com.github.serpapi:google-search-results-java:2.0.3' }",
+        "You also need an API key, you can get 100 free searches upon signing up. import com.google.gson.Gson; import com.google.gson.JsonArray; import com.google.gson.JsonObject; import serpapi.SerpApiSearchException; import serpapi.GoogleSearch; import java.util.Map; import java.util.HashMap; class Main { public static void main(String[] args) { Map<String, String> parameter = new HashMap<>(); parameter.put(\"q\", \"Coffee\"); parameter.put(\"location\", \"Austin, Texas, United States\"); parameter.put(\"hl\", \"en\"); parameter.put(\"gl\", \"us\"); parameter.put(\"api_key\", System.getenv(\"API_KEY\")); try { GoogleSea"
+      ],
+      "domain": "serpapi.com",
+      "siteName": "SerpApi",
+      "language": "en",
+      "publishedDate": {
+        "instant": "2024-01-08T03:32:21Z"
+      },
+      "thumbnail": "https://imgs.search.brave.com/joeHeBxqgZiT30LtBacgFG59qB-vStRyJF607B7gFTQ/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pbWFn/ZXMudW5zcGxhc2gu/Y29tL3Bob3RvLTE1/NTM4OTU1MDEtYWY5/ZTI4MmU3ZmMxP2Ny/b3A9ZW50cm9weSZj/cz10aW55c3JnYiZm/aXQ9bWF4JmZtPWpw/ZyZpeGlkPU0zd3hN/VGMzTTN3d2ZERjhj/MlZoY21Ob2ZERTRm/SHhuYjI5bmJHVjha/VzU4TUh4OGZId3hO/ekEwTmpnME1EUXpm/REEmaXhsaWI9cmIt/NC4wLjMmcT04MCZ3/PTIwMDA",
+      "position": {
+        "rankInGroup": 6,
+        "area": "main"
+      },
+      "extensions": {
+        "values": {
+          "brave:age": "8. Januar 2024",
+          "brave:familyFriendly": true,
+          "brave:subtype": "article"
+        },
+        "unmapped": {
+          "brave": {
+            "is_source_local": false,
+            "is_source_both": false,
+            "profile": {
+              "url": "https://serpapi.com/blog/how-to-scrape-google-search-results/",
+              "long_name": "serpapi.com",
+              "img": "https://imgs.search.brave.com/ZYJqgExXGm35wE4AU6Fg1NB-q2XPN_gDnNS5i8s6r8Q/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvODkwMzUxZjY3/MzFhODExN2ZjMDc1/YTEyNTIzZGRhNzJk/NzExZGM0ZDFkODky/YjY5YTk4YWU3MjE0/MGQ4NDVlYy9zZXJw/YXBpLmNvbS8"
+            },
+            "type": "search_result",
+            "is_live": false,
+            "meta_url": {
+              "scheme": "https",
+              "netloc": "serpapi.com",
+              "hostname": "serpapi.com",
+              "favicon": "https://imgs.search.brave.com/ZYJqgExXGm35wE4AU6Fg1NB-q2XPN_gDnNS5i8s6r8Q/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvODkwMzUxZjY3/MzFhODExN2ZjMDc1/YTEyNTIzZGRhNzJk/NzExZGM0ZDFkODky/YjY5YTk4YWU3MjE0/MGQ4NDVlYy9zZXJw/YXBpLmNvbS8",
+              "path": "› blog  › how-to-scrape-google-search-results"
+            },
+            "thumbnail": {
+              "original": "https://images.unsplash.com/photo-1553895501-af9e282e7fc1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMTc3M3wwfDF8c2VhcmNofDE4fHxnb29nbGV8ZW58MHx8fHwxNzA0Njg0MDQzfDA&ixlib=rb-4.0.3&q=80&w=2000",
+              "logo": false
+            },
+            "article": {
+              "author": [
+                {
+                  "type": "person",
+                  "name": "Terry Tan",
+                  "url": "https://serpapi.com/blog/author/terry/",
+                  "thumbnail": {
+                    "src": "https://imgs.search.brave.com/5ZieN82AP426eg2MpRA2xOqKTHfx--r1uBeItp1o5Ec/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9zdG9y/YWdlLmdob3N0Lmlv/L2MvYTUvMDAvYTUw/MDQ5NzctMGRkMi00/YmNkLTkyOTItZGQw/ZTA1ZDRjNTllL2Nv/bnRlbnQvaW1hZ2Vz/LzIwMjIvMDcvcHJv/ZmlsZS5qcGVn",
+                    "original": "https://storage.ghost.io/c/a5/00/a5004977-0dd2-4bcd-9292-dd0e05d4c59e/content/images/2022/07/profile.jpeg"
+                  }
+                }
+              ],
+              "date": "Jan 08, 2024",
+              "publisher": {
+                "type": "organization",
+                "name": "SerpApi",
+                "url": "https://serpapi.com/blog/",
+                "thumbnail": {
+                  "src": "https://imgs.search.brave.com/gDZrFEMKDoq_dXbFVud6Gnh5NxDDSEmB34FeGG0aHzM/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9zdG9y/YWdlLmdob3N0Lmlv/L2MvYTUvMDAvYTUw/MDQ5NzctMGRkMi00/YmNkLTkyOTItZGQw/ZTA1ZDRjNTllL2Nv/bnRlbnQvaW1hZ2Vz/LzIwMjEvMDcvU2Vy/cEFwaS10ZXh0LWxv/Z28tMS5zdmc",
+                  "original": "https://storage.ghost.io/c/a5/00/a5004977-0dd2-4bcd-9292-dd0e05d4c59e/content/images/2021/07/SerpApi-text-logo-1.svg"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "web#7",
+      "type": "organic",
+      "url": "https://github.com/aresstack/Serp4J/pull/9",
+      "title": "Paket A: Build-Gerüst, serp4j-core (Domänenmodell und Ports) und serp4j-http-api by Miguel0888 · Pull Request #9 · aresstack/Serp4J · GitHub",
+      "snippet": "Version Catalog, serp4j-bom (Constraints dynamisch aus allen publizierten Modulen), Root-Aggregation für das Central Portal (publishingType = USER_MANAGED). -Xlint:all -Werror -parameters, Javadoc -Xdoclint:all,-missing -Xwerror, reproduzierbare Archive, Automatic-Module-Name. ... core.model: SearchRequest (Builder, require(...), abgeleitetes getUsedFeatures()), SearchResponse = SearchData + Optional SearchMetadata + Optional SearchAnalysis, Paging, SearchLocale, GeoLocation, TimeRange, DeviceType, SafeSearch, SearchFeature, RequirementLevel, ProviderRequestOptions.",
+      "additionalSnippets": [
+        "Serp4J beschafft Suchergebnisse. Es betreibt keine eigentliche Recherche. - Paket A: Build-Gerüst, serp4j-core (Domänenmodell und Ports) und serp4j-http-api by Miguel0888 · Pull Request #9 · aresstack/Serp4J",
+        "Die Contract-Test-Vorlage SearchProviderContract liegt bis Paket E in den Testquellen von serp4j-core; E verschiebt sie nach serp4j-testkit. BrowserRuntime kommt erst mit serp4j-browser-api. -Xlint:-options für die Java-8-Module (JDK 21 warnt vor --release 8, das würde mit -Werror scheitern) und @SuppressWarnings(\"serial\") an den Exceptions (nicht serialisierbare Felder; Exceptions werden nicht Java-serialisiert).",
+        "…M und nmcp-Publishing (Paket A) Gradle 8.14.3 (Wrapper), Kotlin DSL, Included Build build-logic mit den Convention-Plugins serp4j.java-library (java-library, -Xlint:all -Werror, Javadoc mit -Xwerror, reproduzierbare Archive, Automatic-Module-Name, JUnit Jupiter + AssertJ), serp4j.java8 (Toolchain JDK 21 mit --release 8 und zusätzlichem Testlauf testJava8 auf JDK 8, Teil von check, abschaltbar mit -Pserp4j.java8Tests=false), serp4j.java21, serp4j.published (maven-publish, Signatur mit In-Memory-GPG-Schlüssel, POM-Metadaten, com.gradleup.nmcp) und serp4j.provider.",
+        "Version Catalog, serp4j-bom (Constraints dynamisch aus allen publizierten Modulen), Root-Aggregation für das Central Portal (publishingType = USER_MANAGED). -Xlint:all -Werror -parameters, Javadoc -Xdoclint:all,-missing -Xwerror, reproduzierbare Archive, Automatic-Module-Name. ... core.model: SearchRequest (Builder, require(...), abgeleitetes getUsedFeatures()), SearchResponse = SearchData + Optional SearchMetadata + Optional SearchAnalysis, Paging, SearchLocale, GeoLocation, TimeRange, DeviceType, SafeSearch, SearchFeature, RequirementLevel, ProviderRequestOptions."
+      ],
+      "domain": "github.com",
+      "siteName": "GitHub",
+      "language": "en",
+      "thumbnail": "https://imgs.search.brave.com/kkVMK-ZlX4hu1trUKRH61LEtuIHHO0dqUPsu7OUzPME/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9vcGVu/Z3JhcGguZ2l0aHVi/YXNzZXRzLmNvbS80/NTVkNTJiNWNmZWFi/YWNhZDY1YTY4YTA5/MmY4YjZkMTgzNDkz/ZGE4MGZmOWI1Nzgz/NjJkMzkxODZjNjI5/MmQ1L2FyZXNzdGFj/ay9TZXJwNEovcHVs/bC85",
+      "position": {
+        "rankInGroup": 7,
+        "area": "main"
+      },
+      "extensions": {
+        "values": {
+          "brave:familyFriendly": true,
+          "brave:subtype": "generic"
+        },
+        "unmapped": {
+          "brave": {
+            "is_source_local": false,
+            "is_source_both": false,
+            "profile": {
+              "url": "https://github.com/aresstack/Serp4J/pull/9",
+              "long_name": "github.com",
+              "img": "https://imgs.search.brave.com/xxsA4YxzaR0cl-DBsH9-lpv2gsif3KMYgM87p26bs_o/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvYWQyNWM1NjA5/ZjZmZjNlYzI2MDNk/N2VkNmJhYjE2MzZl/MDY5ZTMxMDUzZmY1/NmU3NWIzNWVmMjk0/NTBjMjJjZi9naXRo/dWIuY29tLw"
+            },
+            "type": "search_result",
+            "is_live": false,
+            "meta_url": {
+              "scheme": "https",
+              "netloc": "github.com",
+              "hostname": "github.com",
+              "favicon": "https://imgs.search.brave.com/xxsA4YxzaR0cl-DBsH9-lpv2gsif3KMYgM87p26bs_o/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvYWQyNWM1NjA5/ZjZmZjNlYzI2MDNk/N2VkNmJhYjE2MzZl/MDY5ZTMxMDUzZmY1/NmU3NWIzNWVmMjk0/NTBjMjJjZi9naXRo/dWIuY29tLw",
+              "path": "› aresstack  › Serp4J  › pull  › 9"
+            },
+            "thumbnail": {
+              "original": "https://opengraph.githubassets.com/455d52b5cfeabacad65a68a092f8b6d183493da80ff9b578362d39186c6292d5/aresstack/Serp4J/pull/9",
+              "logo": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "web#8",
+      "type": "organic",
+      "url": "https://serpapi.com/libraries",
+      "title": "SerpApi Libraries - SerpApi",
+      "snippet": "Download the latest supported SERP scraping libraries from SerpApi. Support for Python, Ruby, Java, JavaScript, PHP, Go, and .NET languages.",
+      "additionalSnippets": [
+        "0 searches · + 0 extra credits · Dashboard Sign Out · Beta · • New Ruby library published - Jun 1, 2025 · Coming next: • Update libraries to support the latest SerpApi features."
+      ],
+      "domain": "serpapi.com",
+      "siteName": "SerpApi",
+      "language": "en",
+      "thumbnail": "https://imgs.search.brave.com/osNzkGo0HQY4T_fbdU7fKVasTeBS6a2yC2Yo0Ml5cCQ/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9zZXJw/YXBpLmNvbS9zZXJw/YXBpLXNvY2lhbC1p/bWFnZS5wbmc",
+      "position": {
+        "rankInGroup": 8,
+        "area": "main"
+      },
+      "extensions": {
+        "values": {
+          "brave:familyFriendly": true,
+          "brave:subtype": "generic"
+        },
+        "unmapped": {
+          "brave": {
+            "is_source_local": false,
+            "is_source_both": false,
+            "profile": {
+              "url": "https://serpapi.com/libraries",
+              "long_name": "serpapi.com",
+              "img": "https://imgs.search.brave.com/ZYJqgExXGm35wE4AU6Fg1NB-q2XPN_gDnNS5i8s6r8Q/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvODkwMzUxZjY3/MzFhODExN2ZjMDc1/YTEyNTIzZGRhNzJk/NzExZGM0ZDFkODky/YjY5YTk4YWU3MjE0/MGQ4NDVlYy9zZXJw/YXBpLmNvbS8"
+            },
+            "type": "search_result",
+            "is_live": false,
+            "meta_url": {
+              "scheme": "https",
+              "netloc": "serpapi.com",
+              "hostname": "serpapi.com",
+              "favicon": "https://imgs.search.brave.com/ZYJqgExXGm35wE4AU6Fg1NB-q2XPN_gDnNS5i8s6r8Q/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvODkwMzUxZjY3/MzFhODExN2ZjMDc1/YTEyNTIzZGRhNzJk/NzExZGM0ZDFkODky/YjY5YTk4YWU3MjE0/MGQ4NDVlYy9zZXJw/YXBpLmNvbS8",
+              "path": "› libraries"
+            },
+            "thumbnail": {
+              "original": "https://serpapi.com/serpapi-social-image.png",
+              "logo": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "web#9",
+      "type": "organic",
+      "url": "https://github.com/serpapi/google-search-results-java",
+      "title": "GitHub - serpapi/google-search-results-java: Google Search Results JAVA API via SerpApi · GitHub",
+      "snippet": "This Java package enables to scrape and parse Google, Bing and Baidu search results using SerpApi.",
+      "additionalSnippets": [
+        "This example runs a search about \"coffee\" using your secret api key. ... Parse JSON into Ruby Hash using JSON standard library provided by Ruby Et voila..",
+        "To get started with this project in Java. We provided a fully working example. git clone https://github.com/serpapi/google_search_results_java.git cd google_search_results_java/demo make run api_key=<your private key>",
+        "To enable a type of search, the field tbm (to be matched) must be set to: ... The full documentation is available here. ... SerpApi is using HTTPS / SSLv3. Older JVM version do not support this protocol because it's more recent. Upgrade java to 1.8_201+ (which is recommended by Oracle).",
+        "This Java package enables to scrape and parse Google, Bing and Baidu search results using SerpApi."
+      ],
+      "domain": "github.com",
+      "siteName": "GitHub",
+      "language": "en",
+      "thumbnail": "https://imgs.search.brave.com/g-lLJz0oYtXW7cWOuP-_Y9VrysP0AB-6FK9n8arDGhk/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9vcGVu/Z3JhcGguZ2l0aHVi/YXNzZXRzLmNvbS85/M2RiZThmOTgzMWJh/ZDVlNDM4MDYzNmVi/NGRkZTUyNmZkYjQ4/ZDM1ZTA3ZjU1ZDY3/NTZhZWRiODNhZjk4/MDA2L3NlcnBhcGkv/Z29vZ2xlLXNlYXJj/aC1yZXN1bHRzLWph/dmE",
+      "position": {
+        "rankInGroup": 9,
+        "area": "main"
+      },
+      "extensions": {
+        "values": {
+          "brave:familyFriendly": true,
+          "brave:subtype": "software"
+        },
+        "unmapped": {
+          "brave": {
+            "is_source_local": false,
+            "is_source_both": false,
+            "profile": {
+              "url": "https://github.com/serpapi/google-search-results-java",
+              "long_name": "github.com",
+              "img": "https://imgs.search.brave.com/xxsA4YxzaR0cl-DBsH9-lpv2gsif3KMYgM87p26bs_o/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvYWQyNWM1NjA5/ZjZmZjNlYzI2MDNk/N2VkNmJhYjE2MzZl/MDY5ZTMxMDUzZmY1/NmU3NWIzNWVmMjk0/NTBjMjJjZi9naXRo/dWIuY29tLw"
+            },
+            "type": "search_result",
+            "is_live": false,
+            "meta_url": {
+              "scheme": "https",
+              "netloc": "github.com",
+              "hostname": "github.com",
+              "favicon": "https://imgs.search.brave.com/xxsA4YxzaR0cl-DBsH9-lpv2gsif3KMYgM87p26bs_o/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvYWQyNWM1NjA5/ZjZmZjNlYzI2MDNk/N2VkNmJhYjE2MzZl/MDY5ZTMxMDUzZmY1/NmU3NWIzNWVmMjk0/NTBjMjJjZi9naXRo/dWIuY29tLw",
+              "path": "› serpapi  › google-search-results-java"
+            },
+            "thumbnail": {
+              "original": "https://opengraph.githubassets.com/93dbe8f9831bad5e4380636eb4dde526fdb48d35e07f55d6756aedb83af98006/serpapi/google-search-results-java",
+              "logo": false
+            },
+            "software": {
+              "name": "google-search-results-java",
+              "author": "serpapi",
+              "is_npm": false,
+              "is_pypi": false,
+              "stars": 46,
+              "forks": 28,
+              "programmingLanguage": "Java 84.6% | HTML 14.4% | Makefile 1.0%"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "web#10",
+      "type": "organic",
+      "url": "https://github.com/serpapi/google-search-results-java/releases",
+      "title": "Releases · serpapi/google-search-results-java · GitHub",
+      "snippet": "Google Search Results JAVA API via SerpApi. Contribute to serpapi/google-search-results-java development by creating an account on GitHub.",
+      "additionalSnippets": [
+        "This release targets jar and Javadocs distribution using Maven. ... There was an error while loading. Please reload this page. ... There was an error while loading. Please reload this page. ... For clarity we drop rename the following class name suffix from SearchResults to Search.",
+        "Copy the jar file to your library directory.",
+        "Search or jump to..."
+      ],
+      "domain": "github.com",
+      "siteName": "GitHub",
+      "language": "en",
+      "thumbnail": "https://imgs.search.brave.com/-j-oNgu2KyVOxoBgIZg-upi7ti__vOrFOcoJzT7J7g4/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9vcGVu/Z3JhcGguZ2l0aHVi/YXNzZXRzLmNvbS9k/ZjRlMzZiNmNlZmJh/NGM3ZGFjMzY3ODUz/NDFkZTAzNTVjYjcw/NzQ3NTU4Y2IwMjdj/NWE1ZTk1Y2JmYWUw/OTZjL3NlcnBhcGkv/Z29vZ2xlLXNlYXJj/aC1yZXN1bHRzLWph/dmE",
+      "position": {
+        "rankInGroup": 10,
+        "area": "main"
+      },
+      "extensions": {
+        "values": {
+          "brave:familyFriendly": true,
+          "brave:subtype": "software"
+        },
+        "unmapped": {
+          "brave": {
+            "is_source_local": false,
+            "is_source_both": false,
+            "profile": {
+              "url": "https://github.com/serpapi/google-search-results-java/releases",
+              "long_name": "github.com",
+              "img": "https://imgs.search.brave.com/xxsA4YxzaR0cl-DBsH9-lpv2gsif3KMYgM87p26bs_o/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvYWQyNWM1NjA5/ZjZmZjNlYzI2MDNk/N2VkNmJhYjE2MzZl/MDY5ZTMxMDUzZmY1/NmU3NWIzNWVmMjk0/NTBjMjJjZi9naXRo/dWIuY29tLw"
+            },
+            "type": "search_result",
+            "is_live": false,
+            "meta_url": {
+              "scheme": "https",
+              "netloc": "github.com",
+              "hostname": "github.com",
+              "favicon": "https://imgs.search.brave.com/xxsA4YxzaR0cl-DBsH9-lpv2gsif3KMYgM87p26bs_o/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvYWQyNWM1NjA5/ZjZmZjNlYzI2MDNk/N2VkNmJhYjE2MzZl/MDY5ZTMxMDUzZmY1/NmU3NWIzNWVmMjk0/NTBjMjJjZi9naXRo/dWIuY29tLw",
+              "path": "› serpapi  › google-search-results-java  › releases"
+            },
+            "thumbnail": {
+              "original": "https://opengraph.githubassets.com/df4e36b6cefba4c7dac36785341de0355cb70747558cb027c5a5e95cbfae096c/serpapi/google-search-results-java",
+              "logo": false
+            },
+            "software": {
+              "name": "google-search-results-java",
+              "author": "serpapi",
+              "is_npm": false,
+              "is_pypi": false,
+              "programmingLanguage": ""
+            }
+          }
+        }
+      }
+    }
+  ],
+  "features": [],
+  "metadata": {
+    "originalQuery": "serp4j java search library",
+    "hasMore": true,
+    "extensions": {
+      "values": {
+        "brave:badResults": false,
+        "brave:country": "de",
+        "brave:isNavigational": false,
+        "brave:isNewsBreaking": false
+      },
+      "unmapped": {
+        "brave": {
+          "type": "search",
+          "query": {
+            "show_strict_warning": false,
+            "spellcheck_off": false,
+            "should_fallback": false,
+            "postal_code": "",
+            "city": "",
+            "header_country": "",
+            "state": ""
+          },
+          "mixed": {
+            "type": "mixed",
+            "main": [
+              {
+                "type": "web",
+                "index": 0,
+                "all": false
+              },
+              {
+                "type": "web",
+                "index": 1,
+                "all": false
+              },
+              {
+                "type": "web",
+                "index": 2,
+                "all": false
+              },
+              {
+                "type": "web",
+                "index": 3,
+                "all": false
+              },
+              {
+                "type": "web",
+                "index": 4,
+                "all": false
+              },
+              {
+                "type": "web",
+                "index": 5,
+                "all": false
+              },
+              {
+                "type": "web",
+                "index": 6,
+                "all": false
+              },
+              {
+                "type": "web",
+                "index": 7,
+                "all": false
+              },
+              {
+                "type": "web",
+                "index": 8,
+                "all": false
+              },
+              {
+                "type": "web",
+                "index": 9,
+                "all": false
+              },
+              {
+                "type": "web",
+                "index": 10,
+                "all": false
+              },
+              {
+                "type": "web",
+                "index": 11,
+                "all": false
+              },
+              {
+                "type": "web",
+                "index": 12,
+                "all": false
+              },
+              {
+                "type": "web",
+                "index": 13,
+                "all": false
+              },
+              {
+                "type": "web",
+                "index": 14,
+                "all": false
+              },
+              {
+                "type": "web",
+                "index": 15,
+                "all": false
+              },
+              {
+                "type": "web",
+                "index": 16,
+                "all": false
+              },
+              {
+                "type": "web",
+                "index": 17,
+                "all": false
+              },
+              {
+                "type": "web",
+                "index": 18,
+                "all": false
+              },
+              {
+                "type": "web",
+                "index": 19,
+                "all": false
+              }
+            ]
+          },
+          "web": {
+            "type": "search",
+            "family_friendly": true
+          }
+        }
+      }
+    }
+  },
+  "warnings": []
+}

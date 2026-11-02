@@ -16,4 +16,5 @@ dependencies {
     implementation(project(":serp4j-json"))
 
     testImplementation(project(":serp4j-testkit"))
+    "liveTestImplementation"(project(":serp4j-http-ahc"))
 }
