@@ -1,0 +1,423 @@
+{
+  "definition": "dataforseo-serp-organic",
+  "version": 1,
+  "results": [
+    {
+      "id": "serp#1",
+      "type": "organic",
+      "url": "https://google.com/goto?url=ANONYMIZED-REDIRECT-TOKEN-01",
+      "title": "Search API | Java Transport Client (deprecated) [7.17]",
+      "snippet": "The search API allows one to execute a search query and get back search hits that match the query. It can be executed across one or more indices and across ...",
+      "displayUrl": "https://www.elastic.co › current",
+      "domain": "google.com",
+      "siteName": "Elastic.co",
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 1,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[1]/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]/div[1]",
+            "is_image": false,
+            "is_video": false,
+            "is_featured_snippet": false,
+            "is_malicious": false,
+            "is_web_story": false,
+            "amp_version": false,
+            "highlighted": [
+              "search"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#2",
+      "type": "organic",
+      "url": "https://google.com/goto?url=ANONYMIZED-REDIRECT-TOKEN-02",
+      "title": "Search (Neo4j Java Driver 6.2 API)",
+      "snippet": "The help page provides an introduction to the scope and syntax of JavaDoc search. Use the ↓ / ↑ keys to move between search results and the ← / → keys ...",
+      "displayUrl": "https://neo4j.com › api › current",
+      "domain": "google.com",
+      "siteName": "Neo4j",
+      "position": {
+        "rankInGroup": 2,
+        "rankAbsolute": 2,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[1]/div[2]/div[2]/div[1]/div[1]/div[4]/div[1]/div[1]",
+            "is_image": false,
+            "is_video": false,
+            "is_featured_snippet": false,
+            "is_malicious": false,
+            "is_web_story": false,
+            "amp_version": false,
+            "highlighted": [
+              "search"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#3",
+      "type": "organic",
+      "url": "https://github.com/thiagolocatelli/parse4j",
+      "title": "thiagolocatelli/parse4j: Java Library to deal with Parse ...",
+      "snippet": "Ths library is a non-official java library, but it works according to Parse's REST api specification. ps.: most of the following code snippets and text have ...",
+      "displayUrl": "https://github.com › thiagolocatelli",
+      "domain": "github.com",
+      "siteName": "GitHub",
+      "position": {
+        "rankInGroup": 3,
+        "rankAbsolute": 3,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[1]/div[2]/div[2]/div[1]/div[1]/div[6]/div[1]/div[1]",
+            "is_image": false,
+            "is_video": false,
+            "is_featured_snippet": false,
+            "is_malicious": false,
+            "is_web_story": false,
+            "amp_version": false,
+            "highlighted": [
+              "library",
+              "java library"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#4",
+      "type": "organic",
+      "url": "https://google.com/goto?url=ANONYMIZED-REDIRECT-TOKEN-03",
+      "title": "How to search for a Java string in Eclipse?",
+      "snippet": "I need to search for instances of a character sequence in a Java string using Eclipse. Is there an easy way or regex to do this? Example: Search for Eggs ...",
+      "displayUrl": "4 Antworten  ·  vor 14 Jahren",
+      "domain": "google.com",
+      "siteName": "Stack Overflow",
+      "position": {
+        "rankInGroup": 4,
+        "rankAbsolute": 4,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[1]/div[2]/div[2]/div[1]/div[1]/div[8]/div[1]/div[1]",
+            "is_image": false,
+            "is_video": false,
+            "is_featured_snippet": false,
+            "is_malicious": false,
+            "is_web_story": false,
+            "amp_version": false,
+            "links": [
+              {
+                "type": "link_element",
+                "title": "How do I include the sat4j library in eclipse java IDE?",
+                "url": "https://google.com/goto?url=ANONYMIZED-REDIRECT-TOKEN-04",
+                "domain": "google.com"
+              },
+              {
+                "type": "link_element",
+                "title": "Extending Eclipse Java Search - Stack Overflow",
+                "url": "https://stackoverflow.com/questions/34248706/extending-eclipse-java-search",
+                "domain": "stackoverflow.com"
+              },
+              {
+                "type": "link_element",
+                "title": "Weitere Ergebnisse von stackoverflow.com",
+                "url": "https://www.google.com/search?q=serp4j+java+search+library+site:stackoverflow.com&sca_esv=ANONYMIZED",
+                "domain": "www.google.com"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#5",
+      "type": "organic",
+      "url": "https://google.com/goto?url=ANONYMIZED-REDIRECT-TOKEN-05",
+      "title": "SpanCollector.java",
+      "snippet": "package org.apache.lucene.search.spans; /* * Licensed to the Apache Software Foundation (ASF) under one or more * contributor license agreements.",
+      "displayUrl": "https://gitlab.comp.anu.edu.au › ...",
+      "domain": "google.com",
+      "siteName": "The Australian National University",
+      "position": {
+        "rankInGroup": 5,
+        "rankAbsolute": 5,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[1]/div[2]/div[2]/div[1]/div[1]/div[10]/div[1]/div[1]",
+            "is_image": false,
+            "is_video": false,
+            "is_featured_snippet": false,
+            "is_malicious": false,
+            "is_web_story": false,
+            "amp_version": false,
+            "highlighted": [
+              "search"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#6",
+      "type": "organic",
+      "url": "https://coursework.cs.duke.edu/bwb29/p4-autocomplete/-/blob/main/src/BinarySearchLibrary.java",
+      "title": "BinarySearchLibrary.java - P4 Autocomplete",
+      "snippet": "02.11.2025 — import java.util.*; /** * Facilitates using fast binary search with * a Comparator. The methods firstIndex and lastIndex * run in time ...",
+      "displayUrl": "https://coursework.cs.duke.edu › ...",
+      "domain": "coursework.cs.duke.edu",
+      "siteName": "Duke University",
+      "publishedDate": {
+        "instant": "2025-11-02T00:00:00Z"
+      },
+      "position": {
+        "rankInGroup": 6,
+        "rankAbsolute": 6,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[1]/div[2]/div[2]/div[1]/div[1]/div[12]/div[1]/div[1]",
+            "is_image": false,
+            "is_video": false,
+            "is_featured_snippet": false,
+            "is_malicious": false,
+            "is_web_story": false,
+            "pre_snippet": "11/02/2025 00:00:00",
+            "amp_version": false,
+            "highlighted": [
+              "java",
+              "search"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#7",
+      "type": "organic",
+      "url": "https://google.com/goto?url=ANONYMIZED-REDIRECT-TOKEN-06",
+      "title": "Java library for scraping websites",
+      "snippet": "11.08.2015 — jsoup is a really nice library to parse and scrape HTML pages. It has a simple and easy to use API; It is actively developed and open source ...",
+      "displayUrl": "https://softwarerecs.stackexchange.com › ...",
+      "domain": "google.com",
+      "siteName": "Software Recommendations Stack Exchange",
+      "publishedDate": {
+        "instant": "2015-08-11T00:00:00Z"
+      },
+      "position": {
+        "rankInGroup": 7,
+        "rankAbsolute": 7,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[1]/div[2]/div[2]/div[1]/div[1]/div[14]/div[1]/div[1]",
+            "is_image": false,
+            "is_video": false,
+            "is_featured_snippet": false,
+            "is_malicious": false,
+            "is_web_story": false,
+            "pre_snippet": "08/11/2015 00:00:00",
+            "amp_version": false,
+            "highlighted": [
+              "jsoup"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#8",
+      "type": "organic",
+      "url": "https://google.com/goto?url=ANONYMIZED-REDIRECT-TOKEN-07",
+      "title": "Search (Spring Data Neo4j 8.0.8-SNAPSHOT API)",
+      "snippet": "The help page provides an introduction to the scope and syntax of JavaDoc search. Use the ↓ / ↑ keys to move between search results and the ← / → keys ...",
+      "displayUrl": "https://docs.spring.io › api › java",
+      "domain": "google.com",
+      "siteName": "SpringSource",
+      "position": {
+        "rankInGroup": 8,
+        "rankAbsolute": 8,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[1]/div[2]/div[2]/div[1]/div[1]/div[16]/div[1]/div[1]",
+            "is_image": false,
+            "is_video": false,
+            "is_featured_snippet": false,
+            "is_malicious": false,
+            "is_web_story": false,
+            "amp_version": false,
+            "highlighted": [
+              "search"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#9",
+      "type": "organic",
+      "url": "https://github.com/spring-projects/spring-data-elasticsearch/blob/main/src/main/java/org/springframework/data/elasticsearch/core/SearchHitSupport.java",
+      "title": "spring-data-elasticsearch - src - main - java - org",
+      "snippet": "Provide support to increase developer productivity in Java when using Elasticsearch. Uses familiar Spring concepts such as a template classes for core API ...",
+      "displayUrl": "https://github.com › data › core",
+      "domain": "github.com",
+      "siteName": "GitHub",
+      "position": {
+        "rankInGroup": 9,
+        "rankAbsolute": 9,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[1]/div[2]/div[2]/div[1]/div[1]/div[18]/div[1]/div[1]",
+            "is_image": false,
+            "is_video": false,
+            "is_featured_snippet": false,
+            "is_malicious": false,
+            "is_web_story": false,
+            "amp_version": false,
+            "highlighted": [
+              "Provide"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#10",
+      "type": "organic",
+      "url": "https://google.com/goto?url=ANONYMIZED-REDIRECT-TOKEN-08",
+      "title": "Is Java needed when implementing Search Restrictions?",
+      "snippet": "12.03.2018 — If I create a new search restriction by impex there it's no need to implement java code? I just execute the impex with the restriction and works ...",
+      "displayUrl": "https://community.sap.com › qa...",
+      "domain": "google.com",
+      "siteName": "SAP Community",
+      "publishedDate": {
+        "instant": "2018-03-12T00:00:00Z"
+      },
+      "position": {
+        "rankInGroup": 10,
+        "rankAbsolute": 10,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[1]/div[2]/div[2]/div[1]/div[1]/div[20]/div[1]/div[1]",
+            "is_image": false,
+            "is_video": false,
+            "is_featured_snippet": false,
+            "is_malicious": false,
+            "is_web_story": false,
+            "pre_snippet": "03/12/2018 00:00:00",
+            "amp_version": false,
+            "highlighted": [
+              "search",
+              "java"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "features": [],
+  "metadata": {
+    "totalResultsEstimate": 74,
+    "providerRequestId": "00000000-0000-0000-0000-000000000000",
+    "cost": 0.0,
+    "currency": "USD",
+    "extensions": {
+      "unmapped": {
+        "dataforseo": {
+          "version": "0.1.20261022",
+          "status_code": 20000,
+          "status_message": "Ok.",
+          "time": "5.6147 sec.",
+          "cost": 0.0,
+          "tasks_count": 1,
+          "tasks_error": 0,
+          "tasks": [
+            {
+              "status_code": 20000,
+              "status_message": "Ok.",
+              "time": "5.4739 sec.",
+              "result_count": 1,
+              "path": [
+                "v3",
+                "serp",
+                "google",
+                "organic",
+                "live",
+                "advanced"
+              ],
+              "data": {
+                "api": "serp",
+                "function": "live",
+                "se": "google",
+                "se_type": "organic",
+                "keyword": "serp4j java search library",
+                "location_name": "Germany",
+                "language_code": "de",
+                "depth": 10,
+                "device": "desktop",
+                "os": "windows"
+              },
+              "result": [
+                {
+                  "keyword": "serp4j java search library",
+                  "type": "organic",
+                  "se_domain": "google.com",
+                  "location_code": 2276,
+                  "language_code": "de",
+                  "check_url": "https://www.google.com/search?q=serp4j%20java%20search%20library&hl=de&gl=DE&ie=UTF-8&uule=ANONYMIZED",
+                  "datetime": "2026-11-02 04:06:23 +00:00",
+                  "item_types": [
+                    "organic"
+                  ],
+                  "pages_count": 1,
+                  "items_count": 10
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "warnings": []
+}

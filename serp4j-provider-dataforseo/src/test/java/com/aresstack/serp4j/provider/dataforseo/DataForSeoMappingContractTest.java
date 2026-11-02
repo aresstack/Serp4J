@@ -12,9 +12,9 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Mapping definition against the fixtures. Until a recorded DataForSEO answer exists (E-1), the fixture is
- * synthetic and marked as such; Angelo's decision of 2026-11-01: implement against the API reference now, adjust
- * after a real answer.
+ * Mapping definition against the fixtures. {@code google-organic-live-advanced-de.json} is the first recorded
+ * DataForSEO answer (2026-11-02, E-1); it only contains organic items, so the synthetic fixtures (marked as such,
+ * Angelo's decision of 2026-11-01) still cover the feature sections until recorded answers with those features exist.
  */
 class DataForSeoMappingContractTest extends MappingDefinitionContractTest {
 
@@ -26,7 +26,8 @@ class DataForSeoMappingContractTest extends MappingDefinitionContractTest {
     @Override
     protected List<Fixture> fixtures() {
         return Arrays.asList(Fixtures.load("dataforseo", "google-organic-live-advanced.json"),
-                Fixtures.load("dataforseo", "google-organic-live-advanced-features.json"));
+                Fixtures.load("dataforseo", "google-organic-live-advanced-features.json"),
+                Fixtures.load("dataforseo", "google-organic-live-advanced-de.json"));
     }
 
     @Override
