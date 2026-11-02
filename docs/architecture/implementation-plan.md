@@ -3,6 +3,9 @@
 > **Status:** Nach Angelos Review vom 2026-10-31 angepasst (Review-Punkte A–C, Entscheidungen E-1 bis E-8) · Merge- und Startfreigabe ausstehend
 > **Wichtig:** Keines der Pakete wird vor Angelos ausdrücklicher Freigabe begonnen. Paket A kann nach seiner Aussage als erstes freigegeben werden; E-1 und E-2 müssen dafür nicht abgewartet werden.
 > Grundlage: [architecture.md](architecture.md), [ADRs](adr/README.md), Paketschnitt A–H aus Angelos Auftrag.
+> **Nachtrag 2026-11-02 ([ADR-020](adr/ADR-020-browser-uebergabe-playwright.md)):** Paket F wurde umgesetzt und wieder
+> entfernt; S1–S4, G1 und G2 entfallen. An ihre Stelle tritt `serp4j-playwright` (Host übergibt den Browser) und
+> `askai-playwright-google` in AskAI.
 
 ## 1. Überblick
 

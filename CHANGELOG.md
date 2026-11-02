@@ -7,6 +7,19 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
 
 ## [Unreleased]
 
+### Changed
+
+- **ADR-020 – Browser:** Serp4J startet, verwaltet und beendet keine Browser mehr. Der Host initialisiert Playwright,
+  startet den Browser und übergibt ihn bei jeder Suche (`PlaywrightSearchProvider.search(request, context, browser)`).
+  Neues Modul `serp4j-playwright` (Java 21, publiziert) mit `PlaywrightSearchProvider`, `PlaywrightSearchSupport`
+  und `PlaywrightSearchFailures`; Suchmaschinen-Adapter liegen beim Host (Google in AskAI).
+
+### Removed
+
+- Paket F: `serp4j-browser-api`, `serp4j-browser-testkit`, `serp4j-browser-playwright`,
+  `serp4j-browser-playwright-driver-node`, `serp4j-browser-playwright-driver-graal` samt Browser-TCK (ADR-010/-011
+  ersetzt durch ADR-020). Der CI-Job `browser-tck` führt jetzt die Browser-Tests von `serp4j-playwright` aus.
+
 ### Added
 
 - Google-`/goto`-Auflösung in verschachtelten URLs: `ResultUrlEnricher` löst neben der Treffer-URL auch Sitelinks

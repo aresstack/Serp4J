@@ -42,20 +42,10 @@ val plannedModules = listOf(
     "serp4j-provider-dataforseo",
     "serp4j-provider-serpapi",
     "serp4j-provider-argos",
-    // Browser
-    "serp4j-browser-api",
-    "serp4j-browser-playwright",
-    "serp4j-browser-playwright-driver-node",
-    "serp4j-browser-playwright-driver-graal",
+    // Browser (ADR-020): Playwright-Integration für lokale Provider; der Host übergibt den Browser
     "serp4j-playwright",
-    "serp4j-browser-search",
-    // Google (im Repository, in 0.x nicht publiziert – E-3/E-4)
-    "serp4j-engine-google-common",
-    "serp4j-engine-google-http",
-    "serp4j-engine-google-browser",
     // Tests und Beispiele
     "serp4j-testkit",
-    "serp4j-browser-testkit",
     "serp4j-examples",
 )
 

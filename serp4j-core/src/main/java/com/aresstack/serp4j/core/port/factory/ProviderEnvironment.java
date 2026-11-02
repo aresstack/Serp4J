@@ -10,8 +10,8 @@ import java.util.Optional;
 
 /**
  * Shared infrastructure a {@link SearchProviderFactory} may use (architecture.md §5.1): credentials, a clock and
- * typed services the core does not know (an HTTP transport, a browser runtime, a scheduler). Services are looked up
- * by type so the core stays free of {@code serp4j-http-api} and {@code serp4j-browser-api}.
+ * typed services the core does not know (an HTTP transport, a scheduler). Services are looked up by type so the
+ * core stays free of {@code serp4j-http-api} and of Playwright.
  *
  * <p>Ownership (ADR-017 rule 5): every service in the environment belongs to whoever built the environment;
  * providers created from it never close them.</p>

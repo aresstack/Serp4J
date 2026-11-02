@@ -23,7 +23,18 @@ dependencies {
     testImplementation(project(":serp4j-testkit"))
     testImplementation(libs.archunit.junit5)
 
-    // Real-browser tests launch Playwright's Chromium with the official driver (CI installs it explicitly).
+    // Real-browser tests play the host: they launch Playwright's Chromium with the official driver (CI installs it
+    // explicitly). Production code never carries a driver.
     "browserTestRuntimeOnly"(libs.playwright.driver)
     "browserTestRuntimeOnly"(libs.playwright.driver.bundle)
+}
+
+// Explicit, never implicit: installs the Playwright browser build that matches this Playwright version.
+// CI: ./gradlew :serp4j-playwright:installPlaywrightBrowsers -Pserp4j.playwrightInstall="install --with-deps chromium"
+tasks.register<JavaExec>("installPlaywrightBrowsers") {
+    description = "Installs Playwright browsers with the Playwright CLI (explicit; Serp4J never downloads browsers itself)."
+    group = "browser"
+    classpath = sourceSets["browserTest"].runtimeClasspath
+    mainClass.set("com.microsoft.playwright.CLI")
+    args = providers.gradleProperty("serp4j.playwrightInstall").getOrElse("install chromium").split(" ")
 }

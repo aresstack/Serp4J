@@ -20,11 +20,7 @@ Entscheidungen in den [ADRs](docs/architecture/adr), die Reihenfolge der Arbeits
 | `serp4j-json` | 8 | `JsonTrees`: JSON-Text ↔ `StructuredValue` (einzige Stelle mit Gson) | `serp4j-core`, Gson |
 | `serp4j-provider-dataforseo` | 8 | Cloud-Adapter DataForSEO SERP API v3: `DataForSeoSearchProvider` für Google/Bing organic (live/regular, live/advanced), Basic-Auth nur im Header, Statuscodes im Body, Mapping-Definition `dataforseo-serp-organic` ([README](serp4j-provider-dataforseo/README.md)) | core, http-api; mapping, json (`implementation`) |
 | `serp4j-testkit` | 8 | Test-Scope: `MockSearchProvider`, `ScriptedSearchProvider`, `ScriptedConversationalProvider`, `FakeHttpTransport`, Fixtures mit Herkunftskennzeichnung und Secret-Scan, abstrakte Contract-Tests ([README](serp4j-testkit/README.md)) | core, http-api; JUnit 5 `compileOnly` |
-| `serp4j-browser-api` | 8 | Browser-Port `BrowserRuntime`/`BrowserSession`, Navigation, Warten, Skripte, Interaktion, Snapshots, Netzwerkbeobachtung, `UrlPolicy`, Fehlertypen; kennt den Core nicht | keine |
-| `serp4j-browser-testkit` | 8 | `FakeBrowserRuntime` und TCK `BrowserRuntimeContractTest` (JUnit 5) für jede Implementierung | `serp4j-browser-api` |
-| `serp4j-browser-playwright` | 8 | Adapter über Playwright Java: ein Owner-Thread je Browser, Kapazitätsgrenze, Probe, Remote-Server; ohne JS-Treiber | `serp4j-browser-api`, Playwright Java |
-| `serp4j-browser-playwright-driver-node` | 8 | Treiber: Node-Treiber von Playwright (plattformspezifisches Bundle) | Playwright `driver-bundle` |
-| `serp4j-browser-playwright-driver-graal` | 21 | Treiber: playwright4j (Playwright-Treiber in GraalJS, ohne Node) | playwright4j |
+| `serp4j-playwright` | 21 | Playwright-Integration für lokale browsergestützte Provider (ADR-020): `PlaywrightSearchProvider` (`search(request, context, browser)`), `PlaywrightSearchSupport` (Vorprüfung, Timeouts, Fehlerübersetzung, Metadaten), `PlaywrightSearchFailures`; der Host startet und übergibt den Browser, Serp4J verwaltet keinen | `serp4j-core`, Playwright Java (ohne Treiber) |
 | `serp4j-bom` | – | Bill of Materials über alle publizierten Module (Lockstep-Version) | – |
 
 Die weiteren Module (`serp4j-orchestration`, `serp4j-http-*`, `serp4j-provider-*`) sind in
@@ -43,13 +39,12 @@ sind; JDK 8 wird nur als Test-Laufzeit gebraucht.
 ./gradlew publishToMavenLocal              # Artefakte lokal in ~/.m2 ablegen
 ```
 
-Der normale Build startet nie einen Browser. Die Browser-TCK läuft getrennt und braucht ein installiertes
-Chromium (Serp4J lädt selbst keine Browser herunter):
+Der normale Build startet nie einen Browser. Die Browser-Tests von `serp4j-playwright` laufen getrennt und brauchen
+ein installiertes Chromium (Serp4J lädt selbst keine Browser herunter):
 
 ```bash
-./gradlew :serp4j-browser-playwright-driver-node:installPlaywrightBrowsers   # einmalig: Chromium installieren
-./gradlew :serp4j-browser-playwright-driver-node:browserTest \
-          :serp4j-browser-playwright-driver-graal:browserTest -Pserp4j.browserTests=true
+./gradlew :serp4j-playwright:installPlaywrightBrowsers      # einmalig: Chromium installieren
+./gradlew :serp4j-playwright:browserTest -Pserp4j.browserTests=true
 # vorhandenes Binary statt Download: SERP4J_BROWSER_EXECUTABLE=/pfad/zu/chrome
 ```
 
@@ -102,26 +97,30 @@ dependencies {
 }
 ```
 
-### Browser
+### Browser (ADR-020)
 
-Wer im Browser suchen will, nimmt den Adapter und **genau einen** Treiber dazu; ohne oder mit zwei Treibern meldet
-`probe()` `DRIVER_NOT_FOUND` bzw. `MULTIPLE_DRIVERS`, statt beim ersten Aufruf zu scheitern (ADR-011).
+Serp4J startet keinen Browser. Wer im Browser suchen will, initialisiert Playwright selbst, startet den Browser
+(z. B. Camoufox) und übergibt ihn bei jeder Suche einem eigenen Provider, der `PlaywrightSearchProvider`
+implementiert. `serp4j-playwright` bringt die Playwright-Java-API ohne Treiber mit; den Treiber (offizielles
+`driver-bundle` oder `playwright4j`) wählt der Host.
 
 ```kotlin
 dependencies {
-    implementation("com.aresstack:serp4j-browser-playwright")
-    runtimeOnly("com.aresstack:serp4j-browser-playwright-driver-node")   // Java 8, Node-Treiber
-    // oder: runtimeOnly("com.aresstack:serp4j-browser-playwright-driver-graal")  // Java 21, ohne Node
+    implementation("com.aresstack:serp4j-playwright")           // Java 21; zieht serp4j-core
+    runtimeOnly("com.microsoft.playwright:driver-bundle:1.62.0") // oder com.aresstack:playwright4j
 }
 ```
 
 ```java
-try (BrowserRuntime runtime = PlaywrightBrowserRuntime.builder().maxConcurrentSessions(2).build();
-     BrowserSession session = runtime.openSession(BrowserSessionOptions.builder()
-             .urlPolicy(UrlPolicy.allowHosts("example.org", "*.example.org")).build())) {
-    NavigationResult result = session.navigate(NavigationRequest.to("https://example.org/"));
+try (Playwright playwright = Playwright.create();
+     Browser browser = playwright.chromium().launch()) {                 // gehört dem Host
+    SearchResponse response = myProvider.search(SearchRequest.builder("serp4j").build(), browser);
 }
 ```
+
+Ein Provider nutzt `PlaywrightSearchSupport` (Vorprüfung, Timeout aus dem `SearchContext`, Fehlerübersetzung,
+Metadaten) und meldet Consent-Dialoge oder Challenges als `BLOCKED` (`PlaywrightSearchFailures.obstacle`), statt sie
+wegzuklicken (ADR-016). Ein vollständiges Beispiel ist `LocalPageSearchProvider` im `browserTest`-Source-Set.
 
 Persistente Profile (`ProfileMode.persistentExclusive("google-de")`, z. B. für Consent-Cookies) gibt es nur mit
 `PlaywrightBrowserRuntime.builder().profileDirectory(pfad)`; ein Profil wird per Dateisperre exklusiv geleast.

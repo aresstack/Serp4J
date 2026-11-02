@@ -28,7 +28,7 @@ Option C.
 |---|---|---|---|
 | `serp4j-core` | `com.aresstack:serp4j-core` | 8 | Allgemeine Such-API, Provider-Schnittstellen, Datenmodell, API-basierte Provider |
 | `serp4j-playwright` | `com.aresstack:serp4j-playwright` | 21 | Playwright-Integration, damit Hosts eigene lokale browsergestützte Provider implementieren |
-| `askai-google-playwright` (in AskAI) | – (nicht publiziert) | 21 | bestehende Google-Browsersuche aus AskAI, auf `serp4j-core` + `serp4j-playwright` umgestellt |
+| `askai-playwright-google` (in AskAI) | – (nicht publiziert) | 21 | bestehende Google-Browsersuche aus AskAI, auf `serp4j-core` + `serp4j-playwright` umgestellt; baut auf AskAIs `askai-playwright` (Playwright-/Browserverwaltung des Hosts) auf |
 
 Beide Serp4J-Module gehen regulär nach Maven Central. `serp4j-playwright` hängt an `serp4j-core` und der
 Playwright-Java-API ohne Treiber; den Treiber (driver-bundle oder playwright4j) bringt der Host.
@@ -60,7 +60,7 @@ SPI), ein `Supplier<Browser>`, ein `BrowserContext` je Suche, Browser-Erkennung,
 ### 3. AskAI
 AskAI verwaltet zwei unabhängige Camoufox-Instanzen: den **Suchbrowser** (headless, dauerhaft, wird an Serp4J
 übergeben, bei Absturz von AskAI neu gestartet) und den **Research-Browser** (sichtbar, öffnet die gefundenen
-Seiten). Die eigentliche Recherche bleibt in AskAI. `askai-google-playwright` registriert Google als Serp4J-Provider;
+Seiten). Die eigentliche Recherche bleibt in AskAI. `askai-playwright-google` registriert Google als Serp4J-Provider;
 AskAI behält keine parallele HTTP-/HTML-Suche.
 
 ### 4. Folgen für vorhandene Module
