@@ -60,6 +60,9 @@ verschiedener `/goto`-URLs, bei 10 Treffern typischerweise 7–8), also im ungü
 Abschalten: `builder.resolveGoogleGotoUrls(false)` bzw. Factory-Property `resolveGoogleGotoUrls=false` –
 dann keine zusätzlichen Requests.
 
+**Folgeaufgaben:** `/goto`-URLs innerhalb von SERP-Features werden noch nicht aufgelöst; der providerneutrale
+`GoogleGotoUrlResolver` soll später auch im SerpApi-Provider angebunden werden.
+
 Live-Prüfung ohne DataForSEO-Guthaben: `SERP4J_GOOGLE_GOTO_URL=<aktuelle /goto-URL>
 [SERP4J_GOOGLE_GOTO_TARGET=<erwartetes Ziel>] ./gradlew :serp4j-provider-dataforseo:liveTest -Pserp4j.live=true`.
 

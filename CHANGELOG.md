@@ -18,6 +18,9 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
   unverändert und erzeugen genau eine Warnung `url_resolution_failed` mit Zählung je Grund. Die Zielseite wird nie
   abgerufen, an Google gehen keine Zugangsdaten, Cookies oder Referrer. Nur Google-Suchen; Bing bleibt unverändert.
   Option `resolveGoogleGotoUrls` (Standard `true`) im Builder und in der Factory, `urlResolveTimeout` im Builder.
+  Folgeaufgaben: `/goto`-URLs innerhalb von SERP-Features (verschachtelte Treffer) werden noch nicht aufgelöst, nur
+  `SearchData.getResults()`; `GoogleGotoUrlResolver` soll später auch im SerpApi-Provider angebunden werden (dort
+  liefert der echte Google-Lauf ebenfalls 7 von 10 organischen Treffern als `/goto`).
 - `serp4j-http-api`: Paket `com.aresstack.serp4j.http.resolve` mit `UrlResolver`, `UrlResolutionException` und
   `GoogleGotoUrlResolver` – providerunabhängig wiederverwendbar.
 - `HttpRequest.Builder.followRedirects(boolean)` / `HttpRequest.isFollowRedirects()`: Redirects pro Request
