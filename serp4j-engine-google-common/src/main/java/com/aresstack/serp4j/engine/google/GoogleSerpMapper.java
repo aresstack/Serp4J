@@ -82,18 +82,24 @@ public final class GoogleSerpMapper {
             all.add(SearchWarning.of(WARNING_UNMAPPED_BLOCKS, page.getUnrecognizedBlocks()
                     + " result block(s) on the Google page are not mapped yet", provider));
         }
+        boolean complete = true;
+        for (SearchWarning warning : all) {
+            if (SearchWarning.PARTIAL_RESULTS.equals(warning.getCode())) {
+                complete = false;
+            }
+        }
         Duration duration = finishedAt.isBefore(startedAt) ? Duration.ZERO : Duration.between(startedAt, finishedAt);
         SearchMetadata.Builder metadata = SearchMetadata
                 .forProvider(provider, SearchEngineId.GOOGLE, SearchVertical.WEB, QueryInfo.of(request.getQuery()))
                 .execution(ExecutionInfo.builder().startedAt(startedAt).duration(duration).attempts(1)
                         .sourceUrl(sourceUrl).build())
-                .complete(true)
+                .complete(complete)
                 .warnings(all);
         if (request.getLocale().isPresent()) {
             metadata.locale(request.getLocale().get());
         }
         RawPayloadPolicy policy = request.getRawPayloadPolicy();
-        boolean keepRaw = policy == RawPayloadPolicy.ALWAYS || (policy == RawPayloadPolicy.ON_ERROR && !all.isEmpty());
+        boolean keepRaw = policy == RawPayloadPolicy.ALWAYS || (policy == RawPayloadPolicy.ON_ERROR && (!all.isEmpty() || !complete));
         if (keepRaw && html != null) {
             metadata.rawPayload(RawPayload.ofText("text/html; charset=UTF-8", html));
         }

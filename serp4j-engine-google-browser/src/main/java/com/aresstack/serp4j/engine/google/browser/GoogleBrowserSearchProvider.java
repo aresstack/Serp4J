@@ -95,6 +95,13 @@ public final class GoogleBrowserSearchProvider implements SearchProvider {
 
     private static final String PATH = "browser";
 
+    /** Closes sessions off the caller's thread; shared, daemon threads, never shut down. */
+    private static final ExecutorService CLEANUP = Executors.newCachedThreadPool(r -> {
+        Thread t = new Thread(r, "serp4j-google-browser-cleanup");
+        t.setDaemon(true);
+        return t;
+    });
+
     private final ProviderDescriptor descriptor;
     private final BrowserRuntime runtime;
     private final GoogleUrlBuilder urlBuilder;
@@ -185,7 +192,8 @@ public final class GoogleBrowserSearchProvider implements SearchProvider {
         running.add(job);
         job.result.whenComplete((r, e) -> {
             running.remove(job);
-            job.closeSession();
+            // Never close on the completing thread: cancel()/close() would block behind a running navigation.
+            closeAsync(job);
         });
         context.getCancellation().onCancel(() -> job.result.completeExceptionally(
                 failure(SearchErrorCategory.CANCELLED, "search was cancelled")));
@@ -288,6 +296,14 @@ public final class GoogleBrowserSearchProvider implements SearchProvider {
                     // closing is best effort; the runtime reclaims lost sessions
                 }
             }
+        }
+    }
+
+    private static void closeAsync(final Running job) {
+        try {
+            CLEANUP.execute(job::closeSession);
+        } catch (RejectedExecutionException e) {
+            job.closeSession();
         }
     }
 
