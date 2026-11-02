@@ -20,6 +20,8 @@ public final class BrowserReadiness {
         BROWSER_NOT_INSTALLED,
         /** The browser is installed but could not be started or connected. */
         BROWSER_START_FAILED,
+        /** No backend ({@link BrowserRuntimeFactory}) supports the requested {@link BrowserSpec} (ADR-020). */
+        NO_BACKEND,
         /** The runtime has been closed. */
         CLOSED
     }

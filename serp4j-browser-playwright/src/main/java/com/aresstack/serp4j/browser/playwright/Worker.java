@@ -191,8 +191,18 @@ final class Worker {
             if (config.executablePath != null) {
                 options.setExecutablePath(config.executablePath);
             }
+            if (!config.browserEnvironment.isEmpty()) {
+                options.setEnv(browserEnv());
+            }
             browser = type.launch(options);
         }
+    }
+
+    /** JVM environment plus the configured browser environment; Playwright replaces, not merges, the env. */
+    private Map<String, String> browserEnv() {
+        Map<String, String> env = new java.util.LinkedHashMap<String, String>(System.getenv());
+        env.putAll(config.browserEnvironment);
+        return env;
     }
 
     private BrowserType browserType() {
@@ -225,6 +235,9 @@ final class Worker {
         }
         if (config.channel != null) {
             launch.setChannel(config.channel);
+        }
+        if (!config.browserEnvironment.isEmpty()) {
+            launch.setEnv(browserEnv());
         }
         if (config.executablePath != null) {
             launch.setExecutablePath(config.executablePath);

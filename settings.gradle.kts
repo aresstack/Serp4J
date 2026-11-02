@@ -48,6 +48,7 @@ val plannedModules = listOf(
     "serp4j-browser-playwright-driver-node",
     "serp4j-browser-playwright-driver-graal",
     "serp4j-browser-camoufox",
+    "serp4j-browser-search",
     // Google (im Repository, in 0.x nicht publiziert – E-3/E-4)
     "serp4j-engine-google-common",
     "serp4j-engine-google-http",

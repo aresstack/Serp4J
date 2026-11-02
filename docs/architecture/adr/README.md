@@ -25,3 +25,4 @@ den ADRs eingearbeitet. `Vorgeschlagen` steht nur noch bei Entscheidungen, die A
 | [017](ADR-017-lifecycle-und-ownership.md) | Lifecycle und Ownership gemeinsam genutzter Infrastruktur | Angenommen |
 | [018](ADR-018-google-zugriffswege.md) | Zwei Zugriffswege auf Google: HTTP und Browser | Angenommen |
 | [019](ADR-019-response-mapping.md) | Response-Mapping in zwei Ebenen: deklarative Definitionen plus Custom Mapper, Modul `serp4j-mapping` | Angenommen |
+| [020](ADR-020-browser-auswahl-und-uebergabe.md) | Einheitliche Browserbeschreibung (`BrowserSpec`), Erkennung installierter Browser, Factory-SPI, Camoufox | Vorgeschlagen |

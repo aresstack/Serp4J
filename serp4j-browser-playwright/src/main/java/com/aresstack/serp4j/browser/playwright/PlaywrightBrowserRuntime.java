@@ -283,6 +283,7 @@ public final class PlaywrightBrowserRuntime implements BrowserRuntime {
         private Duration startTimeout = Duration.ofSeconds(60);
         private Duration closeTimeout = Duration.ofSeconds(10);
         private final Map<String, String> driverEnvironment = new LinkedHashMap<String, String>();
+        private final Map<String, String> browserEnvironment = new LinkedHashMap<String, String>();
         private boolean shutdownHook = true;
         private ClassLoader classLoader = PlaywrightBrowserRuntime.class.getClassLoader();
 
@@ -434,6 +435,20 @@ public final class PlaywrightBrowserRuntime implements BrowserRuntime {
         }
 
         /**
+         * @param name  environment variable of the browser process (not the driver), for example Camoufox
+         *              configuration; merged over the JVM environment
+         * @param value value
+         * @return this builder
+         */
+        public Builder browserEnvironment(String name, String value) {
+            if (name == null || value == null) {
+                throw new NullPointerException("name and value must not be null");
+            }
+            browserEnvironment.put(name, value);
+            return this;
+        }
+
+        /**
          * @param classLoader class loader for driver module discovery, default the loader of this class
          * @return this builder
          */
@@ -460,14 +475,14 @@ public final class PlaywrightBrowserRuntime implements BrowserRuntime {
          */
         public PlaywrightBrowserRuntime build() {
             if (wsEndpoint != null && (executablePath != null || channel != null || !launchArgs.isEmpty()
-                    || profileRoot != null)) {
+                    || profileRoot != null || !browserEnvironment.isEmpty())) {
                 throw new IllegalStateException("executablePath, channel, launch arguments and profile directory do "
                         + "not apply to a remote Playwright server");
             }
             return new PlaywrightBrowserRuntime(new PlaywrightConfig(browserType, channel, executablePath, headless,
                     new ArrayList<String>(launchArgs), wsEndpoint, workers, maxConcurrentSessions, startTimeout,
                     closeTimeout, new LinkedHashMap<String, String>(driverEnvironment), shutdownHook, classLoader,
-                    profileRoot));
+                    profileRoot, new LinkedHashMap<String, String>(browserEnvironment)));
         }
     }
 }

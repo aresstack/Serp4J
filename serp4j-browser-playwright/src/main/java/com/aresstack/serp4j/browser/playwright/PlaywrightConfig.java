@@ -20,6 +20,8 @@ final class PlaywrightConfig {
     final Duration startTimeout;
     final Duration closeTimeout;
     final Map<String, String> driverEnvironment;
+    /** Extra environment of the browser process, merged over the JVM environment (ADR-020). */
+    final Map<String, String> browserEnvironment;
     final boolean shutdownHook;
     final ClassLoader classLoader;
     final Path profileRoot;
@@ -27,7 +29,8 @@ final class PlaywrightConfig {
     PlaywrightConfig(PlaywrightBrowserType browserType, String channel, Path executablePath, boolean headless,
                      List<String> launchArgs, String wsEndpoint, int workers, int maxConcurrentSessions,
                      Duration startTimeout, Duration closeTimeout, Map<String, String> driverEnvironment,
-                     boolean shutdownHook, ClassLoader classLoader, Path profileRoot) {
+                     boolean shutdownHook, ClassLoader classLoader, Path profileRoot,
+                     Map<String, String> browserEnvironment) {
         this.browserType = browserType;
         this.channel = channel;
         this.executablePath = executablePath;
@@ -42,6 +45,7 @@ final class PlaywrightConfig {
         this.shutdownHook = shutdownHook;
         this.classLoader = classLoader;
         this.profileRoot = profileRoot;
+        this.browserEnvironment = Collections.unmodifiableMap(browserEnvironment);
     }
 
     boolean supportsPersistentProfiles() {
