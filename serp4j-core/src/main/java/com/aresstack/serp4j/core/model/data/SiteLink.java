@@ -43,6 +43,11 @@ public final class SiteLink {
         return Optional.ofNullable(description);
     }
 
+    /** A copy pointing to {@code url}, with title and description kept. */
+    public SiteLink withUrl(String url) {
+        return of(url, title, description);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

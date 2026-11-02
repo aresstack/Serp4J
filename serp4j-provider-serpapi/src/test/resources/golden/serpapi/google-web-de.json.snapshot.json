@@ -230,6 +230,16 @@
       "displayUrl": "4 Antworten",
       "domain": "www.google.com",
       "siteName": "Stack Overflow",
+      "siteLinks": [
+        {
+          "url": "https://www.google.com/goto?url=CAESngEB6zswFSOxjH1YSuB2LB5Y78-pcOHv_1j-GVsK1AXfTA2zXpF3Psi7zWn2GHRUnLjVRUXB25wLYbx4QlaOArnESX_88S21TXvcA-hAtJXU9r2U_l7pkVDjySCbF4S0z8UHezujoc1p9FzZKPJhgFYWr7EkN3GIw-cz74X6PrUeeILn9WkKeewNRDva8hfepsyU2mOMp1PQjUtyUGCI1w",
+          "title": "How do I include the sat4j library in eclipse java IDE?"
+        },
+        {
+          "url": "https://www.google.com/goto?url=CAEShQEB6zswFUgvRNHXE8fxINa8t3LhUazbICY8VFlZVTzDX1AJH_PEPBRo-mVewXHfwOJXHtRXOhgSPeVW-0Bzyp6kqLWE7EwRRkri9JWPGiHzz9sQTh7UT1XdEhmEuXx9zfpRQ0RIsD4HBMItwjhB-jz5MEm6XLOoiQJJJt5-P4TJ92uU1URm",
+          "title": "Extending Eclipse Java Search - Stack Overflow"
+        }
+      ],
       "position": {
         "rankInGroup": 6,
         "area": "main"
@@ -242,20 +252,6 @@
         "unmapped": {
           "serpapi": {
             "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=ANONYMIZED&url=CAESkQEB6zswFdAmLk2BLbTOSj0eHYhw28ujeT6ryckXgV5fEB1cEFi5ipezcdXdSsDmjRojsjV_7pNfdqmFBtcQMek3ILBej1i57Q1wMMSo0PHSmX2iX8b0riQ6Cdy6yRb_NqdR0M8DS5KgmQ9IqjM4AKkm0NVOtGF4fVF7t46giIA76IbNHHJoXQD5OcbHeeaZ6A4W&ved=ANONYMIZED&uoh=1",
-            "sitelinks": {
-              "list": [
-                {
-                  "title": "How do I include the sat4j library in eclipse java IDE?",
-                  "link": "https://www.google.com/goto?url=CAESngEB6zswFSOxjH1YSuB2LB5Y78-pcOHv_1j-GVsK1AXfTA2zXpF3Psi7zWn2GHRUnLjVRUXB25wLYbx4QlaOArnESX_88S21TXvcA-hAtJXU9r2U_l7pkVDjySCbF4S0z8UHezujoc1p9FzZKPJhgFYWr7EkN3GIw-cz74X6PrUeeILn9WkKeewNRDva8hfepsyU2mOMp1PQjUtyUGCI1w",
-                  "date": "12. Mai 2022"
-                },
-                {
-                  "title": "Extending Eclipse Java Search - Stack Overflow",
-                  "link": "https://www.google.com/goto?url=CAEShQEB6zswFUgvRNHXE8fxINa8t3LhUazbICY8VFlZVTzDX1AJH_PEPBRo-mVewXHfwOJXHtRXOhgSPeVW-0Bzyp6kqLWE7EwRRkri9JWPGiHzz9sQTh7UT1XdEhmEuXx9zfpRQ0RIsD4HBMItwjhB-jz5MEm6XLOoiQJJJt5-P4TJ92uU1URm",
-                  "date": "13. Dez. 2015"
-                }
-              ]
-            },
             "about_this_result": {
               "source": {
                 "description": "I need to search for instances of a character sequence in a Java string using Eclipse. Is there an easy way or regex to do this? Example: Search ...",

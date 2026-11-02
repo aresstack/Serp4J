@@ -4,6 +4,7 @@ import com.aresstack.serp4j.core.model.SearchLocale;
 import com.aresstack.serp4j.core.model.SearchRequest;
 import com.aresstack.serp4j.core.model.SearchResponse;
 import com.aresstack.serp4j.core.model.data.SearchResultItem;
+import com.aresstack.serp4j.core.model.ext.StructuredValue;
 import com.aresstack.serp4j.core.model.id.SearchEngineId;
 import com.aresstack.serp4j.core.model.metadata.SearchWarning;
 import com.aresstack.serp4j.core.port.CancellationSource;
@@ -150,7 +151,8 @@ class SerpApiGotoUrlResolutionTest {
                 assertThat(a.get(i).getExtensions().get(ResultUrlEnricher.URL_RESOLUTION))
                         .hasValue(ResultUrlEnricher.RESOLVED);
                 SearchResultItem restored = a.get(i).toBuilder().url(b.get(i).getUrl())
-                        .extensions(b.get(i).getExtensions()).build();
+                        .extensions(b.get(i).getExtensions()).clearSiteLinks().siteLinks(b.get(i).getSiteLinks())
+                        .build();
                 if (b.get(i).getDomain().isPresent()) {
                     restored = restored.toBuilder().domain(b.get(i).getDomain().get()).build();
                 }
@@ -160,7 +162,7 @@ class SerpApiGotoUrlResolutionTest {
             }
         }
         assertThat(resolved).as("7 of 10 organic Google results of the recorded answer are /goto").isEqualTo(7);
-        assertThat(transport.gotoRequests).hasSize(resolved);
+        assertThat(transport.gotoRequests).as("7 result URLs + 2 /goto site links").hasSize(resolved + 2);
         assertThat(after.getData().getFeatures()).isEqualTo(before.getData().getFeatures());
         assertThat(after.getMetadata().get().getWarnings()).isEqualTo(before.getMetadata().get().getWarnings());
         for (HttpRequest r : transport.gotoRequests) {
@@ -183,7 +185,7 @@ class SerpApiGotoUrlResolutionTest {
             transport.releaseAll();
         }
         assertThat(transport.maxConcurrent.get()).isEqualTo(ResultUrlEnricher.MAX_CONCURRENT);
-        assertThat(transport.gotoRequests).hasSize(7);
+        assertThat(transport.gotoRequests).as("limit shared by result URLs and site links").hasSize(9);
         assertThat(f.get().getMetadata().get().getWarnings()).extracting(SearchWarning::getCode)
                 .doesNotContain(ResultUrlEnricher.WARNING_CODE);
     }
@@ -206,10 +208,52 @@ class SerpApiGotoUrlResolutionTest {
             }
         }
         assertThat(failed).isEqualTo(7);
+        SearchResultItem owner = siteLinkOwner(response);
+        assertThat(owner.getSiteLinks()).allMatch(l -> l.getUrl().startsWith(GOTO_PREFIX));
+        assertThat(owner.getExtensions().get(ResultUrlEnricher.NESTED_URL_RESOLUTIONS).get().getElements())
+                .hasSize(2).allMatch(e -> e.get("url_resolution").flatMap(StructuredValue::asText)
+                        .equals(java.util.Optional.of("not_a_redirect")) && !e.get("url").isPresent());
         List<SearchWarning> warnings = response.getMetadata().get().getWarnings();
         assertThat(warnings).filteredOn(w -> w.getCode().equals(ResultUrlEnricher.WARNING_CODE)).hasSize(1)
-                .first().satisfies(w -> assertThat(w.getMessage()).contains("7 of 7").contains("not_a_redirect=7")
+                .first().satisfies(w -> assertThat(w.getMessage()).contains("9 of 9").contains("not_a_redirect=9")
                         .doesNotContain("goto?url="));
+    }
+
+    private static SearchResultItem siteLinkOwner(SearchResponse response) {
+        List<SearchResultItem> owners = new java.util.ArrayList<SearchResultItem>();
+        for (SearchResultItem item : response.getData().getResults()) {
+            if (!item.getSiteLinks().isEmpty()) {
+                owners.add(item);
+            }
+        }
+        assertThat(owners).as("the recorded answer has exactly one result with site links").hasSize(1);
+        return owners.get(0);
+    }
+
+    @Test
+    void recordedGotoSiteLinksAreResolvedAndTracedOnTheirResult() throws Exception {
+        SearchResponse before = unresolved(GOOGLE_FIXTURE, google());
+        apiAnswers(GOOGLE_FIXTURE);
+
+        SearchResponse after = provider.search(google(), SearchContext.defaults()).get(5, TimeUnit.SECONDS);
+
+        SearchResultItem plain = siteLinkOwner(before);
+        SearchResultItem owner = siteLinkOwner(after);
+        assertThat(plain.getSiteLinks()).hasSize(2).allMatch(l -> l.getUrl().startsWith(GOTO_PREFIX));
+        assertThat(plain.getExtensions().contains(ResultUrlEnricher.NESTED_URL_RESOLUTIONS)).isFalse();
+        StructuredValue trace = owner.getExtensions().get(ResultUrlEnricher.NESTED_URL_RESOLUTIONS).get();
+        assertThat(trace.getElements()).hasSize(2);
+        for (int i = 0; i < 2; i++) {
+            String original = plain.getSiteLinks().get(i).getUrl();
+            assertThat(owner.getSiteLinks().get(i).getUrl()).isEqualTo(target(original));
+            assertThat(owner.getSiteLinks().get(i).getTitle()).isEqualTo(plain.getSiteLinks().get(i).getTitle());
+            StructuredValue entry = trace.get(i).get();
+            assertThat(entry.get("field").flatMap(StructuredValue::asText)).hasValue("siteLinks[" + i + "]");
+            assertThat(entry.get("original_url").flatMap(StructuredValue::asText)).hasValue(original);
+            assertThat(entry.get("url_resolution").flatMap(StructuredValue::asText))
+                    .hasValue(ResultUrlEnricher.RESOLVED);
+            assertThat(entry.get("url").flatMap(StructuredValue::asText)).hasValue(target(original));
+        }
     }
 
     @Test

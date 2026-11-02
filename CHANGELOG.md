@@ -9,6 +9,20 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
 
 ### Added
 
+- Google-`/goto`-Auflösung in verschachtelten URLs: `ResultUrlEnricher` löst neben der Treffer-URL auch Sitelinks
+  (`SearchResultItem.siteLinks`), Quellen von Answer Box, Featured Snippet, Generated Answer (AI Overview) und
+  People also ask sowie Website, Beschreibungsquelle, Profile und Fakten-Links des Knowledge Panels auf – im selben
+  Lauf, Grenzen (4 parallel, 3 s, Deadline, Cancellation) für alle URLs einer Suche gemeinsam, jede URL einmal.
+  Nachvollziehbarkeit über die neue Extension `serp4j:nested_url_resolutions` am besitzenden Treffer bzw. Feature:
+  Array `{field, original_url, url_resolution, url?}`. Unaufgelöste verschachtelte URLs bleiben unverändert und zählen
+  in die eine Warnung `url_resolution_failed`. `resolveGoogleGotoUrls(false)` schaltet alles ab. Generische Features
+  (`GenericSerpFeature`) und Bilder/Thumbnails/Related-Query-URLs werden nicht angefasst.
+- Mapping: neues Item-Ziel `siteLinks` (Objekte mit `link`/`url`, `title`, `description`/`snippet`; sammelt über alle
+  angegebenen Quellen). DataForSEO mappt `links[*]`, SerpApi `sitelinks.inline/expanded/list[*]`. Die echten Fixtures
+  enthalten verschachtelte `/goto`-URLs nur in Sitelinks (SerpApi `google-web-de.json`: 2, DataForSEO
+  `google-organic-live-advanced-de.json`: 1); Golden-Files entsprechend aktualisiert.
+- Core: `SiteLink.withUrl`, `SourceReference.withUrl`, `clear…()` an den Buildern von `SearchResultItem`,
+  `GeneratedAnswerFeature`, `QuestionAnswerFeature` und `KnowledgePanelFeature`.
 - SerpApi: Google-`/goto`-URLs werden nach dem JSON-Mapping wie bei DataForSEO aufgelöst – mit demselben
   `GoogleGotoUrlResolver` und demselben providerneutralen `ResultUrlEnricher` (keine zweite Implementierung).
   `SerpApiResponseMapper` bleibt netzwerkfrei. Option `SerpApiSearchOptions.resolveGoogleGotoUrls` (Standard `true`)

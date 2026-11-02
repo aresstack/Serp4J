@@ -160,6 +160,11 @@ public final class KnowledgePanelFeature extends AbstractSerpFeature {
             return this;
         }
 
+        public Builder clearFacts() {
+            facts.clear();
+            return this;
+        }
+
         public Builder facts(Collection<Fact> facts) {
             for (Fact fact : Preconditions.requireNonNull(facts, "facts")) {
                 fact(fact);
@@ -186,6 +191,11 @@ public final class KnowledgePanelFeature extends AbstractSerpFeature {
 
         public Builder profile(SiteLink profile) {
             profiles.add(Preconditions.requireNonNull(profile, "profile"));
+            return this;
+        }
+
+        public Builder clearProfiles() {
+            profiles.clear();
             return this;
         }
 

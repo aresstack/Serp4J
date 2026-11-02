@@ -1,6 +1,7 @@
 package com.aresstack.serp4j.mapping;
 
 import com.aresstack.serp4j.core.model.data.MediaInfo;
+import com.aresstack.serp4j.core.model.data.SiteLink;
 import com.aresstack.serp4j.core.model.data.PublishedDate;
 import com.aresstack.serp4j.core.model.data.ResultType;
 import com.aresstack.serp4j.core.model.data.SearchData;
@@ -438,6 +439,14 @@ public final class MappingEngine {
                         : PublishedDate.ofText((String) value));
             } else if ("thumbnail".equals(target)) {
                 b.thumbnail(MediaInfo.of((String) value));
+            } else if ("siteLinks".equals(target)) {
+                for (Object o : (List<?>) value) {
+                    StructuredValue link = (StructuredValue) o;
+                    String url = text(link, "link", "url");
+                    if (url != null) {
+                        b.siteLink(SiteLink.of(url, text(link, "title"), text(link, "description", "snippet")));
+                    }
+                }
             }
         }
 
@@ -599,7 +608,9 @@ public final class MappingEngine {
                     element.mark(hits.get(0).getLocation());
                     raw.add(hits.get(0).getValue());
                 }
-                break;
+                if (kind != Targets.Kind.SITE_LINKS) {
+                    break;
+                }
             }
             if (raw.isEmpty() && f.getDefault().isPresent()) {
                 if (kind.isList()) {
@@ -635,6 +646,17 @@ public final class MappingEngine {
                 return null;
             }
             return kind.isList() ? Collections.unmodifiableList(converted) : converted.get(0);
+        }
+
+        /** First non-blank text member of a site-link object, {@code null} if none. */
+        private String text(StructuredValue object, String... names) {
+            for (String name : names) {
+                Optional<StructuredValue> v = object.get(name);
+                if (v.isPresent() && v.get().isString() && !v.get().asText().get().trim().isEmpty()) {
+                    return v.get().asText().get();
+                }
+            }
+            return null;
         }
 
         private void addFlattened(List<StructuredValue> out, StructuredValue value) {

@@ -19,7 +19,7 @@ public final class Targets {
     /** Value kind of a target; decides the default converter and the coercion of converter results. */
     public enum Kind {
         TEXT("string"), INT("int"), LONG("long"), DECIMAL("decimal"), BOOLEAN("boolean"), DATE("string"),
-        AREA("string"), TEXT_LIST("string"), EXTENSION(null);
+        AREA("string"), TEXT_LIST("string"), SITE_LINKS("raw"), EXTENSION(null);
 
         private final String defaultConverter;
 
@@ -33,7 +33,7 @@ public final class Targets {
         }
 
         public boolean isList() {
-            return this == TEXT_LIST;
+            return this == TEXT_LIST || this == SITE_LINKS;
         }
     }
 
@@ -45,7 +45,7 @@ public final class Targets {
     private static final Map<String, Kind> ITEM = ordered(
             "url", Kind.TEXT, "title", Kind.TEXT, "snippet", Kind.TEXT, "additionalSnippets", Kind.TEXT_LIST,
             "displayUrl", Kind.TEXT, "domain", Kind.TEXT, "siteName", Kind.TEXT, "language", Kind.TEXT,
-            "publishedDate", Kind.DATE, "thumbnail", Kind.TEXT);
+            "publishedDate", Kind.DATE, "thumbnail", Kind.TEXT, "siteLinks", Kind.SITE_LINKS);
 
     private static final Map<String, Kind> METADATA = ordered(
             "originalQuery", Kind.TEXT, "effectiveQuery", Kind.TEXT, "totalResultsEstimate", Kind.LONG,

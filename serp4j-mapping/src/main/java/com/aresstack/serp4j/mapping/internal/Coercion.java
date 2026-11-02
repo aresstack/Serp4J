@@ -44,6 +44,11 @@ public final class Coercion {
                 return value instanceof Boolean ? value : standard("boolean", value);
             case DATE:
                 return value instanceof Instant ? value : text(value);
+            case SITE_LINKS:
+                if (value instanceof StructuredValue && ((StructuredValue) value).isObject()) {
+                    return value;
+                }
+                throw new ValueConversionException("expected a site link object with 'link' or 'url'");
             case AREA:
                 if (value instanceof SerpArea) {
                     return value;

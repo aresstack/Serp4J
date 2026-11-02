@@ -84,6 +84,11 @@ public final class QuestionAnswerFeature extends AbstractSerpFeature {
             return this;
         }
 
+        public Builder clearQuestions() {
+            questions.clear();
+            return this;
+        }
+
         public Builder questions(Collection<QuestionAnswer> questions) {
             for (QuestionAnswer question : Preconditions.requireNonNull(questions, "questions")) {
                 question(question);

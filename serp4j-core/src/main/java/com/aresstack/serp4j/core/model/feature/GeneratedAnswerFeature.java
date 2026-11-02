@@ -162,6 +162,12 @@ public final class GeneratedAnswerFeature extends AbstractSerpFeature {
             return this;
         }
 
+        /** Removes all references; segment reference indexes are not touched. */
+        public Builder clearReferences() {
+            references.clear();
+            return this;
+        }
+
         public Builder references(Collection<SourceReference> references) {
             for (SourceReference reference : Preconditions.requireNonNull(references, "references")) {
                 reference(reference);
