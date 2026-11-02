@@ -62,7 +62,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *   {@linkplain HttpHeaders#isSensitiveHeader(String) sensitive header} – the well-known credential headers and
  *   every header a {@link com.aresstack.serp4j.http.RequestAuthentication} marked – is dropped, and so is every
  *   credential query parameter in the target URL (well-known names and those registered for the request), so a
- *   credential never reaches a third host.</li>
+ *   credential never reaches a third host. A request with {@link HttpRequest#isFollowRedirects()} {@code false}
+ *   is never redirected: its first response, {@code 3xx} and {@code Location} included, is delivered as it is.</li>
  *   <li>At most {@link AhcHttpTransportOptions#getMaxConnections()} requests are in flight, at most
  *   {@link AhcHttpTransportOptions#getMaxConnectionsPerHost()} per origin; further requests wait in order instead
  *   of failing (async-http-client alone would reject them). Waiting counts against the request timeout,
@@ -343,7 +344,7 @@ public final class AhcHttpTransport implements HttpTransport {
     /** The request to send next, or {@code null} when {@code response} is the final response. */
     private HttpRequest redirectTarget(HttpRequest request, Response response, int redirects) {
         int status = response.getStatusCode();
-        if (!options.isFollowRedirects() || !isRedirect(status)) {
+        if (!options.isFollowRedirects() || !request.isFollowRedirects() || !isRedirect(status)) {
             return null;
         }
         String location = response.getHeader("Location");

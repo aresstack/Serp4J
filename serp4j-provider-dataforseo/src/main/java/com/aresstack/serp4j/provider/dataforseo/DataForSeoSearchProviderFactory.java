@@ -14,7 +14,8 @@ import java.util.OptionalInt;
  * {@link SearchProviderFactory} for provider type {@code dataforseo} (registered via {@link java.util.ServiceLoader}).
  *
  * <p>Properties: {@code baseUrl}, {@code function} ({@code regular}|{@code advanced}), {@code defaultLocationCode},
- * {@code defaultLanguageCode}. Credentials: {@code login} and {@code password} via
+ * {@code defaultLanguageCode}, {@code resolveGoogleGotoUrls} ({@code true} by default; resolves Google
+ * {@code /goto} result URLs with one extra GET each). Credentials: {@code login} and {@code password} via
  * {@link ProviderConfiguration#credentialKey(String)}. The environment must provide an {@link HttpTransport}.</p>
  */
 public final class DataForSeoSearchProviderFactory implements SearchProviderFactory {
@@ -47,6 +48,10 @@ public final class DataForSeoSearchProviderFactory implements SearchProviderFact
         Optional<String> language = configuration.get("defaultLanguageCode");
         if (language.isPresent()) {
             b.defaultLanguageCode(language.get());
+        }
+        Optional<Boolean> resolve = configuration.getBoolean("resolveGoogleGotoUrls");
+        if (resolve.isPresent()) {
+            b.resolveGoogleGotoUrls(resolve.get());
         }
         return b.build();
     }

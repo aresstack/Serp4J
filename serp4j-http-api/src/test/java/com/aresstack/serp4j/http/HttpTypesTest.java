@@ -191,4 +191,15 @@ class HttpTypesTest {
         assertThat(new HttpTransportException(HttpTransportException.Kind.TIMEOUT, "timed out").isRetryable()).isTrue();
         assertThat(new HttpTransportException(HttpTransportException.Kind.TLS, "handshake").isRetryable()).isFalse();
     }
+
+    @Test
+    void followRedirectsIsOnByDefaultAndSwitchablePerRequest() {
+        HttpRequest normal = HttpRequest.get("https://example.org").build();
+        HttpRequest noFollow = HttpRequest.get("https://example.org").followRedirects(false).build();
+        assertThat(normal.isFollowRedirects()).isTrue();
+        assertThat(noFollow.isFollowRedirects()).isFalse();
+        assertThat(noFollow.toBuilder().build().isFollowRedirects()).isFalse();
+        assertThat(noFollow).isNotEqualTo(normal);
+        assertThat(noFollow.toString()).contains("followRedirects=false");
+    }
 }

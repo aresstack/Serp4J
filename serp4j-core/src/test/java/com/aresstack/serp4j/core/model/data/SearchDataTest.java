@@ -126,4 +126,14 @@ class SearchDataTest {
                 .getRankAbsolute()).hasValue(3);
         assertThatIllegalArgumentException().isThrownBy(() -> SerpPosition.builder().rankInGroup(0));
     }
+
+    @Test
+    void withUrlReplacesOnlyTheUrl() {
+        SearchResultItem item = SearchResultItem.builder(ElementId.of("u"), ResultType.ORGANIC, "https://a.example/x")
+                .title("t").domain("a.example").displayUrl("a.example › x").siteName("A").build();
+        SearchResultItem moved = item.withUrl("https://b.example/y");
+        assertThat(moved.getUrl()).isEqualTo("https://b.example/y");
+        assertThat(moved.toBuilder().url(item.getUrl()).build()).isEqualTo(item);
+        assertThat(item.getUrl()).isEqualTo("https://a.example/x");
+    }
 }

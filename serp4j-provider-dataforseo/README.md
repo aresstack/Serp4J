@@ -33,6 +33,39 @@ http.close();
 `credential.password` umbenennbar). Sie werden je Request aufgelöst und nur im Header
 `Authorization: Basic …` gesendet, nie in URL, Body, Fehlermeldung oder `toString()`.
 
+## Google-Weiterleitungs-URLs (`/goto`)
+
+Google liefert DataForSEO organische Treffer zunehmend nur als `https://www.google.com/goto?url=<token>`. Bei
+Google-Suchen löst der Provider diese URLs nach dem (netzwerkfreien) Mapping auf:
+
+1. DataForSEO-Antwort wie bisher mit `DataForSeoResponseMapper` mappen.
+2. Ergebnis-URLs strukturiert per `URI` prüfen: nur `https`, Host genau `google.com`/`www.google.com`, Pfad `/goto`,
+   nicht leerer Parameter `url`.
+3. Jede verschiedene URL einmal per `GET` ohne Redirect-Folgen abrufen (`HttpRequest.followRedirects(false)`),
+   höchstens vier gleichzeitig, je Request ≤ 3 s (`urlResolveTimeout`) und nie über die Deadline des
+   `SearchContext` hinaus.
+4. Nur bei `301/302/303/307/308` mit absolutem `http(s)`-`Location` die Ziel-URL übernehmen: `url` wird ersetzt,
+   `domain` aus dem Host abgeleitet; Titel, Snippet, Position, Provenance, `displayUrl`, `siteName` bleiben. Die
+   Original-URL steht in der Extension `dataforseo:original_url`.
+5. Sonst bleibt das Ergebnis unverändert; alle Fehlschläge einer Suche ergeben eine Warnung
+   `url_resolution_failed` mit Zählung je Grund. Es wird nie über `breadcrumb`, `domain` oder `website_name`
+   geraten.
+
+Die Zielseite wird nicht abgerufen; der Request an Google trägt weder DataForSEO-Zugangsdaten noch Cookies oder
+Referrer. Cancellation und `close()` brechen laufende Auflösungen ab, der geliehene `HttpTransport` bleibt offen.
+
+**Latenz:** jede Google-Suche mit `/goto`-Treffern kostet bis zu N zusätzliche Requests an Google (N = Zahl
+verschiedener `/goto`-URLs, bei 10 Treffern typischerweise 7–8), also im ungünstigsten Fall bis zu
+⌈N/4⌉ × 3 s zusätzliche Laufzeit; im Normalfall (≈ 80 ms je Redirect) unter einer halben Sekunde.
+Abschalten: `builder.resolveGoogleGotoUrls(false)` bzw. Factory-Property `resolveGoogleGotoUrls=false` –
+dann keine zusätzlichen Requests.
+
+**Folgeaufgaben:** `/goto`-URLs innerhalb von SERP-Features werden noch nicht aufgelöst; der providerneutrale
+`GoogleGotoUrlResolver` soll später auch im SerpApi-Provider angebunden werden.
+
+Live-Prüfung ohne DataForSEO-Guthaben: `SERP4J_GOOGLE_GOTO_URL=<aktuelle /goto-URL>
+[SERP4J_GOOGLE_GOTO_TARGET=<erwartetes Ziel>] ./gradlew :serp4j-provider-dataforseo:liveTest -Pserp4j.live=true`.
+
 ## Statuscodes
 
 DataForSEO antwortet meist mit HTTP 200 und meldet Fehler im Body (`status_code` der Hülle und des Tasks).

@@ -8,6 +8,7 @@ import com.aresstack.serp4j.core.model.id.SearchEngineId;
 import com.aresstack.serp4j.core.port.SearchContext;
 import com.aresstack.serp4j.core.port.credential.EnvironmentCredentialProvider;
 import com.aresstack.serp4j.http.ahc.AhcHttpTransport;
+import com.aresstack.serp4j.http.resolve.GoogleGotoUrlResolver;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -58,6 +59,42 @@ class DataForSeoLiveTest {
                 record(response.getMetadata().get().getRawPayload().get().getBodyAsText());
             }
             assertThat(response.getData().getResults()).isNotEmpty();
+            // Google /goto redirects are resolved by default: every result either has a direct URL or, when the
+            // resolution failed, keeps its /goto URL and the search carries the url_resolution_failed warning.
+            boolean unresolved = false;
+            for (com.aresstack.serp4j.core.model.data.SearchResultItem item : response.getData().getResults()) {
+                if (GoogleGotoUrlResolver.isGoogleGotoUrl(item.getUrl())) {
+                    unresolved = true;
+                } else if (item.getExtensions().contains(DataForSeoResultUrlEnricher.ORIGINAL_URL)) {
+                    assertThat(item.getUrl()).startsWith("http");
+                    assertThat(item.getUrl()).doesNotContain("google.com/goto");
+                }
+            }
+            if (unresolved) {
+                assertThat(response.getMetadata().get().getWarnings()).extracting(w -> w.getCode())
+                        .contains(DataForSeoResultUrlEnricher.WARNING_CODE);
+            }
+        }
+    }
+
+    /**
+     * Resolves one real Google {@code /goto} URL without DataForSEO credentials (no credit used). Runs only with
+     * {@code -Pserp4j.live=true} and {@code SERP4J_GOOGLE_GOTO_URL} set to a current {@code /goto} URL, e.g. the
+     * confirmed Elastic redirect; {@code SERP4J_GOOGLE_GOTO_TARGET} optionally names the expected target.
+     */
+    @Test
+    void googleGotoUrlResolvesToItsTarget() throws Exception {
+        assumeTrue(Boolean.getBoolean("serp4j.live"), "live tests are off");
+        String gotoUrl = System.getenv("SERP4J_GOOGLE_GOTO_URL");
+        assumeTrue(gotoUrl != null && !gotoUrl.trim().isEmpty(), "SERP4J_GOOGLE_GOTO_URL is not set");
+        try (AhcHttpTransport transport = AhcHttpTransport.create()) {
+            String target = new GoogleGotoUrlResolver(transport).resolve(gotoUrl, java.time.Duration.ofSeconds(3))
+                    .get(10, TimeUnit.SECONDS);
+            assertThat(target).startsWith("http").doesNotContain("google.com/goto");
+            String expected = System.getenv("SERP4J_GOOGLE_GOTO_TARGET");
+            if (expected != null && !expected.trim().isEmpty()) {
+                assertThat(target).isEqualTo(expected.trim());
+            }
         }
     }
 

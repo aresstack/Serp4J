@@ -138,6 +138,11 @@ public final class SearchResultItem implements SearchElement {
         return extensions;
     }
 
+    /** A copy with another URL; every other property (domain included) stays as it is. */
+    public SearchResultItem withUrl(String url) {
+        return toBuilder().url(url).build();
+    }
+
     public Builder toBuilder() {
         Builder builder = new Builder(id, type, url);
         builder.title = title;
@@ -203,7 +208,7 @@ public final class SearchResultItem implements SearchElement {
     public static final class Builder {
         private final ElementId id;
         private final ResultType type;
-        private final String url;
+        private String url;
         private String title;
         private String snippet;
         private final List<String> additionalSnippets = new ArrayList<String>();
@@ -224,6 +229,15 @@ public final class SearchResultItem implements SearchElement {
             this.id = Preconditions.requireNonNull(id, "id");
             this.type = Preconditions.requireNonNull(type, "type");
             this.url = Preconditions.requireText(url, "url");
+        }
+
+        /**
+         * Replaces the URL, e.g. after a provider resolved a redirect URL to its target; all other properties of
+         * the builder stay as they are.
+         */
+        public Builder url(String url) {
+            this.url = Preconditions.requireText(url, "url");
+            return this;
         }
 
         public Builder title(String title) {
