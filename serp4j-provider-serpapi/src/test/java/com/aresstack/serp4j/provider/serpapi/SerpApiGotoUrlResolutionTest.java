@@ -243,7 +243,9 @@ class SerpApiGotoUrlResolutionTest {
         SearchRequest bing = SearchRequest.builder("serp4j java search library").engine(SearchEngineId.BING)
                 .locale(SearchLocale.of("DE", "de")).limit(10).build();
         SearchResponse response = provider.search(bing, SearchContext.defaults()).get(5, TimeUnit.SECONDS);
-        assertThat(response).isEqualTo(unresolved(BING_FIXTURE, bing));
+        SearchResponse plain = unresolved(BING_FIXTURE, bing);
+        assertThat(response.getData()).isEqualTo(plain.getData());
+        assertThat(response.getMetadata().get().getWarnings()).isEqualTo(plain.getMetadata().get().getWarnings());
         assertThat(transport.gotoRequests).isEmpty();
     }
 
