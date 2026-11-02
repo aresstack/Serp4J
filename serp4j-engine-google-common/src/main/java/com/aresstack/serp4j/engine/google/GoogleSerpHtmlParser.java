@@ -81,6 +81,10 @@ public final class GoogleSerpHtmlParser {
                 related.add(new GoogleSerpPage.Link(text, url, null));
             }
         }
+        if (organic.isEmpty() && recognized && !root.select("h3, div.MjjYud a[href]").isEmpty()) {
+            // Result markup is there but nothing matched: the layout changed, not an empty result.
+            recognized = false;
+        }
         boolean next = doc.getElementById("pnnext") != null;
         GoogleObstacle obstacle = organic.isEmpty() ? GoogleObstacleDetector.fromHtml(html) : GoogleObstacle.NONE;
         return new GoogleSerpPage(organic, related, recognized, next, unrecognized, obstacle);

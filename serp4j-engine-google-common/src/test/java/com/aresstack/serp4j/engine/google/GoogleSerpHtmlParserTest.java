@@ -105,6 +105,23 @@ class GoogleSerpHtmlParserTest {
     }
 
     @Test
+    void containerWithUnparseableResultMarkupIsNotRecognised() {
+        GoogleSerpPage page = parser.parse("<html><body><div id=\"rso\"><div class=\"MjjYud\">"
+                + "<div><h3>Titel</h3><span><a href=\"/goto?url=x\">Link</a></span></div></div></div></body></html>");
+
+        assertThat(page.getOrganicResults()).isEmpty();
+        assertThat(page.isStructureRecognized()).isFalse();
+    }
+
+    @Test
+    void emptyContainerIsARecognisedEmptyResult() {
+        GoogleSerpPage page = parser.parse("<html><body><div id=\"rso\"></div></body></html>");
+
+        assertThat(page.isStructureRecognized()).isTrue();
+        assertThat(page.getOrganicResults()).isEmpty();
+    }
+
+    @Test
     void classicUrlWrapperIsUnwrappedAndJavascriptLinksAreDropped() {
         assertThat(GoogleSerpHtmlParser.absolute("/url?q=https://example.org/a%3Fb%3D1&sa=U"))
                 .isEqualTo("https://example.org/a?b=1");

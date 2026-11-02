@@ -35,7 +35,10 @@ public final class GoogleSerpPage {
         return relatedQueries;
     }
 
-    /** Whether the result container ({@code #search} / {@code #rso}) was found at all. */
+    /**
+     * Whether the page is a result page the parser understands: the container ({@code #search} / {@code #rso}) exists
+     * and, if no result was extracted, it contains no result markup either ({@code h3}, linked result blocks).
+     */
     public boolean isStructureRecognized() {
         return structureRecognized;
     }

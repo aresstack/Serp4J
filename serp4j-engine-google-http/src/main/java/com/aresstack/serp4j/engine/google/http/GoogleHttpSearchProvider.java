@@ -226,17 +226,9 @@ public final class GoogleHttpSearchProvider implements SearchProvider {
                     "unexpected Google redirect (HTTP " + status + ") to " + hostOf(location))
                     .providerStatusCode(status).build();
         }
-        if (status == 429) {
-            throw SearchProviderException.builder(id, SearchErrorCategory.RATE_LIMITED, "Google answered HTTP 429")
-                    .providerStatusCode(status).build();
-        }
-        if (status == 403) {
-            throw SearchProviderException.builder(id, SearchErrorCategory.BLOCKED, "Google answered HTTP 403")
-                    .providerStatusCode(status).build();
-        }
-        if (status >= 500) {
-            throw SearchProviderException.builder(id, SearchErrorCategory.UNAVAILABLE,
-                    "Google answered HTTP " + status).providerStatusCode(status).build();
+        SearchProviderException byStatus = GoogleSearchFailures.forStatus(id, status);
+        if (byStatus != null) {
+            throw byStatus;
         }
         if (status != 200) {
             throw SearchProviderException.builder(id, SearchErrorCategory.RESPONSE_INVALID,

@@ -100,6 +100,43 @@ class GoogleBrowserSearchProviderTest {
     }
 
     @Test
+    void httpErrorPagesKeepTheirCategory() {
+        FakeBrowserRuntime unavailable = runtimeServing(FakePage.builder().status(503)
+                .html("<html><body>Service Unavailable</body></html>").build());
+        SearchProviderException e = failure(GoogleBrowserSearchProvider.builder(unavailable).build()
+                .search(request(), SearchContext.defaults()));
+        assertThat(e.getCategory()).isEqualTo(SearchErrorCategory.UNAVAILABLE);
+        assertThat(e.getProviderStatusCode()).hasValue(503);
+
+        FakeBrowserRuntime forbidden = runtimeServing(FakePage.builder().status(403)
+                .html("<html><body>Forbidden</body></html>").build());
+        assertThat(failure(GoogleBrowserSearchProvider.builder(forbidden).build()
+                .search(request(), SearchContext.defaults())).getCategory()).isEqualTo(SearchErrorCategory.BLOCKED);
+    }
+
+    @Test
+    void waitingForAFreeSessionRespectsTheSearchDeadline() {
+        FakeBrowserRuntime runtime = FakeBrowserRuntime.builder().maxConcurrentSessions(1).web(FakeWeb.builder()
+                .page(SEARCH, FakePage.builder().delay(Duration.ofSeconds(3)).html("<html></html>").build())
+                .build()).build();
+        GoogleBrowserSearchProvider provider = GoogleBrowserSearchProvider.builder(runtime).build();
+        CompletableFuture<SearchResponse> occupying = provider.search(request(), SearchContext.defaults());
+        long until = System.currentTimeMillis() + 5000;
+        while (runtime.getOpenSessionCount() == 0 && System.currentTimeMillis() < until) {
+            Thread.yield();
+        }
+
+        long started = System.nanoTime();
+        SearchProviderException e = failure(provider.search(request(), SearchContext.builder()
+                .timeout(java.time.Instant.now(), Duration.ofMillis(300)).build()));
+
+        assertThat(e.getCategory()).isEqualTo(SearchErrorCategory.TIMEOUT);
+        assertThat(Duration.ofNanos(System.nanoTime() - started)).isLessThan(Duration.ofSeconds(2));
+        provider.close();
+        occupying.cancel(true);
+    }
+
+    @Test
     void changedLayoutIsResponseInvalid() {
         FakeBrowserRuntime runtime = runtimeServing(FakePage.builder()
                 .html("<html><body><main>neu</main></body></html>").build());

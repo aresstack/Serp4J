@@ -212,6 +212,7 @@ public final class GoogleBrowserSearchProvider implements SearchProvider {
                         .urlPolicy(UrlPolicy.allowHosts("google.com", "*.google.com"))
                         .obstaclePolicy(ObstaclePolicy.failFast())
                         .defaultTimeout(timeout(context))
+                        .acquireTimeout(timeout(context))
                         .maxNavigations(1);
                 Locale locale = locale(request);
                 if (locale != null) {
@@ -222,6 +223,9 @@ public final class GoogleBrowserSearchProvider implements SearchProvider {
                 if (result.isDone()) {
                     closeSession();
                     return;
+                }
+                if (context.isExpired(clock.instant())) {
+                    throw failure(SearchErrorCategory.TIMEOUT, "deadline passed while waiting for a browser session");
                 }
                 NavigationResult navigation = opened.navigate(NavigationRequest.to(url)
                         .waitUntil(WaitUntil.DOM_CONTENT_LOADED).timeout(timeout(context)));
@@ -234,9 +238,12 @@ public final class GoogleBrowserSearchProvider implements SearchProvider {
                 if (obstacle != GoogleObstacle.NONE) {
                     throw GoogleSearchFailures.obstacle(id, obstacle, PATH);
                 }
-                if (navigation.getHttpStatus().isPresent() && navigation.getHttpStatus().getAsInt() == 429) {
-                    throw SearchProviderException.builder(id, SearchErrorCategory.RATE_LIMITED,
-                            "Google answered HTTP 429").providerStatusCode(429).build();
+                if (navigation.getHttpStatus().isPresent()) {
+                    SearchProviderException byStatus = GoogleSearchFailures.forStatus(id,
+                            navigation.getHttpStatus().getAsInt());
+                    if (byStatus != null) {
+                        throw byStatus;
+                    }
                 }
                 if (page.getOrganicResults().isEmpty() && !page.isStructureRecognized()) {
                     throw GoogleSearchFailures.unrecognized(id, PATH);
@@ -258,7 +265,12 @@ public final class GoogleBrowserSearchProvider implements SearchProvider {
             } catch (SearchProviderException e) {
                 result.completeExceptionally(e);
             } catch (BrowserException e) {
-                result.completeExceptionally(translate(e));
+                if (context.isExpired(clock.instant())) {
+                    result.completeExceptionally(SearchProviderException.builder(id, SearchErrorCategory.TIMEOUT,
+                            "deadline passed in the browser: " + e.getClass().getSimpleName()).cause(e).build());
+                } else {
+                    result.completeExceptionally(translate(e));
+                }
             } catch (RuntimeException e) {
                 result.completeExceptionally(SearchProviderException.builder(id, SearchErrorCategory.INTERNAL,
                         "Google browser search failed: " + e.getClass().getSimpleName()).cause(e).build());

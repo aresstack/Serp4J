@@ -44,6 +44,29 @@ public final class GoogleSearchFailures {
                 .build();
     }
 
+    /**
+     * Classifies a non-200 HTTP status of the result page: 429 {@code RATE_LIMITED}, 403 {@code BLOCKED}, 5xx
+     * {@code UNAVAILABLE}, other 4xx {@code RESPONSE_INVALID}.
+     *
+     * @return the failure, or {@code null} for statuses below 400
+     */
+    public static SearchProviderException forStatus(ProviderId provider, int status) {
+        SearchErrorCategory category;
+        if (status == 429) {
+            category = SearchErrorCategory.RATE_LIMITED;
+        } else if (status == 403) {
+            category = SearchErrorCategory.BLOCKED;
+        } else if (status >= 500) {
+            category = SearchErrorCategory.UNAVAILABLE;
+        } else if (status >= 400) {
+            category = SearchErrorCategory.RESPONSE_INVALID;
+        } else {
+            return null;
+        }
+        return SearchProviderException.builder(provider, category, "Google answered HTTP " + status)
+                .providerStatusCode(status).build();
+    }
+
     /** The page has neither results nor a known obstacle: the Google layout probably changed. */
     public static SearchProviderException unrecognized(ProviderId provider, String path) {
         return SearchProviderException.builder(provider, SearchErrorCategory.RESPONSE_INVALID,
