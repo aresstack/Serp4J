@@ -1,0 +1,44 @@
+{
+  "search_metadata": {
+    "id": "synthetic0000000000000002",
+    "status": "Success",
+    "json_endpoint": "https://serpapi.com/searches/synthetic/synthetic0000000000000002.json",
+    "created_at": "2026-11-02 04:00:00 UTC",
+    "processed_at": "2026-11-02 04:00:00 UTC",
+    "bing_url": "https://www.bing.com/search?q=serp4j+java+search&count=10",
+    "total_time_taken": 2.05
+  },
+  "search_parameters": {
+    "engine": "bing",
+    "q": "serp4j java search",
+    "count": "10"
+  },
+  "search_information": {
+    "total_results": 4560,
+    "query_displayed": "serp4j java search"
+  },
+  "organic_results": [
+    {
+      "position": 1,
+      "title": "Example Search Library for Java",
+      "link": "https://www.example.com/docs/search",
+      "displayed_link": "https://www.example.com/docs/search",
+      "snippet": "Synthetic Bing snippet."
+    },
+    {
+      "position": 2,
+      "title": "Second synthetic Bing result",
+      "link": "https://example.org/bing",
+      "displayed_link": "example.org/bing",
+      "snippet": "Another synthetic Bing snippet.",
+      "date": "Oct 2, 2026"
+    }
+  ],
+  "related_searches": [
+    { "query": "serp4j bing", "link": "https://www.bing.com/search?q=serp4j+bing" }
+  ],
+  "serpapi_pagination": {
+    "current": 1,
+    "next": "https://serpapi.com/search.json?engine=bing&q=serp4j+java+search&first=11"
+  }
+}

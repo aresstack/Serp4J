@@ -1,0 +1,574 @@
+{
+  "definition": "serpapi-google",
+  "version": 1,
+  "results": [
+    {
+      "id": "organic#1",
+      "type": "organic",
+      "url": "https://lucene.apache.org/__root/docs.lucene.apache.org/core/4_7_0/suggest/index.html?org/apache/lucene/search/spell/package-tree.html",
+      "title": "Hierarchy For Package org.apache.lucene.search.spell",
+      "snippet": "Hierarchy For Package org.apache.lucene.search.spell. Package Hierarchies: All Packages. Class Hierarchy. java.lang.",
+      "displayUrl": "https://lucene.apache.org › suggest",
+      "domain": "lucene.apache.org",
+      "siteName": "Lucene, Apache",
+      "position": {
+        "rankInGroup": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "values": {
+          "serpapi:favicon": "https://serpapi.com/images/i/iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAKlBMVEVHcEwBm48Bm48Bm48Bm48Bm48Bm48Bm48Bm48Bm48Bm48Bm48Bm48Bm4-72L8-AAAADXRSTlMAn9UdwXQt66wFXwxANZT1TAAAAKpJREFUOI3VkkkWwyAMQ5nNlPtft7ELDgpN99HKz-ihb4Mxb5B1oMw9z1UYBn-AxFC5mgYTwVDlVq6ihoTVkLTT1eDtonI2CrGhPHMnPqc_g1WlfZocGQVjSoKd0mLqJGvHzljGMkjd7p7rrj2K2d7Oy3fjQpZ1o6CoZLQzakjjQmDabvCDrMNTYojVLApDsFAnZPC4eFW6GFW48YGyqm-GtP4Om39M80Z9AH71C2Pr_rZEAAAAAElFTkSuQmCC.png"
+        },
+        "unmapped": {
+          "serpapi": {
+            "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=ANONYMIZED&url=CAESwgEB6zswFf7dCEQXeO1XIhGO4CLoN0gBSFBC7GSVxbznVe4yZCTEdn8Boa3LmS4bc1rmMLGblkG-V0jSpJWNCRNMIPtz-E1QJ2F1bJF9I2f-_EF4gC9WmeBtVk-SpFNNJK-6N6eKxRqwXdeh3DxyMMtSpBYG0Xgo8wo64PHDcW_JkKSCHdqiETybt-vkQctKkvZc95sLFrmWBR89ocjysB0FCUj6kknoGnlmZs8srl5MRSw0Oe4QpseOlFcEKrOm8unprQ&ved=ANONYMIZED&uoh=1",
+            "snippet_highlighted_words": [
+              "Class Hierarchy"
+            ],
+            "about_this_result": {
+              "source": {
+                "description": "Hierarchy For Package org.apache.lucene.search.spell. Package Hierarchies: All Packages. Class Hierarchy. java.lang.",
+                "source_info_link": "https://lucene.apache.org/__root/docs.lucene.apache.org/core/4_7_0/suggest/index.html?org/apache/lucene/search/spell/package-tree.html",
+                "icon": "https://serpapi.com/images/i/iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAKlBMVEVHcEwBm48Bm48Bm48Bm48Bm48Bm48Bm48Bm48Bm48Bm48Bm48Bm48Bm4-72L8-AAAADXRSTlMAn9UdwXQt66wFXwxANZT1TAAAAKpJREFUOI3VkkkWwyAMQ5nNlPtft7ELDgpN99HKz-ihb4Mxb5B1oMw9z1UYBn-AxFC5mgYTwVDlVq6ihoTVkLTT1eDtonI2CrGhPHMnPqc_g1WlfZocGQVjSoKd0mLqJGvHzljGMkjd7p7rrj2K2d7Oy3fjQpZ1o6CoZLQzakjjQmDabvCDrMNTYojVLApDsFAnZPC4eFW6GFW48YGyqm-GtP4Om39M80Z9AH71C2Pr_rZEAAAAAElFTkSuQmCC.png"
+              },
+              "languages": [
+                "de"
+              ],
+              "regions": [
+                "DE"
+              ]
+            },
+            "about_page_link": "https://www.google.com/search/about-this-result?origin=www.google.com&req=ANONYMIZED",
+            "about_page_serpapi_link": "https://serpapi.com/search.json?engine=google_about_this_result&google_domain=google.com&req_token=ANONYMIZED"
+          }
+        }
+      }
+    },
+    {
+      "id": "organic#2",
+      "type": "organic",
+      "url": "https://docs.oracle.com/cd/E19199-01/816-6758-10/ch10.html",
+      "title": "Chapter 10 Using Java to Access the Search Engine ...",
+      "snippet": "The Java SDK includes the Java classes needed for interacting with the search engine database ... The search engine Java SDK contains sample Java and HTML files.",
+      "displayUrl": "https://docs.oracle.com › ...",
+      "domain": "docs.oracle.com",
+      "siteName": "Oracle Help Center",
+      "position": {
+        "rankInGroup": 2,
+        "area": "main"
+      },
+      "extensions": {
+        "values": {
+          "serpapi:favicon": "https://serpapi.com/images/i/iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y-mAAAAaVBMVEXtHCTtFh_tGSHsABLsAADvMTnxPkbxPUTuISvtExzzcnf-9_f____83t_wSk_5wcP__P30f4PuKTH4s7X6x8j3q6z1kpX1lZf719j-8fL0i47sAArwRUvwR037z9D5uLr3oaT-6uvzZ224uz7yAAAAzklEQVR4AcyR0RJDMBBFY5OSyC0IUAr9_4-sySzSmfa95_Vkb2424m-JLujTkFS3OGFirUw4pVOLgHt2TZskB1BYBjulYEuVA2zdtJ2ndT1gS06W5QD7oFEy49QA_TPyg9oBnQoqGtnvp6VvM9UYkkgEyBRw5GU2Y9EUyigBlopY1tUvOc3fYhtzFlpVYI0-CwmTbii6mzpeMk4LMHMWibVAMTtewpr3gE3lcX_VYCdYny2JznbitSGgjr1jyCh9fdn4Hsx1CHlEZA_eFAkATqAOMW0JOYMAAAAASUVORK5CYII.png"
+        },
+        "unmapped": {
+          "serpapi": {
+            "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=ANONYMIZED&url=CAESdQHrOzAVJAeGIKPN8CiVIPZdiaHaTbJmEtaXFNEcm-xlQW3Ry4U8qE24-TUl4sQP7U1d9GWbccuF2BHT3Ijt1yGcylYuWMCq0Gw3D6oo-gvWXtG6QNFz-3-VQdsjGbUlVcU49rzbJs5Vj6UCHuq8J8BNchrtnQ&ved=ANONYMIZED&uoh=1",
+            "snippet_highlighted_words": [
+              "Java",
+              "Java",
+              "search",
+              "search",
+              "Java",
+              "Java"
+            ],
+            "about_this_result": {
+              "source": {
+                "description": "The Java SDK includes the Java classes needed for interacting with the search engine database ... The search engine Java SDK contains sample Java and HTML files.",
+                "source_info_link": "https://docs.oracle.com/cd/E19199-01/816-6758-10/ch10.html",
+                "icon": "https://serpapi.com/images/i/iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y-mAAAAaVBMVEXtHCTtFh_tGSHsABLsAADvMTnxPkbxPUTuISvtExzzcnf-9_f____83t_wSk_5wcP__P30f4PuKTH4s7X6x8j3q6z1kpX1lZf719j-8fL0i47sAArwRUvwR037z9D5uLr3oaT-6uvzZ224uz7yAAAAzklEQVR4AcyR0RJDMBBFY5OSyC0IUAr9_4-sySzSmfa95_Vkb2424m-JLujTkFS3OGFirUw4pVOLgHt2TZskB1BYBjulYEuVA2zdtJ2ndT1gS06W5QD7oFEy49QA_TPyg9oBnQoqGtnvp6VvM9UYkkgEyBRw5GU2Y9EUyigBlopY1tUvOc3fYhtzFlpVYI0-CwmTbii6mzpeMk4LMHMWibVAMTtewpr3gE3lcX_VYCdYny2JznbitSGgjr1jyCh9fdn4Hsx1CHlEZA_eFAkATqAOMW0JOYMAAAAASUVORK5CYII.png"
+              },
+              "languages": [
+                "de"
+              ],
+              "regions": [
+                "DE"
+              ]
+            },
+            "about_page_link": "https://www.google.com/search/about-this-result?origin=www.google.com&req=ANONYMIZED",
+            "about_page_serpapi_link": "https://serpapi.com/search.json?engine=google_about_this_result&google_domain=google.com&req_token=ANONYMIZED"
+          }
+        }
+      }
+    },
+    {
+      "id": "organic#3",
+      "type": "organic",
+      "url": "https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/java-search.html",
+      "title": "Search API | Java Transport Client (deprecated) [7.17]",
+      "snippet": "The search API allows one to execute a search query and get back search hits that match the query. It can be executed across one or more indices and across ...",
+      "displayUrl": "https://www.elastic.co › current",
+      "domain": "www.elastic.co",
+      "siteName": "Elastic.co",
+      "position": {
+        "rankInGroup": 3,
+        "area": "main"
+      },
+      "extensions": {
+        "values": {
+          "serpapi:favicon": "https://serpapi.com/images/i/iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y-mAAAA0lBMVEVHcEz_____________________________-eP_3Yj_zUT-xRT____________________-wQD-xAP_1m_____80OL4sc_59_z_0Fb2kLvvN47wQ5T-4p_____xU5v_567____789H___9hvfgAo_WQz_vV8fT6___-vgAaqfUFpvUAn_TJ4Pqtyuv-__QAaMgAb8phnNiQt-UDd8xr0sqM29Vwpd1Gj9VCs_Y8yL0AvbAAuq3t_Pqn2PwpxLkAv7Ol4t2v1lzE4Y7b7LmMxgCTyQ7_Wtq9AAAAI3RSTlMAWMLv__dzKf____9AC6CHGv___2T__________9b__7L_VRw64UEAAAGDSURBVHgBbdJVgoMwFEDRDDzc3epF6u6u-9_SJHW7vwfi6K0_igaGYtGPOJoXREkUeJDRSwqrajoHgmGakmkaFthPk8FxXQ8sQ7pm-MA9_oMgjMKAx3bXXP6OmhMWCpFbxPjQx6-lIMLoCOYLltn7n24YRSGIr1jUrlahwXOCAryM-kDNq8bVJM34V6zxJWJyVm_UG424mfnmnUyTb7XJkqikUSc1knLNvJnUaXd7fVAQ1K_FVSj7hklMhEF3OOy1VQS3H6swGme8ZZDDm_SGGKcMYmbE4gTmi8VytOoIAkyxEQWkruN6vbmGzWKLW45SGBIjAVKgGjdbqy0x3GK5mtx-HFAIcbBOU0I3HXndXg_bMJMvZ5sut8-WK2gNpt2pdzuj3eIVYX84doCuoB-4gRPuoKFr9uuwi1H5dD6fDqUb6vCKuyPB4_1PlB8vHrhM93jUPSh35PDxPEZlOsfD8fVx2jBaEsYHCJyuqayCXpIhHW22m3FK6-hHLMUATf2h1_4Bs5RQLov0__gAAAAASUVORK5CYII.png"
+        },
+        "unmapped": {
+          "serpapi": {
+            "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=ANONYMIZED&url=CAESkQEB6zswFcnJZv2V2VaKLCvFUjhnUKIUB4Hpbr95HLYhn8K3FykYe7ESA5LkYFgYweLRuofJtTUVcVqrZt21jbPYeNgOlczrOyJMX5Qdn7uRIS6Y9BjQCr9VD7ukNqK85g6_2oqGL0t-CpTeVSVlp25Nocu8tIcoUDXpPL8a6XKCmI-iJZShD4I0SFHZP1_Wcgh8&ved=ANONYMIZED&uoh=1",
+            "snippet_highlighted_words": [
+              "search",
+              "search",
+              "search"
+            ],
+            "about_this_result": {
+              "source": {
+                "description": "The search API allows one to execute a search query and get back search hits that match the query. It can be executed across one or more indices and across ...",
+                "source_info_link": "https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/java-search.html",
+                "icon": "https://serpapi.com/images/i/iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y-mAAAA0lBMVEVHcEz_____________________________-eP_3Yj_zUT-xRT____________________-wQD-xAP_1m_____80OL4sc_59_z_0Fb2kLvvN47wQ5T-4p_____xU5v_567____789H___9hvfgAo_WQz_vV8fT6___-vgAaqfUFpvUAn_TJ4Pqtyuv-__QAaMgAb8phnNiQt-UDd8xr0sqM29Vwpd1Gj9VCs_Y8yL0AvbAAuq3t_Pqn2PwpxLkAv7Ol4t2v1lzE4Y7b7LmMxgCTyQ7_Wtq9AAAAI3RSTlMAWMLv__dzKf____9AC6CHGv___2T__________9b__7L_VRw64UEAAAGDSURBVHgBbdJVgoMwFEDRDDzc3epF6u6u-9_SJHW7vwfi6K0_igaGYtGPOJoXREkUeJDRSwqrajoHgmGakmkaFthPk8FxXQ8sQ7pm-MA9_oMgjMKAx3bXXP6OmhMWCpFbxPjQx6-lIMLoCOYLltn7n24YRSGIr1jUrlahwXOCAryM-kDNq8bVJM34V6zxJWJyVm_UG424mfnmnUyTb7XJkqikUSc1knLNvJnUaXd7fVAQ1K_FVSj7hklMhEF3OOy1VQS3H6swGme8ZZDDm_SGGKcMYmbE4gTmi8VytOoIAkyxEQWkruN6vbmGzWKLW45SGBIjAVKgGjdbqy0x3GK5mtx-HFAIcbBOU0I3HXndXg_bMJMvZ5sut8-WK2gNpt2pdzuj3eIVYX84doCuoB-4gRPuoKFr9uuwi1H5dD6fDqUb6vCKuyPB4_1PlB8vHrhM93jUPSh35PDxPEZlOsfD8fVx2jBaEsYHCJyuqayCXpIhHW22m3FK6-hHLMUATf2h1_4Bs5RQLov0__gAAAAASUVORK5CYII.png"
+              },
+              "languages": [
+                "de"
+              ],
+              "regions": [
+                "DE"
+              ]
+            },
+            "about_page_link": "https://www.google.com/search/about-this-result?origin=www.google.com&req=ANONYMIZED",
+            "about_page_serpapi_link": "https://serpapi.com/search.json?engine=google_about_this_result&google_domain=google.com&req_token=ANONYMIZED"
+          }
+        }
+      }
+    },
+    {
+      "id": "organic#4",
+      "type": "organic",
+      "url": "https://www.google.com/goto?url=CAESdQHrOzAVfXK6a6xlntF8jh18nJAFTlSmyYv_wmtrfXgFaiZw7kk19bgj7eHO9WGF-mLCokuQg_4Jxs3XyC2Xzg7GgZlw2ZVzDBMn2zWthZiU1bEDCXIWu3DOu7WphSrmKusNr2g522lKkfGl2uQnywawnallPQ",
+      "title": "Search (Neo4j Java Driver 6.2 API)",
+      "snippet": "The help page provides an introduction to the scope and syntax of JavaDoc search. Use the ↓ / ↑ keys to move between search results and the ← / → keys ...",
+      "displayUrl": "https://neo4j.com › api › current",
+      "domain": "www.google.com",
+      "siteName": "Neo4j",
+      "position": {
+        "rankInGroup": 4,
+        "area": "main"
+      },
+      "extensions": {
+        "values": {
+          "serpapi:favicon": "https://serpapi.com/images/i/iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y-mAAAAYFBMVEVHcEwCT3gQGCAQGCAQGCAQGCAQGCAUHCQQGSIQGCAQGCARFRoQGyEQGCAQGCAQGCAQGB8AVYEAVIAAVH8AVH8AV4IAVH8AVH8AVIAAVH8AVIEAVH8AVH8AVH8AVH8AVH9GkegGAAAAIHRSTlMALYazyJ9qAxva_zwS7-ypUBxp_4cI57lGfRHSrfpakUo_uHgAAADMSURBVHgBYiAFAOoeCwOAQRiAoXN33_9X4kwhUxqoQIQJoUHoUFGcGNDPpckN-bhMBnMaICx_6Ftimy6MCvEbPV0oAqVN8j1aiUBmFzRJiqdESRK_elPz3JvxPZRJUzdQrcu7pCoqO2ratu08sm8ltVtCJRstsfPkIEdJ0-ojQafsKAIQgq8E0zwtS9cOYsv6kZa5lXRuWSu5uuWk5HZJQkimDslnt_M-CaEIr-t-1NN5Pp1CH-mBC6jcCZwsSkLgZlQT-JjHE_gJfYIDw84PlH-lnLMAAAAASUVORK5CYII.png"
+        },
+        "unmapped": {
+          "serpapi": {
+            "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=ANONYMIZED&url=CAESdQHrOzAVwlhUd_1dq8ub9LC0wxOJRU5_iK2qUiQJibEMSZ05g8dcoOau1k7s_-xGH3R8KOtYy9032OJi1JwuUvZPL0XXwFFoup9BIY6XK6ICf6CNp1JFMY8XURywEtWz0wboYDbG76v34d6H0Zsu6p-DatF_kQ&ved=ANONYMIZED&uoh=1",
+            "snippet_highlighted_words": [
+              "search",
+              "search"
+            ],
+            "about_this_result": {
+              "source": {
+                "description": "The help page provides an introduction to the scope and syntax of JavaDoc search. Use the ↓ / ↑ keys to move between search results and the ← / → keys ...",
+                "source_info_link": "https://www.google.com/goto?url=CAESdQHrOzAVfXK6a6xlntF8jh18nJAFTlSmyYv_wmtrfXgFaiZw7kk19bgj7eHO9WGF-mLCokuQg_4Jxs3XyC2Xzg7GgZlw2ZVzDBMn2zWthZiU1bEDCXIWu3DOu7WphSrmKusNr2g522lKkfGl2uQnywawnallPQ",
+                "icon": "https://serpapi.com/images/i/iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y-mAAAAYFBMVEVHcEwCT3gQGCAQGCAQGCAQGCAQGCAUHCQQGSIQGCAQGCARFRoQGyEQGCAQGCAQGCAQGB8AVYEAVIAAVH8AVH8AV4IAVH8AVH8AVIAAVH8AVIEAVH8AVH8AVH8AVH8AVH9GkegGAAAAIHRSTlMALYazyJ9qAxva_zwS7-ypUBxp_4cI57lGfRHSrfpakUo_uHgAAADMSURBVHgBYiAFAOoeCwOAQRiAoXN33_9X4kwhUxqoQIQJoUHoUFGcGNDPpckN-bhMBnMaICx_6Ftimy6MCvEbPV0oAqVN8j1aiUBmFzRJiqdESRK_elPz3JvxPZRJUzdQrcu7pCoqO2ratu08sm8ltVtCJRstsfPkIEdJ0-ojQafsKAIQgq8E0zwtS9cOYsv6kZa5lXRuWSu5uuWk5HZJQkimDslnt_M-CaEIr-t-1NN5Pp1CH-mBC6jcCZwsSkLgZlQT-JjHE_gJfYIDw84PlH-lnLMAAAAASUVORK5CYII.png"
+              },
+              "languages": [
+                "de"
+              ],
+              "regions": [
+                "DE"
+              ]
+            },
+            "about_page_link": "https://www.google.com/search/about-this-result?origin=www.google.com&req=ANONYMIZED",
+            "about_page_serpapi_link": "https://serpapi.com/search.json?engine=google_about_this_result&google_domain=google.com&req_token=ANONYMIZED"
+          }
+        }
+      }
+    },
+    {
+      "id": "organic#5",
+      "type": "organic",
+      "url": "https://www.google.com/goto?url=CAESZQHrOzAVwG0mnsJzdkwCvxsXlm5ie4A9fafBGYdbrDoo_bDbQFT0xiY1zKeJJsvR1-HM_VreLkR7fe0Pe6GPwu1OrUddATbPm_M1fU_g4JpGICkoDUoLswsSK-zfK1o-RXqlxhl1",
+      "title": "thiagolocatelli/parse4j: Java Library to deal with Parse ...",
+      "snippet": "Ths library is a non-official java library, but it works according to Parse's REST api specification. ps.: most of the following code snippets and text have ...",
+      "displayUrl": "https://github.com › thiagolocatelli",
+      "domain": "www.google.com",
+      "siteName": "GitHub",
+      "position": {
+        "rankInGroup": 5,
+        "area": "main"
+      },
+      "extensions": {
+        "values": {
+          "serpapi:favicon": "https://serpapi.com/images/i/iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAb1BMVEX____4-Pi3ubtvcnZNUVU-Q0cpLjLr6-x3en0sMTYkKS59gIORk5aUl5n8_Pzw8PFTV1tbX2Pc3d5DSEzn5-g3PECLjpFKTlKFh4qxs7XCxMUuMze_wcLh4uPV1tZzd3o_Q0jOz9CmqKpjZ2qfoaTxAyfNAAABPUlEQVR4AW3TBYKDMBQE0AltAgzuzur9z7ibH5oKfWjc4UEFl6s2Rl8vgcJZGMX04iTEM5UaPomzHA-KkidVAa_WfKNpffMd32oKCHUlWfb27Q19ZSMVrNHGTMDckMtQLqSegdXGpvi3Sf93W9UudRby2WzsEgL4oMvwoqY1AsrQNfFipbXkCGh1BV6oT1pfRwvfOJlo9ZA5NAonStbmB1pawBuDTAgkX4MzV_eC2H3e0C7lk1aBEzd-7SpigJOZVoXx-J5UxzADil-8-KZYoRaK5y2WZxSdgm0j-dakzkIc2kzT6W3IcFnDTzdt4sKbWMqkpNl229IMsfMmg6UaMsJXmv4qCMXDoI4mO5oADwyFDnGoO3KI0jSHQ6E3eJum5TP4Y-EVyUOGXHZjgWd7ZEwOJzZRjbPQt7mF8P4AzsYZpmkFLF4AAAAASUVORK5CYII.png"
+        },
+        "unmapped": {
+          "serpapi": {
+            "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=ANONYMIZED&url=CAESZQHrOzAVgYlArosgh1KeZh26O4NbBVm3_p7zKDzu6FYgKoPMJmIoHbByF1QWewXwF27O5iDFT3bkCme21Dwb-IXtUwySTcRgoXmueFSCdiWt7499Fdn2fnNtg4cTU_DYd8QqgKuE&ved=ANONYMIZED&uoh=1",
+            "snippet_highlighted_words": [
+              "library",
+              "java library"
+            ],
+            "about_this_result": {
+              "source": {
+                "description": "Ths library is a non-official java library, but it works according to Parse's REST api specification. ps.: most of the following code snippets and text have ...",
+                "source_info_link": "https://www.google.com/goto?url=CAESZQHrOzAVwG0mnsJzdkwCvxsXlm5ie4A9fafBGYdbrDoo_bDbQFT0xiY1zKeJJsvR1-HM_VreLkR7fe0Pe6GPwu1OrUddATbPm_M1fU_g4JpGICkoDUoLswsSK-zfK1o-RXqlxhl1",
+                "icon": "https://serpapi.com/images/i/iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAb1BMVEX____4-Pi3ubtvcnZNUVU-Q0cpLjLr6-x3en0sMTYkKS59gIORk5aUl5n8_Pzw8PFTV1tbX2Pc3d5DSEzn5-g3PECLjpFKTlKFh4qxs7XCxMUuMze_wcLh4uPV1tZzd3o_Q0jOz9CmqKpjZ2qfoaTxAyfNAAABPUlEQVR4AW3TBYKDMBQE0AltAgzuzur9z7ibH5oKfWjc4UEFl6s2Rl8vgcJZGMX04iTEM5UaPomzHA-KkidVAa_WfKNpffMd32oKCHUlWfb27Q19ZSMVrNHGTMDckMtQLqSegdXGpvi3Sf93W9UudRby2WzsEgL4oMvwoqY1AsrQNfFipbXkCGh1BV6oT1pfRwvfOJlo9ZA5NAonStbmB1pawBuDTAgkX4MzV_eC2H3e0C7lk1aBEzd-7SpigJOZVoXx-J5UxzADil-8-KZYoRaK5y2WZxSdgm0j-dakzkIc2kzT6W3IcFnDTzdt4sKbWMqkpNl229IMsfMmg6UaMsJXmv4qCMXDoI4mO5oADwyFDnGoO3KI0jSHQ6E3eJum5TP4Y-EVyUOGXHZjgWd7ZEwOJzZRjbPQt7mF8P4AzsYZpmkFLF4AAAAASUVORK5CYII.png"
+              },
+              "languages": [
+                "de"
+              ],
+              "regions": [
+                "DE"
+              ]
+            },
+            "about_page_link": "https://www.google.com/search/about-this-result?origin=www.google.com&req=ANONYMIZED",
+            "about_page_serpapi_link": "https://serpapi.com/search.json?engine=google_about_this_result&google_domain=google.com&req_token=ANONYMIZED"
+          }
+        }
+      }
+    },
+    {
+      "id": "organic#6",
+      "type": "organic",
+      "url": "https://www.google.com/goto?url=CAESkQEB6zswFYpQljepi88zU6sT3c7FdDlKWVDmwnc0WKvm-bNXWWxzWbr5RBPK7nBfeXaRaBNA7PjYvEu-xXpcxErC12U5nBum_2NafSnwfCZcl0haAAo7OyJGoqDjWL8f8VysN2iFRqsdzXINjwk_OFUaPmxtYvtIfFMTc4JLw6B0VpnbXZrELGlkBTh_4Apuc_Ze",
+      "title": "How to search for a Java string in Eclipse?",
+      "snippet": "I need to search for instances of a character sequence in a Java string using Eclipse. Is there an easy way or regex to do this? Example: Search for Eggs ...",
+      "displayUrl": "4 Antworten",
+      "domain": "www.google.com",
+      "siteName": "Stack Overflow",
+      "position": {
+        "rankInGroup": 6,
+        "area": "main"
+      },
+      "extensions": {
+        "values": {
+          "serpapi:date": "vor 14 Jahren",
+          "serpapi:favicon": "https://serpapi.com/images/i/iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y-mAAAAclBMVEX_XgD_XwDHTA3_YABQKBoAER_QTwz_YQCZPhMAFB4fHB14NBcAFx4eHB3ZUgruWQZoLxg2IRtEJRvhVAkAGB2wRREYGh2BNhZfLBkLGR4aGx3nVggzIBymQhISGh32WwS8SQ9AJBuTPBSLORVWKhkADh-4PaZeAAAAuUlEQVR4AbzQRQLDMAwAQaturCqRw8z4_yeWMXTsXsco8Zdgjw5yG4-Gwg2TJzJJyY1D0WJN9pqCIwFd1rym6PkBohtqDhYqI4opEZhmeVjMFVTJOgujm3IAMwSsuNbsB25WOr8I1_uwsSjPOa2b-UYjs9oGg45NY_5cUKRrJv9kR6GFYo4pc5bnGWsKQMwVQfUdcZ13y-niPTgk9SAXlo73UjeLlmjW8SNuYYEhPZuWO0XzSVw2eAEARO8NFMONSEkAAAAASUVORK5CYII.png"
+        },
+        "unmapped": {
+          "serpapi": {
+            "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=ANONYMIZED&url=CAESkQEB6zswFdAmLk2BLbTOSj0eHYhw28ujeT6ryckXgV5fEB1cEFi5ipezcdXdSsDmjRojsjV_7pNfdqmFBtcQMek3ILBej1i57Q1wMMSo0PHSmX2iX8b0riQ6Cdy6yRb_NqdR0M8DS5KgmQ9IqjM4AKkm0NVOtGF4fVF7t46giIA76IbNHHJoXQD5OcbHeeaZ6A4W&ved=ANONYMIZED&uoh=1",
+            "sitelinks": {
+              "list": [
+                {
+                  "title": "How do I include the sat4j library in eclipse java IDE?",
+                  "link": "https://www.google.com/goto?url=CAESngEB6zswFSOxjH1YSuB2LB5Y78-pcOHv_1j-GVsK1AXfTA2zXpF3Psi7zWn2GHRUnLjVRUXB25wLYbx4QlaOArnESX_88S21TXvcA-hAtJXU9r2U_l7pkVDjySCbF4S0z8UHezujoc1p9FzZKPJhgFYWr7EkN3GIw-cz74X6PrUeeILn9WkKeewNRDva8hfepsyU2mOMp1PQjUtyUGCI1w",
+                  "date": "12. Mai 2022"
+                },
+                {
+                  "title": "Extending Eclipse Java Search - Stack Overflow",
+                  "link": "https://www.google.com/goto?url=CAEShQEB6zswFUgvRNHXE8fxINa8t3LhUazbICY8VFlZVTzDX1AJH_PEPBRo-mVewXHfwOJXHtRXOhgSPeVW-0Bzyp6kqLWE7EwRRkri9JWPGiHzz9sQTh7UT1XdEhmEuXx9zfpRQ0RIsD4HBMItwjhB-jz5MEm6XLOoiQJJJt5-P4TJ92uU1URm",
+                  "date": "13. Dez. 2015"
+                }
+              ]
+            },
+            "about_this_result": {
+              "source": {
+                "description": "I need to search for instances of a character sequence in a Java string using Eclipse. Is there an easy way or regex to do this? Example: Search ...",
+                "source_info_link": "https://www.google.com/goto?url=CAESkQEB6zswFYpQljepi88zU6sT3c7FdDlKWVDmwnc0WKvm-bNXWWxzWbr5RBPK7nBfeXaRaBNA7PjYvEu-xXpcxErC12U5nBum_2NafSnwfCZcl0haAAo7OyJGoqDjWL8f8VysN2iFRqsdzXINjwk_OFUaPmxtYvtIfFMTc4JLw6B0VpnbXZrELGlkBTh_4Apuc_Ze",
+                "icon": "https://serpapi.com/images/i/iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y-mAAAAclBMVEX_XgD_XwDHTA3_YABQKBoAER_QTwz_YQCZPhMAFB4fHB14NBcAFx4eHB3ZUgruWQZoLxg2IRtEJRvhVAkAGB2wRREYGh2BNhZfLBkLGR4aGx3nVggzIBymQhISGh32WwS8SQ9AJBuTPBSLORVWKhkADh-4PaZeAAAAuUlEQVR4AbzQRQLDMAwAQaturCqRw8z4_yeWMXTsXsco8Zdgjw5yG4-Gwg2TJzJJyY1D0WJN9pqCIwFd1rym6PkBohtqDhYqI4opEZhmeVjMFVTJOgujm3IAMwSsuNbsB25WOr8I1_uwsSjPOa2b-UYjs9oGg45NY_5cUKRrJv9kR6GFYo4pc5bnGWsKQMwVQfUdcZ13y-niPTgk9SAXlo73UjeLlmjW8SNuYYEhPZuWO0XzSVw2eAEARO8NFMONSEkAAAAASUVORK5CYII.png"
+              },
+              "languages": [
+                "de"
+              ],
+              "regions": [
+                "DE"
+              ]
+            },
+            "about_page_link": "https://www.google.com/search/about-this-result?origin=www.google.com&req=ANONYMIZED",
+            "about_page_serpapi_link": "https://serpapi.com/search.json?engine=google_about_this_result&google_domain=google.com&req_token=ANONYMIZED"
+          }
+        }
+      }
+    },
+    {
+      "id": "organic#7",
+      "type": "organic",
+      "url": "https://www.google.com/goto?url=CAES5gEB6zswFeavwm5NTaPmyPRYdfYXXlCVIL7usc4-FEi1DobA9ckPnACkoYCMTSYC4ov_bT_1K1bVFBpjtCwSHpxY09EyCILbura2l8IFM8ic4Kapr5TOzVcsuTHYStRIPC3y0AU7TvB_QiWCMkG5dMJaYla_Vo36xWPLsFYi9Od0oH21qWxVk16cQPJtl6U-pjbfO0As4PiahEcwayWMtVeolfUSbg5NVRiOPu9Gv9czUt0DF2VsWVYgKxg8Hb5kyRzMsNeSs02vavS3ES_XM3J-b0im5lfwvobhVY1xuRU75qSq_fPdIA",
+      "title": "SpanCollector.java",
+      "snippet": "package org.apache.lucene.search.spans; /* * Licensed to the Apache Software Foundation (ASF) under one or more * contributor license agreements.",
+      "displayUrl": "https://gitlab.comp.anu.edu.au › ...",
+      "domain": "www.google.com",
+      "siteName": "The Australian National University",
+      "position": {
+        "rankInGroup": 7,
+        "area": "main"
+      },
+      "extensions": {
+        "values": {
+          "serpapi:favicon": "https://serpapi.com/images/i/iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y-mAAAAhFBMVEUXEyETEiEADyEOEiEmFiHiQylIHSIAECGQLiXrRSmjMybXQCjmRClXICOuNiabMSYACSB9KSSmNCbJPCg0HSH_cSb1YifoTijgPyluMyL8bSZgLiL_bybtViioSyQAACHQXCWfRyP8hib8lCb8oybYXiX_eSb8oCagayP_qyZdPiLYjSVkBOTGAAAA-ElEQVR4AbWRVRaDQBAE2Vnc3R3i979fZiUQ-6XRpt4UphwaAnQvFMgHUzV9o1TX1HdqmJZtbMW2TOMNguM68K9gqGdpFnqlFYtH90Hf1dzAkNYAi7-NEsPVNNcJgSd0WDOIhEZkadhjmyd2sViR8bImWJHK8JKAtKZZXpTaW8oiz1LhhSqrs_wd5nihEqO0yWqMHMYx1rKGCi20rLZdyVkn2uv7hn3Ge460zDnL-lCRGUakLK4rjtk47D9lmASdZ8Gm4f23hE2NumVdF9TXDTrfA_R0vqyYy_lE4Z0I9fXG4O26Kd8z3Bm8D8rfhMrjQcJ_RKhReXyeUHsV-G7vRHMAAAAASUVORK5CYII.png"
+        },
+        "unmapped": {
+          "serpapi": {
+            "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=ANONYMIZED&url=CAES5gEB6zswFYCAekZH0b2CtF2dPmE5masukTVhCnPnU_dLaPnW5mX4_KedQzqBjFyyNCkY_5gs67g-CM5IeVjurK11LCBszoK9OV1wcZGVcVkSHlIogD9R1IYF_oSXD8eXZBO7ip1NOgtkSRIWmUxwisNIBNrTF0LsW_e5IVaoE_fuxjIt6mib4Nt0mVjVvCM-3mFd4I9Q83J-Iul3TaHsemjTVnpH1jnqse1LBsvBuuuZba-kZidJMVDRFPOw6FW8VcfJSQVgKyWhFVODQa5kIthYhPpdkbYl2ki5ET3wZG-0y0bscXTSug&ved=ANONYMIZED&uoh=1",
+            "snippet_highlighted_words": [
+              "search"
+            ],
+            "about_this_result": {
+              "source": {
+                "description": "package org.apache.lucene.search.spans; /* * Licensed to the Apache Software Foundation (ASF) under one or more * contributor license agreements.",
+                "source_info_link": "https://www.google.com/goto?url=CAES5gEB6zswFeavwm5NTaPmyPRYdfYXXlCVIL7usc4-FEi1DobA9ckPnACkoYCMTSYC4ov_bT_1K1bVFBpjtCwSHpxY09EyCILbura2l8IFM8ic4Kapr5TOzVcsuTHYStRIPC3y0AU7TvB_QiWCMkG5dMJaYla_Vo36xWPLsFYi9Od0oH21qWxVk16cQPJtl6U-pjbfO0As4PiahEcwayWMtVeolfUSbg5NVRiOPu9Gv9czUt0DF2VsWVYgKxg8Hb5kyRzMsNeSs02vavS3ES_XM3J-b0im5lfwvobhVY1xuRU75qSq_fPdIA",
+                "icon": "https://serpapi.com/images/i/iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y-mAAAAhFBMVEUXEyETEiEADyEOEiEmFiHiQylIHSIAECGQLiXrRSmjMybXQCjmRClXICOuNiabMSYACSB9KSSmNCbJPCg0HSH_cSb1YifoTijgPyluMyL8bSZgLiL_bybtViioSyQAACHQXCWfRyP8hib8lCb8oybYXiX_eSb8oCagayP_qyZdPiLYjSVkBOTGAAAA-ElEQVR4AbWRVRaDQBAE2Vnc3R3i979fZiUQ-6XRpt4UphwaAnQvFMgHUzV9o1TX1HdqmJZtbMW2TOMNguM68K9gqGdpFnqlFYtH90Hf1dzAkNYAi7-NEsPVNNcJgSd0WDOIhEZkadhjmyd2sViR8bImWJHK8JKAtKZZXpTaW8oiz1LhhSqrs_wd5nihEqO0yWqMHMYx1rKGCi20rLZdyVkn2uv7hn3Ge460zDnL-lCRGUakLK4rjtk47D9lmASdZ8Gm4f23hE2NumVdF9TXDTrfA_R0vqyYy_lE4Z0I9fXG4O26Kd8z3Bm8D8rfhMrjQcJ_RKhReXyeUHsV-G7vRHMAAAAASUVORK5CYII.png"
+              },
+              "languages": [
+                "de"
+              ],
+              "regions": [
+                "DE"
+              ]
+            },
+            "about_page_link": "https://www.google.com/search/about-this-result?origin=www.google.com&req=ANONYMIZED",
+            "about_page_serpapi_link": "https://serpapi.com/search.json?engine=google_about_this_result&google_domain=google.com&req_token=ANONYMIZED"
+          }
+        }
+      }
+    },
+    {
+      "id": "organic#8",
+      "type": "organic",
+      "url": "https://www.google.com/goto?url=CAESmAEB6zswFXxWlv6rDK0Eegywu6OT6-lMuulyt0wmwgORVV5mTI4xQ67n_TqOtw5ASccEiGe64vrpUhXJpKqitgf1skuZ0DwWbcWsFlP7RCUtnFmGcKgNlYwg4D6ahiddHB5g0lr_0sJKwkG24i7Ce3fygOXIWU38wybvniOMqy2pSi_OBHVz6mJdBC1HTQglPZQwt8jiC-j_qA",
+      "title": "BinarySearchLibrary.java - P4 Autocomplete",
+      "snippet": "import java.util.*; /** * Facilitates using fast binary search with * a Comparator. The methods firstIndex and lastIndex * run in time ...",
+      "displayUrl": "https://coursework.cs.duke.edu › ...",
+      "domain": "www.google.com",
+      "siteName": "Duke University",
+      "position": {
+        "rankInGroup": 8,
+        "area": "main"
+      },
+      "extensions": {
+        "values": {
+          "serpapi:date": "02.11.2025",
+          "serpapi:favicon": "https://serpapi.com/images/i/iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y-mAAAAhFBMVEUXEyETEiEADyEOEiEmFiHiQylIHSIAECGQLiXrRSmjMybXQCjmRClXICOuNiabMSYACSB9KSSmNCbJPCg0HSH_cSb1YifoTijgPyluMyL8bSZgLiL_bybtViioSyQAACHQXCWfRyP8hib8lCb8oybYXiX_eSb8oCagayP_qyZdPiLYjSVkBOTGAAAA-ElEQVR4AbWRVRaDQBAE2Vnc3R3i979fZiUQ-6XRpt4UphwaAnQvFMgHUzV9o1TX1HdqmJZtbMW2TOMNguM68K9gqGdpFnqlFYtH90Hf1dzAkNYAi7-NEsPVNNcJgSd0WDOIhEZkadhjmyd2sViR8bImWJHK8JKAtKZZXpTaW8oiz1LhhSqrs_wd5nihEqO0yWqMHMYx1rKGCi20rLZdyVkn2uv7hn3Ge460zDnL-lCRGUakLK4rjtk47D9lmASdZ8Gm4f23hE2NumVdF9TXDTrfA_R0vqyYy_lE4Z0I9fXG4O26Kd8z3Bm8D8rfhMrjQcJ_RKhReXyeUHsV-G7vRHMAAAAASUVORK5CYII.png"
+        },
+        "unmapped": {
+          "serpapi": {
+            "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=ANONYMIZED&url=CAESmAEB6zswFcRuIefpQ1O84jXJ8nU0EMrFPoZE-dx8L7vqiKxNsf7qR8NgKK8JKFpJkpUDBw4Byf9CqoIpT9sNulblN4WWE4xcTz5xNktb4U6iJLL2wMs9FMskpddf2hWPgTDSuP6bYiCO3g-F7xauyZ0fLx3YT07CzpwLGMJfwy15EBm1Ue2hbiKtVm7K_vd_T7ykHNZyEKLdSw&ved=ANONYMIZED&uoh=1",
+            "snippet_highlighted_words": [
+              "java",
+              "search"
+            ],
+            "about_this_result": {
+              "source": {
+                "description": "import java.util.*; /** * Facilitates using fast binary search with * a Comparator. The methods firstIndex and lastIndex * run in time ...",
+                "source_info_link": "https://www.google.com/goto?url=CAESmAEB6zswFXxWlv6rDK0Eegywu6OT6-lMuulyt0wmwgORVV5mTI4xQ67n_TqOtw5ASccEiGe64vrpUhXJpKqitgf1skuZ0DwWbcWsFlP7RCUtnFmGcKgNlYwg4D6ahiddHB5g0lr_0sJKwkG24i7Ce3fygOXIWU38wybvniOMqy2pSi_OBHVz6mJdBC1HTQglPZQwt8jiC-j_qA",
+                "icon": "https://serpapi.com/images/i/iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y-mAAAAhFBMVEUXEyETEiEADyEOEiEmFiHiQylIHSIAECGQLiXrRSmjMybXQCjmRClXICOuNiabMSYACSB9KSSmNCbJPCg0HSH_cSb1YifoTijgPyluMyL8bSZgLiL_bybtViioSyQAACHQXCWfRyP8hib8lCb8oybYXiX_eSb8oCagayP_qyZdPiLYjSVkBOTGAAAA-ElEQVR4AbWRVRaDQBAE2Vnc3R3i979fZiUQ-6XRpt4UphwaAnQvFMgHUzV9o1TX1HdqmJZtbMW2TOMNguM68K9gqGdpFnqlFYtH90Hf1dzAkNYAi7-NEsPVNNcJgSd0WDOIhEZkadhjmyd2sViR8bImWJHK8JKAtKZZXpTaW8oiz1LhhSqrs_wd5nihEqO0yWqMHMYx1rKGCi20rLZdyVkn2uv7hn3Ge460zDnL-lCRGUakLK4rjtk47D9lmASdZ8Gm4f23hE2NumVdF9TXDTrfA_R0vqyYy_lE4Z0I9fXG4O26Kd8z3Bm8D8rfhMrjQcJ_RKhReXyeUHsV-G7vRHMAAAAASUVORK5CYII.png"
+              },
+              "languages": [
+                "de"
+              ],
+              "regions": [
+                "DE"
+              ]
+            },
+            "about_page_link": "https://www.google.com/search/about-this-result?origin=www.google.com&req=ANONYMIZED",
+            "about_page_serpapi_link": "https://serpapi.com/search.json?engine=google_about_this_result&google_domain=google.com&req_token=ANONYMIZED"
+          }
+        }
+      }
+    },
+    {
+      "id": "organic#9",
+      "type": "organic",
+      "url": "https://www.google.com/goto?url=CAESlAEB6zswFWwxWi0t9DtP07zy-mvu4uYC8wVJQIfWsNGFmvbi5m3roHXE_bS41s66l4xVqw_vHYpsTKj9IjiBc5lJ8VP7j8FGyoZ76d5hEfz-MTtPNBbenK49uGeqKPwNvYSu3GgShEhegddFyjcKq4WFTc6KhU-Un6fxmr2SBe3pj_mzTR3okX6dTfbJJH2EYga7Tm_F",
+      "title": "Java library for scraping websites",
+      "snippet": "jsoup is a really nice library to parse and scrape HTML pages. It has a simple and easy to use API; It is actively developed and open source ...",
+      "displayUrl": "https://softwarerecs.stackexchange.com › ...",
+      "domain": "www.google.com",
+      "siteName": "Software Recommendations Stack Exchange",
+      "position": {
+        "rankInGroup": 9,
+        "area": "main"
+      },
+      "extensions": {
+        "values": {
+          "serpapi:date": "11.08.2015",
+          "serpapi:favicon": "https://serpapi.com/images/i/iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y-mAAAAJ1BMVEVHcEwqXG0qXW4qXG0qXW4qXW4qXW4qXG4qXG0qXW4qXW4pXG0qXG3Db8khAAAADHRSTlMA5TS9dB-X0vhNrA18icTHAAAAoElEQVQokcWQSRLDIAwEtbCj_783YMAg2bkmc6AodY2WAfizPDN9hUWEX02uAkiTB3DG7pNI4Q5jaI-mTg45CQrWjSJg7212mTYIjWvxZAhZNPRhEvIRU_8VethoD9_mNbDv8YAZr0Jq8awB-ZhKDQfAtZWJKLQ9_YI24CT1SKkqlsXxZia-LEnGhQmvmDSNedxIQMWwOwx8q4-DHg1_rw8oGwmZp-45bAAAAABJRU5ErkJggg.png"
+        },
+        "unmapped": {
+          "serpapi": {
+            "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=ANONYMIZED&url=CAESlAEB6zswFaTBiNS6xqP1KYKvvpRyhuXKEoBnn9jDr0qRhx3DH-T3bPYBgBhjYBRtmlLlDLiBwb35IOzEULTkHhQSLFvhpDz_lfwQrLVgFC30TDPh5uXw0Z6fHlOEtg1-1LimJvUVCigbxaYPQ4Yz7ZY_Xt5ssr7VKZxfbglKWiZjrxbsg06OIbGrMQCFZ8otCp67qwjZ&ved=ANONYMIZED&uoh=1",
+            "snippet_highlighted_words": [
+              "jsoup"
+            ],
+            "about_this_result": {
+              "source": {
+                "description": "jsoup is a really nice library to parse and scrape HTML pages. It has a simple and easy to use API; It is actively developed and open source ...",
+                "source_info_link": "https://www.google.com/goto?url=CAESlAEB6zswFWwxWi0t9DtP07zy-mvu4uYC8wVJQIfWsNGFmvbi5m3roHXE_bS41s66l4xVqw_vHYpsTKj9IjiBc5lJ8VP7j8FGyoZ76d5hEfz-MTtPNBbenK49uGeqKPwNvYSu3GgShEhegddFyjcKq4WFTc6KhU-Un6fxmr2SBe3pj_mzTR3okX6dTfbJJH2EYga7Tm_F",
+                "icon": "https://serpapi.com/images/i/iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y-mAAAAJ1BMVEVHcEwqXG0qXW4qXG0qXW4qXW4qXW4qXG4qXG0qXW4qXW4pXG0qXG3Db8khAAAADHRSTlMA5TS9dB-X0vhNrA18icTHAAAAoElEQVQokcWQSRLDIAwEtbCj_783YMAg2bkmc6AodY2WAfizPDN9hUWEX02uAkiTB3DG7pNI4Q5jaI-mTg45CQrWjSJg7212mTYIjWvxZAhZNPRhEvIRU_8VethoD9_mNbDv8YAZr0Jq8awB-ZhKDQfAtZWJKLQ9_YI24CT1SKkqlsXxZia-LEnGhQmvmDSNedxIQMWwOwx8q4-DHg1_rw8oGwmZp-45bAAAAABJRU5ErkJggg.png"
+              },
+              "languages": [
+                "de"
+              ],
+              "regions": [
+                "DE"
+              ]
+            },
+            "about_page_link": "https://www.google.com/search/about-this-result?origin=www.google.com&req=ANONYMIZED",
+            "about_page_serpapi_link": "https://serpapi.com/search.json?engine=google_about_this_result&google_domain=google.com&req_token=ANONYMIZED"
+          }
+        }
+      }
+    },
+    {
+      "id": "organic#10",
+      "type": "organic",
+      "url": "https://www.google.com/goto?url=CAESjwEB6zswFRgrZF2C2SUuI-nXFFLUux9MxkqVT0Iw2EpriIHWhdIIyCKWkD0JVCvGs9NsuxWNdvGX71NX81057KR1NY2AWM52-vyenpteCpctTAtXpcTIVdpf79YmF5GFXFk3IH1eQ8coRQB_uXWlAy3TCUrPgmABQ4HxZlvyp3xr2k65MoH_ywmFGfML3Na_DA",
+      "title": "Search (Spring Data Neo4j 8.0.8-SNAPSHOT API)",
+      "snippet": "The help page provides an introduction to the scope and syntax of JavaDoc search. Use the ↓ / ↑ keys to move between search results and the ← / → keys ...",
+      "displayUrl": "https://docs.spring.io › api › java",
+      "domain": "www.google.com",
+      "siteName": "SpringSource",
+      "position": {
+        "rankInGroup": 10,
+        "area": "main"
+      },
+      "extensions": {
+        "values": {
+          "serpapi:favicon": "https://serpapi.com/images/i/iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y-mAAAAeFBMVEVHcExzuhpwuRR2vBx2vB53vB51vBp3vB9suBJ3vBx2vB54vB1rtxR0uRt5vSJ1uwSm0nZuuALa7Mjl8thzuxC02Y_____1-u-LxUltuADF4ahsuAGPx1Dx-OnF4qShz3H9_vuOx0p4vRrX68GczWeNxk2s1Ifm89ZgmsZsAAAAKHRSTlMAOXu45P_HhFnWbAQnFvKL1__u7f_i__Op8-L65uvU7fnOodvh8_JYGeJATwAAAS9JREFUeAFlkIG6bSAQRgeNDXRBAQDc93_DYwKwgGZ9_dXAiaYbDJGZPw3eWDaeMMcFAO9QvoEPTG8tHYkc31j_Am9z-CWMYktl8q9LhEwzksZX5YWUMqB9flRZ1XKl0QDsWzkJw5y3USeJ1Dp3EyLrA1FEsZqlpA76scpZVHSd7AYwlKtS-WRcfQ9Mue7lapIT0CF5LV8EVGlJJuLjGkkzKTaMX66oOpI9bajsnhsVTG0vHeCHmD9cWuVbUqSD9oxNi5zvw0m179xQl4q5PI4cmQDg7EfpRlHlYV50ewS3Vuma1Dxhl2GYV4eScW4A4WHV8AR5W6Tdnh5PyH1QWKMsQtYvK0KIZZlZmaAGO__HmTpMhPRC5KcD1zPxgaEyT-0wPLEteKP9TIbIDP1K_AOqbilBNcfAzQAAAABJRU5ErkJggg.png"
+        },
+        "unmapped": {
+          "serpapi": {
+            "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=ANONYMIZED&url=CAESjwEB6zswFYZHhE9m-mMQxobQAvW4XL7jSqzvvrhKAGNKdA1HYkfCnm0B0S95FvsWuBo_jOKuttk3HE5TlUahtU8Dig2_mnYd5xRPtTn4FCuyw7cgmBNpUL-0M7PSLYtzLBainQ3BqqQ4mG0UjJ50yO35B_z0F85Kd_k1YFz-jI-qScyxFaf0pg4s9mckPvD3Dw&ved=ANONYMIZED&uoh=1",
+            "snippet_highlighted_words": [
+              "search",
+              "search"
+            ],
+            "about_this_result": {
+              "source": {
+                "description": "The help page provides an introduction to the scope and syntax of JavaDoc search. Use the ↓ / ↑ keys to move between search results and the ← / → keys ...",
+                "source_info_link": "https://www.google.com/goto?url=CAESjwEB6zswFRgrZF2C2SUuI-nXFFLUux9MxkqVT0Iw2EpriIHWhdIIyCKWkD0JVCvGs9NsuxWNdvGX71NX81057KR1NY2AWM52-vyenpteCpctTAtXpcTIVdpf79YmF5GFXFk3IH1eQ8coRQB_uXWlAy3TCUrPgmABQ4HxZlvyp3xr2k65MoH_ywmFGfML3Na_DA",
+                "icon": "https://serpapi.com/images/i/iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y-mAAAAeFBMVEVHcExzuhpwuRR2vBx2vB53vB51vBp3vB9suBJ3vBx2vB54vB1rtxR0uRt5vSJ1uwSm0nZuuALa7Mjl8thzuxC02Y_____1-u-LxUltuADF4ahsuAGPx1Dx-OnF4qShz3H9_vuOx0p4vRrX68GczWeNxk2s1Ifm89ZgmsZsAAAAKHRSTlMAOXu45P_HhFnWbAQnFvKL1__u7f_i__Op8-L65uvU7fnOodvh8_JYGeJATwAAAS9JREFUeAFlkIG6bSAQRgeNDXRBAQDc93_DYwKwgGZ9_dXAiaYbDJGZPw3eWDaeMMcFAO9QvoEPTG8tHYkc31j_Am9z-CWMYktl8q9LhEwzksZX5YWUMqB9flRZ1XKl0QDsWzkJw5y3USeJ1Dp3EyLrA1FEsZqlpA76scpZVHSd7AYwlKtS-WRcfQ9Mue7lapIT0CF5LV8EVGlJJuLjGkkzKTaMX66oOpI9bajsnhsVTG0vHeCHmD9cWuVbUqSD9oxNi5zvw0m179xQl4q5PI4cmQDg7EfpRlHlYV50ewS3Vuma1Dxhl2GYV4eScW4A4WHV8AR5W6Tdnh5PyH1QWKMsQtYvK0KIZZlZmaAGO__HmTpMhPRC5KcD1zPxgaEyT-0wPLEteKP9TIbIDP1K_AOqbilBNcfAzQAAAABJRU5ErkJggg.png"
+              },
+              "languages": [
+                "de"
+              ],
+              "regions": [
+                "DE"
+              ]
+            },
+            "about_page_link": "https://www.google.com/search/about-this-result?origin=www.google.com&req=ANONYMIZED",
+            "about_page_serpapi_link": "https://serpapi.com/search.json?engine=google_about_this_result&google_domain=google.com&req_token=ANONYMIZED"
+          }
+        }
+      }
+    }
+  ],
+  "features": [
+    {
+      "id": "related_searches#1",
+      "type": "related_searches",
+      "class": "RelatedQueriesFeature",
+      "queries": [
+        {
+          "text": "Javor search engine"
+        },
+        {
+          "text": "Apache Lucene"
+        },
+        {
+          "text": "Solr search"
+        },
+        {
+          "text": "Lucene 10"
+        },
+        {
+          "text": "Lucene index"
+        },
+        {
+          "text": "Nlp java"
+        }
+      ],
+      "extensions": {
+        "unmapped": {
+          "serpapi": [
+            {
+              "block_position": 1,
+              "link": "https://www.google.com/search?sca_esv=ANONYMIZED&hl=de&gl=de&sxsrf=ANONYMIZED&q=Javor+search+engine&sa=X&ved=ANONYMIZED",
+              "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&gl=de&google_domain=google.com&hl=de&q=Javor+search+engine"
+            },
+            {
+              "block_position": 1,
+              "link": "https://www.google.com/search?sca_esv=ANONYMIZED&hl=de&gl=de&sxsrf=ANONYMIZED&q=Apache+Lucene&sa=X&ved=ANONYMIZED",
+              "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&gl=de&google_domain=google.com&hl=de&q=Apache+Lucene"
+            },
+            {
+              "block_position": 1,
+              "link": "https://www.google.com/search?sca_esv=ANONYMIZED&hl=de&gl=de&sxsrf=ANONYMIZED&q=Solr+search&sa=X&ved=ANONYMIZED",
+              "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&gl=de&google_domain=google.com&hl=de&q=Solr+search"
+            },
+            {
+              "block_position": 1,
+              "link": "https://www.google.com/search?sca_esv=ANONYMIZED&hl=de&gl=de&sxsrf=ANONYMIZED&q=Lucene+10&sa=X&ved=ANONYMIZED",
+              "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&gl=de&google_domain=google.com&hl=de&q=Lucene+10"
+            },
+            {
+              "block_position": 1,
+              "link": "https://www.google.com/search?sca_esv=ANONYMIZED&hl=de&gl=de&sxsrf=ANONYMIZED&q=Lucene+index&sa=X&ved=ANONYMIZED",
+              "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&gl=de&google_domain=google.com&hl=de&q=Lucene+index"
+            },
+            {
+              "block_position": 1,
+              "link": "https://www.google.com/search?sca_esv=ANONYMIZED&hl=de&gl=de&sxsrf=ANONYMIZED&q=Nlp+java&sa=X&ved=ANONYMIZED",
+              "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&gl=de&google_domain=google.com&hl=de&q=Nlp+java"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "originalQuery": "serp4j java search library",
+    "totalResultsEstimate": 74,
+    "pageNumber": 1,
+    "providerRequestId": "anonymized00000000000000",
+    "extensions": {
+      "values": {
+        "serpapi:createdAt": "2026-11-02 05:11:08 UTC",
+        "serpapi:engineUrl": "https://www.google.com/search?q=serp4j+java+search+library&oq=serp4j+java+search+library&hl=de&gl=de&sourceid=chrome&ie=UTF-8",
+        "serpapi:organicResultsState": "Results for exact spelling",
+        "serpapi:status": "Success",
+        "serpapi:totalTimeTaken": 0.34
+      },
+      "unmapped": {
+        "serpapi": {
+          "search_metadata": {
+            "json_endpoint": "https://serpapi.com/searches/anonymized/anonymized00000000000000.json",
+            "markdown_endpoint": "https://serpapi.com/searches/anonymized/anonymized00000000000000.md",
+            "pixel_position_endpoint": "https://serpapi.com/searches/anonymized/anonymized00000000000000.json_with_pixel_position",
+            "processed_at": "2026-11-02 05:11:08 UTC",
+            "raw_html_file": "https://serpapi.com/searches/anonymized/anonymized00000000000000.html"
+          },
+          "search_parameters": {
+            "engine": "google",
+            "google_domain": "google.com",
+            "hl": "de",
+            "gl": "de",
+            "device": "desktop"
+          },
+          "search_information": {
+            "query_displayed": "serp4j java search library",
+            "time_taken_displayed": 0.15
+          },
+          "pagination": {
+            "current": 1,
+            "next": "https://www.google.com/search?q=serp4j+java+search+library&sca_esv=ANONYMIZED&hl=de&gl=de&sxsrf=ANONYMIZED&ei=ANONYMIZED&start=10&sa=N&sstk=ANONYMIZED&ved=ANONYMIZED",
+            "other_pages": {
+              "2": "https://www.google.com/search?q=serp4j+java+search+library&sca_esv=ANONYMIZED&hl=de&gl=de&sxsrf=ANONYMIZED&ei=ANONYMIZED&start=10&sa=N&sstk=ANONYMIZED&ved=ANONYMIZED",
+              "3": "https://www.google.com/search?q=serp4j+java+search+library&sca_esv=ANONYMIZED&hl=de&gl=de&sxsrf=ANONYMIZED&ei=ANONYMIZED&start=20&sa=N&sstk=ANONYMIZED&ved=ANONYMIZED",
+              "4": "https://www.google.com/search?q=serp4j+java+search+library&sca_esv=ANONYMIZED&hl=de&gl=de&sxsrf=ANONYMIZED&ei=ANONYMIZED&start=30&sa=N&sstk=ANONYMIZED&ved=ANONYMIZED",
+              "5": "https://www.google.com/search?q=serp4j+java+search+library&sca_esv=ANONYMIZED&hl=de&gl=de&sxsrf=ANONYMIZED&ei=ANONYMIZED&start=40&sa=N&sstk=ANONYMIZED&ved=ANONYMIZED",
+              "6": "https://www.google.com/search?q=serp4j+java+search+library&sca_esv=ANONYMIZED&hl=de&gl=de&sxsrf=ANONYMIZED&ei=ANONYMIZED&start=50&sa=N&sstk=ANONYMIZED&ved=ANONYMIZED"
+            }
+          },
+          "serpapi_pagination": {
+            "next_link": "https://serpapi.com/search.json?device=desktop&engine=google&gl=de&google_domain=google.com&hl=de&q=serp4j+java+search+library&start=10",
+            "next": "https://serpapi.com/search.json?device=desktop&engine=google&gl=de&google_domain=google.com&hl=de&q=serp4j+java+search+library&start=10",
+            "other_pages": {
+              "2": "https://serpapi.com/search.json?device=desktop&engine=google&gl=de&google_domain=google.com&hl=de&q=serp4j+java+search+library&start=10",
+              "3": "https://serpapi.com/search.json?device=desktop&engine=google&gl=de&google_domain=google.com&hl=de&q=serp4j+java+search+library&start=20",
+              "4": "https://serpapi.com/search.json?device=desktop&engine=google&gl=de&google_domain=google.com&hl=de&q=serp4j+java+search+library&start=30",
+              "5": "https://serpapi.com/search.json?device=desktop&engine=google&gl=de&google_domain=google.com&hl=de&q=serp4j+java+search+library&start=40",
+              "6": "https://serpapi.com/search.json?device=desktop&engine=google&gl=de&google_domain=google.com&hl=de&q=serp4j+java+search+library&start=50"
+            }
+          }
+        }
+      }
+    }
+  },
+  "warnings": []
+}

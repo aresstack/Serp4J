@@ -1,0 +1,136 @@
+{
+  "search_metadata": {
+    "id": "anonymized00000000000000",
+    "status": "Success",
+    "json_endpoint": "https://serpapi.com/searches/anonymized/anonymized00000000000000.json",
+    "markdown_endpoint": "https://serpapi.com/searches/anonymized/anonymized00000000000000.md",
+    "created_at": "2026-11-02 05:11:09 UTC",
+    "processed_at": "2026-11-02 05:11:09 UTC",
+    "bing_url": "https://www.bing.com/search?q=serp4j+java+search+library&mkt=de-DE&cc=DE",
+    "raw_html_file": "https://serpapi.com/searches/anonymized/anonymized00000000000000.html",
+    "total_time_taken": 8.36
+  },
+  "search_parameters": {
+    "q": "serp4j java search library",
+    "cc": "DE",
+    "device": "desktop",
+    "mkt": "de-DE",
+    "engine": "bing"
+  },
+  "search_information": {
+    "total_results": 71
+  },
+  "organic_results": [
+    {
+      "position": 1,
+      "title": "为什么当年 Steve Jobs 会从 Lisa 转到 Macintosh 项目？",
+      "tracking_link": "https://www.bing.com/ck/a?!&&p=ANONYMIZED&ptn=3&ver=2&hsh=4&fclid=ANONYMIZED&psq=serp4j+java+search+library&u=a1aHR0cHM6Ly93d3cuemhpaHUuY29tL3F1ZXN0aW9uLzE5ODI5OTM1&ntb=1",
+      "link": "https://www.zhihu.com/question/19829935",
+      "displayed_link": "https://www.zhihu.com › question",
+      "thumbnail": "https://th.bing.com/th/id/ODLS.A2450BEC-5595-40BA-9F13-D9EC6AB74B9F?w=32&h=32&qlt=90&pcl=fffffa&o=6&pid=1.2",
+      "snippet": "当时 Apple 的管理层比较重视 Lisa，而 Lisa 团队的人都不喜欢 Jobs 在设计中指手画脚，所以 Lisa 团队的不满加上管理层的忧虑，决 …"
+    },
+    {
+      "position": 2,
+      "title": "如何评价「Steve Jobs 剧院」的设计？ - 知乎",
+      "tracking_link": "https://www.bing.com/ck/a?!&&p=ANONYMIZED&ptn=3&ver=2&hsh=4&fclid=ANONYMIZED&psq=serp4j+java+search+library&u=a1aHR0cHM6Ly93d3cuemhpaHUuY29tL3F1ZXN0aW9uLzY1MjQ3NTEw&ntb=1",
+      "link": "https://www.zhihu.com/question/65247510",
+      "displayed_link": "https://www.zhihu.com › question",
+      "thumbnail": "https://th.bing.com/th/id/ODLS.A2450BEC-5595-40BA-9F13-D9EC6AB74B9F?w=32&h=32&qlt=91&pcl=fffffa&o=6&pid=1.2",
+      "snippet": "如何评价「Steve Jobs 剧院」的设计？ 如 Apple Newsroom 的新闻稿 Apple Park 4 月对员工开放 所述，Apple Park 的剧院将被命名为 …"
+    },
+    {
+      "position": 3,
+      "title": "Free - Scoreboard+ (Windows) (macOS) | OBS Forums",
+      "tracking_link": "https://www.bing.com/ck/a?!&&p=ANONYMIZED&ptn=3&ver=2&hsh=4&fclid=ANONYMIZED&psq=serp4j+java+search+library&u=a1aHR0cHM6Ly9vYnNwcm9qZWN0LmNvbS9mb3J1bS90aHJlYWRzL3Njb3JlYm9hcmQtd2luZG93cy1tYWNvcy4yMzI5Ni8&ntb=1",
+      "link": "https://obsproject.com/forum/threads/scoreboard-windows-macos.23296/",
+      "date": "5. Jan. 2015",
+      "displayed_link": "https://obsproject.com › forum › threads",
+      "thumbnail": "https://th.bing.com/th/id/ODLS.A2450BEC-5595-40BA-9F13-D9EC6AB74B9F?w=32&h=32&qlt=92&pcl=fffffa&o=6&pid=1.2",
+      "snippet": "ha0511kr submitted a new resource: Scoreboard+ With Timer - Scoreboard with Timer, Sports Scoreboard,Sports …"
+    },
+    {
+      "position": 4,
+      "title": "Semi-free - Touch Portal | OBS Forums",
+      "tracking_link": "https://www.bing.com/ck/a?!&&p=ANONYMIZED&ptn=3&ver=2&hsh=4&fclid=ANONYMIZED&psq=serp4j+java+search+library&u=a1aHR0cHM6Ly9vYnNwcm9qZWN0LmNvbS9mb3J1bS9yZXNvdXJjZXMvdG91Y2gtcG9ydGFsLjc1NS8&ntb=1",
+      "link": "https://obsproject.com/forum/resources/touch-portal.755/",
+      "date": "20. Jan. 2019",
+      "displayed_link": "https://obsproject.com › forum › resources",
+      "thumbnail": "https://th.bing.com/th/id/ODLS.A2450BEC-5595-40BA-9F13-D9EC6AB74B9F?w=32&h=32&qlt=93&pcl=fffffa&o=6&pid=1.2",
+      "snippet": "Touch Portal is a companion app to control a PC or a Mac by using a deck of buttons to improve the workflow & …"
+    },
+    {
+      "position": 5,
+      "title": "如何开始 Freelancer 生涯？ - 知乎",
+      "tracking_link": "https://www.bing.com/ck/a?!&&p=ANONYMIZED&ptn=3&ver=2&hsh=4&fclid=ANONYMIZED&psq=serp4j+java+search+library&u=a1aHR0cHM6Ly93d3cuemhpaHUuY29tL3F1ZXN0aW9uLzIwMTQwNzcy&ntb=1",
+      "link": "https://www.zhihu.com/question/20140772",
+      "displayed_link": "https://www.zhihu.com › question",
+      "thumbnail": "https://th.bing.com/th/id/ODLS.A2450BEC-5595-40BA-9F13-D9EC6AB74B9F?w=32&h=32&qlt=94&pcl=fffffa&o=6&pid=1.2",
+      "snippet": "Upwork - Hire Freelancers & Get Freelance Jobs Online 2. Toptal 与其他的平台不同，Toptal略显高端，是针对更专业更有经验的自由 …"
+    },
+    {
+      "position": 6,
+      "title": "Steve Jobs 同款眼鏡 Lunor Eyeglasses Classic Round 哪裡可以買到？",
+      "tracking_link": "https://www.bing.com/ck/a?!&&p=ANONYMIZED&ptn=3&ver=2&hsh=4&fclid=ANONYMIZED&psq=serp4j+java+search+library&u=a1aHR0cHM6Ly93d3cuemhpaHUuY29tL3F1ZXN0aW9uLzIwODUwODgy&ntb=1",
+      "link": "https://www.zhihu.com/question/20850882",
+      "displayed_link": "https://www.zhihu.com › question",
+      "thumbnail": "https://th.bing.com/th/id/ODLS.A2450BEC-5595-40BA-9F13-D9EC6AB74B9F?w=32&h=32&qlt=95&pcl=fffffa&o=6&pid=1.2",
+      "snippet": "Steve Jobs 同款眼鏡 Lunor Eyeglasses Classic Round 哪裡可以買到？ 自己非常喜歡，希望有辦法的朋友能幫忙，但一定要同款的正 …"
+    },
+    {
+      "position": 7,
+      "title": "ABAQUS中出现XML parsing failure for job错误怎么解决？",
+      "tracking_link": "https://www.bing.com/ck/a?!&&p=ANONYMIZED&ptn=3&ver=2&hsh=4&fclid=ANONYMIZED&psq=serp4j+java+search+library&u=a1aHR0cHM6Ly93d3cuemhpaHUuY29tL3F1ZXN0aW9uLzQ0NjQzODY5P3NvcnQ9Y3JlYXRlZA&ntb=1",
+      "link": "https://www.zhihu.com/question/44643869?sort=created",
+      "displayed_link": "https://www.zhihu.com › question",
+      "thumbnail": "https://th.bing.com/th/id/ODLS.A2450BEC-5595-40BA-9F13-D9EC6AB74B9F?w=32&h=32&qlt=96&pcl=fffffa&o=6&pid=1.2",
+      "snippet": "在job中submit之后出现如下错误！！！Error in job Job-1: XML parsing failure for job Job-1. Shuttin…"
+    },
+    {
+      "position": 8,
+      "title": "work与job的用法与区别？ - 知乎",
+      "tracking_link": "https://www.bing.com/ck/a?!&&p=ANONYMIZED&ptn=3&ver=2&hsh=4&fclid=ANONYMIZED&psq=serp4j+java+search+library&u=a1aHR0cHM6Ly93d3cuemhpaHUuY29tL3F1ZXN0aW9uLzQ4NjU2ODg3&ntb=1",
+      "link": "https://www.zhihu.com/question/48656887",
+      "displayed_link": "https://www.zhihu.com › question",
+      "thumbnail": "https://th.bing.com/th/id/ODLS.A2450BEC-5595-40BA-9F13-D9EC6AB74B9F?w=32&h=32&qlt=97&pcl=fffffa&o=6&pid=1.2",
+      "snippet": "Job （为获取报酬所做的）工作、职业，既可 指固定的工作，也可指临时的或某项具体的工作，是可数名词，前面可用不定冠词a，复 …"
+    },
+    {
+      "position": 9,
+      "title": "如何评价《成为乔布斯》（Becoming Steve Jobs）？ - 知乎",
+      "tracking_link": "https://www.bing.com/ck/a?!&&p=ANONYMIZED&ptn=3&ver=2&hsh=4&fclid=ANONYMIZED&psq=serp4j+java+search+library&u=a1aHR0cHM6Ly93d3cuemhpaHUuY29tL3F1ZXN0aW9uLzI5MDA2MzY3&ntb=1",
+      "link": "https://www.zhihu.com/question/29006367",
+      "displayed_link": "https://www.zhihu.com › question",
+      "thumbnail": "https://th.bing.com/th/id/ODLS.A2450BEC-5595-40BA-9F13-D9EC6AB74B9F?w=32&h=32&qlt=98&pcl=fffffa&o=6&pid=1.2",
+      "snippet": "如何评价《成为乔布斯》（Becoming Steve Jobs）？ 希望看过这本新传记的知友能给点评价。 对于已经读过Isaacson的 《乔布斯传 …"
+    },
+    {
+      "position": 10,
+      "title": "从乔布斯身上我们可以学到哪些好的精神与品质？ - 知乎",
+      "tracking_link": "https://www.bing.com/ck/a?!&&p=ANONYMIZED&ptn=3&ver=2&hsh=4&fclid=ANONYMIZED&psq=serp4j+java+search+library&u=a1aHR0cHM6Ly93d3cuemhpaHUuY29tL3F1ZXN0aW9uLzI4Njc1Njgw&ntb=1",
+      "link": "https://www.zhihu.com/question/28675680",
+      "displayed_link": "https://www.zhihu.com › question",
+      "thumbnail": "https://th.bing.com/th/id/ODLS.A2450BEC-5595-40BA-9F13-D9EC6AB74B9F?w=32&h=32&qlt=99&pcl=fffffa&o=6&pid=1.2",
+      "snippet": "29、 你是如何理解Steve Jobs所说的“人生中最重要的决定不是你做什么,而是你不做什么”这句话 ? 30、 乔布斯为什么没在2000年之前 …"
+    }
+  ],
+  "pagination": {
+    "current": 1,
+    "next": "https://www.bing.com/search?q=serp4j+java+search+library&mkt=de-DE&cc=DE&cvid=E619E74CFAC5448FAEBC64D9A56ED94E&gs_lcrp=EgRlZGdlKgYIABBFGDkyBggAEEUYOdIBCDQwOTdqMGoxqAIAsAIA&rdr=1&rdrig=93A921E7506244359FA522BCF7017199&FPIG=3DD01295C1C24D599725E92BA5E7CF71&first=11&FORM=PORE",
+    "other_pages": {
+      "2": "https://www.bing.com/search?q=serp4j+java+search+library&mkt=de-DE&cc=DE&cvid=E619E74CFAC5448FAEBC64D9A56ED94E&gs_lcrp=EgRlZGdlKgYIABBFGDkyBggAEEUYOdIBCDQwOTdqMGoxqAIAsAIA&rdr=1&rdrig=93A921E7506244359FA522BCF7017199&FPIG=3DD01295C1C24D599725E92BA5E7CF71&first=11&FORM=PERE",
+      "3": "https://www.bing.com/search?q=serp4j+java+search+library&mkt=de-DE&cc=DE&cvid=E619E74CFAC5448FAEBC64D9A56ED94E&gs_lcrp=EgRlZGdlKgYIABBFGDkyBggAEEUYOdIBCDQwOTdqMGoxqAIAsAIA&rdr=1&rdrig=93A921E7506244359FA522BCF7017199&FPIG=3DD01295C1C24D599725E92BA5E7CF71&first=21&FORM=PERE1",
+      "4": "https://www.bing.com/search?q=serp4j+java+search+library&mkt=de-DE&cc=DE&cvid=E619E74CFAC5448FAEBC64D9A56ED94E&gs_lcrp=EgRlZGdlKgYIABBFGDkyBggAEEUYOdIBCDQwOTdqMGoxqAIAsAIA&rdr=1&rdrig=93A921E7506244359FA522BCF7017199&FPIG=3DD01295C1C24D599725E92BA5E7CF71&first=31&FORM=PERE2"
+    }
+  },
+  "serpapi_pagination": {
+    "current": 1,
+    "next_link": "https://serpapi.com/search.json?cc=DE&device=desktop&engine=bing&first=11&mkt=de-DE&q=serp4j+java+search+library",
+    "next": "https://serpapi.com/search.json?cc=DE&device=desktop&engine=bing&first=11&mkt=de-DE&q=serp4j+java+search+library",
+    "other_pages": {
+      "2": "https://serpapi.com/search.json?cc=DE&device=desktop&engine=bing&first=11&mkt=de-DE&q=serp4j+java+search+library",
+      "3": "https://serpapi.com/search.json?cc=DE&device=desktop&engine=bing&first=21&mkt=de-DE&q=serp4j+java+search+library",
+      "4": "https://serpapi.com/search.json?cc=DE&device=desktop&engine=bing&first=31&mkt=de-DE&q=serp4j+java+search+library"
+    }
+  }
+}

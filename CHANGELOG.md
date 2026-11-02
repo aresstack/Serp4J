@@ -64,6 +64,25 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
   mit `RawPayloadPolicy.ALWAYS`, bei Teil- oder unvollständigen Ergebnissen auch mit `ON_ERROR`. `DataForSeoOptions` (location_code/-name, se_domain, os, Funktion, tag) und
   `DataForSeoSearchProviderFactory` (ServiceLoader). Fixtures sind **synthetisch** und als solche gekennzeichnet,
   bis eine aufgezeichnete Antwort vorliegt (E-1). Noch nicht enthalten: Standard-Task-Ablauf, HTML, Locations/Languages.
+- `serp4j-provider-serpapi` (Java 8, fünfter Provider, gegen die SerpApi-Dokumentation vom 2026-11-02):
+  `SerpApiSearchProvider` für `GET https://serpapi.com/search.json` mit `engine=google` (Standard) und
+  `engine=bing`. Google: `q`, `gl`, `hl`, `location`, `google_domain`, `start`, `safe`, `tbs` (kein `num` – Google wertet ihn seit 09/2025 nicht mehr aus; andere Limits als 10 ergeben eine Warnung bzw. `UNSUPPORTED`)
+  (`qdr:*` bzw. `cdr:1,cd_min,cd_max`); Bing: `cc`, `mkt` (Sprache ohne Land → Warnung bzw. `UNSUPPORTED`), `count` ≤ 50 (sonst gekappt mit Warnung bzw.
+  `UNSUPPORTED`), `first` = offset + 1, `safeSearch`, `filters` (`ez1`–`ez3`, sonst `ez5_<von>_<bis>`). Der Key
+  kommt aus dem `CredentialProvider` (`<id>.api-key`) und geht – weil SerpApi ihn nur so annimmt – als URL-Parameter
+  `api_key` über `RequestAuthentication.queryParameter`: maskiert in `getRedactedUrl()`/`toString()`/
+  `ExecutionInfo.sourceUrl`, in Fehlermeldungen per Muster `api_key=***`, Transportfehler ohne angehängte Ursache;
+  `SecretValue` wird geschlossen, der Key nur als `char[]` gehalten und danach gelöscht. `SerpApiRequestOptions`
+  (`no_cache`, `device`, `location`, `google_domain`, weitere Parameter ohne die reservierten Namen); falscher
+  Optionstyp → `INVALID_REQUEST` vor Credential-Abruf und HTTP-Aufruf. Mapping-Definitionen `serpapi-google` und
+  `serpapi-bing` v1 (organic, ads, top_stories, knowledge_graph, answer_box, related_questions, related_searches;
+  `search_metadata.id` → `providerRequestId`, `total_results` → `PageInfo.totalResultsEstimate`, `serpapi_pagination.next` → `hasMore`, Anzeigen-URL mit Fallback `tracking_link`). Fehler: 401/403/„Invalid API
+  key“ → `AUTHENTICATION`, „run out of searches“ → `QUOTA_EXHAUSTED`, sonst 429 → `RATE_LIMITED`, 400 →
+  `INVALID_REQUEST`, 5xx und `status=Error` → `UNAVAILABLE`; „hasn't returned any results“ ist eine leere
+  Erfolgsantwort. SerpApi-Cache bleibt standardmäßig an (gecachte Antworten kosten kein Kontingent).
+  `SerpApiSearchProviderFactory` per `ServiceLoader`. Keine SerpApi-Client-Bibliothek als Abhängigkeit
+  (`serpapi-java` braucht Java 21, `serpapi4j` Java 16). Fixtures sind **synthetisch** und gekennzeichnet; `liveTest`
+  (`SERP4J_SERPAPI_API_KEY`) zeichnet Google- und Bing-Antworten mit `-Pserp4j.recordFixtures=true` auf (E-1).
 - `serp4j-provider-brightdata` (Java 8, Paket C): `BrightDataSearchProvider` für die Bright Data SERP API,
   synchroner Weg `POST https://api.brightdata.com/request` mit `{zone, url, format: "json", data_format: "parsed"}`
   (von Angelo real verifiziert). Die Google-URL entsteht aus dem neutralen `SearchRequest` (`q`, `start`, `hl`, `gl`,

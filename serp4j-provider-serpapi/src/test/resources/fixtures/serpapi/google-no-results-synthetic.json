@@ -1,0 +1,6 @@
+{
+  "search_metadata": { "id": "synthetic0000000000000003", "status": "Success", "total_time_taken": 0.9 },
+  "search_parameters": { "engine": "google", "q": "zzzz synthetic nothing" },
+  "search_information": { "organic_results_state": "Fully empty" },
+  "error": "Google hasn't returned any results for this query."
+}
