@@ -16,8 +16,6 @@ dependencies {
     runtimeOnly(libs.playwright.driver.bundle)
 
     "browserTestImplementation"(testFixtures(project(":serp4j-browser-playwright")))
-    // ADR-020 live check: every detected browser (Edge, Chrome, Chromium, Camoufox) through BrowserRuntimes.create.
-    "browserTestImplementation"(project(":serp4j-browser-camoufox"))
 }
 
 // Explicit, never implicit: installs the Playwright browser build that matches this Playwright version.
