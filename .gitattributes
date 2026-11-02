@@ -1,0 +1,7 @@
+# Golden files are compared byte for byte against the LF output of the mapping engine. Pin them to LF so that a
+# checkout with core.autocrlf=true (Windows default) does not rewrite them to CRLF.
+serp4j-mapping/src/test/resources/scenarios/**/expected.json text eol=lf
+
+# The POSIX wrapper must keep LF or "./gradlew" fails in WSL/Git Bash checkouts made with core.autocrlf=true.
+gradlew text eol=lf
+*.bat text eol=crlf

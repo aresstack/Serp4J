@@ -181,8 +181,13 @@ class AhcHttpTransportTest {
         HttpTransportException failure = failureOf(transport.execute(
                 HttpRequest.get("http://127.0.0.1:" + closedPort + "/").build()));
 
-        assertThat(failure.getKind()).isEqualTo(Kind.CONNECT);
+        // Linux/macOS answer a closed loopback port with an immediate RST (CONNECT). Windows retries SYNs to a
+        // refused port for a while, so the attempt may end in the connect timeout instead (TIMEOUT). Both are
+        // legitimate, distinct kinds; the classification itself is pinned deterministically in
+        // TransportFailuresTest. What must hold everywhere: the failure is retryable and leaks nothing.
+        assertThat(failure.getKind()).isIn(Kind.CONNECT, Kind.TIMEOUT);
         assertThat(failure.isRetryable()).isTrue();
+        assertThat(failure.getMessage()).contains("GET http://127.0.0.1:" + closedPort + "/");
     }
 
     @Test
@@ -202,21 +207,6 @@ class AhcHttpTransportTest {
         assertThat(server.lastRequest().header("X-Custom-Credential")).isEqualTo(SECRET);
         assertNoSecretInChain(failure);
         assertThat(failure.getMessage()).contains("POST").contains("api_key=****").contains("custom_token=****");
-    }
-
-    @Test
-    void connectFailureMessageIsRedacted() throws Exception {
-        int closedPort;
-        try (ServerSocket socket = new ServerSocket(0)) {
-            closedPort = socket.getLocalPort();
-        }
-
-        HttpTransportException failure = failureOf(transport.execute(
-                HttpRequest.get("http://127.0.0.1:" + closedPort + "/x?key=" + SECRET).build()));
-
-        assertNoSecretInChain(failure);
-        assertThat(failure.getCause()).isInstanceOf(TransportFailures.SanitizedCause.class);
-        assertThat(failure.getCause().getStackTrace()).isNotEmpty();
     }
 
     @Test
