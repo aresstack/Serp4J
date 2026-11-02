@@ -46,8 +46,10 @@ Google-Suchen löst der Provider diese URLs nach dem (netzwerkfreien) Mapping au
    `SearchContext` hinaus.
 4. Nur bei `301/302/303/307/308` mit absolutem `http(s)`-`Location` die Ziel-URL übernehmen: `url` wird ersetzt,
    `domain` aus dem Host abgeleitet; Titel, Snippet, Position, Provenance, `displayUrl`, `siteName` bleiben. Die
-   Original-URL steht in der Extension `dataforseo:original_url`.
-5. Sonst bleibt das Ergebnis unverändert; alle Fehlschläge einer Suche ergeben eine Warnung
+   Original-URL steht in der Extension `serp4j:original_url`, der Status in `serp4j:url_resolution`
+   (`resolved` bzw. Fehlergrund). Die Orchestrierung ist der providerneutrale `ResultUrlEnricher` aus
+   `serp4j-http-api`, den auch SerpApi nutzt.
+5. Sonst bleibt die URL unverändert (Status `serp4j:url_resolution` = Grund, z. B. `timeout`); alle Fehlschläge einer Suche ergeben eine Warnung
    `url_resolution_failed` mit Zählung je Grund. Es wird nie über `breadcrumb`, `domain` oder `website_name`
    geraten.
 
@@ -60,8 +62,7 @@ verschiedener `/goto`-URLs, bei 10 Treffern typischerweise 7–8), also im ungü
 Abschalten: `builder.resolveGoogleGotoUrls(false)` bzw. Factory-Property `resolveGoogleGotoUrls=false` –
 dann keine zusätzlichen Requests.
 
-**Folgeaufgaben:** `/goto`-URLs innerhalb von SERP-Features werden noch nicht aufgelöst; der providerneutrale
-`GoogleGotoUrlResolver` soll später auch im SerpApi-Provider angebunden werden.
+**Folgeaufgabe:** `/goto`-URLs innerhalb von SERP-Features werden noch nicht aufgelöst.
 
 Live-Prüfung ohne DataForSEO-Guthaben: `SERP4J_GOOGLE_GOTO_URL=<aktuelle /goto-URL>
 [SERP4J_GOOGLE_GOTO_TARGET=<erwartetes Ziel>] ./gradlew :serp4j-provider-dataforseo:liveTest -Pserp4j.live=true`.

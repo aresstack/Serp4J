@@ -24,6 +24,8 @@ import com.aresstack.serp4j.core.port.credential.SecretValue;
 import com.aresstack.serp4j.http.HttpResponse;
 import com.aresstack.serp4j.http.HttpTransport;
 import com.aresstack.serp4j.http.HttpTransportException;
+import com.aresstack.serp4j.http.resolve.GoogleGotoUrlResolver;
+import com.aresstack.serp4j.http.resolve.ResultUrlEnricher;
 import com.aresstack.serp4j.provider.serpapi.internal.SerpApiErrors;
 import com.aresstack.serp4j.provider.serpapi.internal.SerpApiRequestFactory;
 import com.aresstack.serp4j.provider.serpapi.internal.SerpApiResponseMapper;
@@ -67,6 +69,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *       {@code QUOTA_EXHAUSTED}, other 429 to {@code RATE_LIMITED}, 400 to {@code INVALID_REQUEST}, 5xx and
  *       {@code search_metadata.status=Error} to {@code UNAVAILABLE}. "Google hasn't returned any results" is an empty,
  *       successful answer.</li>
+ *   <li>Google {@code /goto?url=…} result URLs are resolved after mapping by the provider-neutral
+ *       {@link ResultUrlEnricher} with {@link GoogleGotoUrlResolver} (default on, see
+ *       {@link SerpApiSearchOptions#isResolveGoogleGotoUrls()}); original URL and status are kept as extensions
+ *       {@code serp4j:original_url} and {@code serp4j:url_resolution}. Bing is never touched.</li>
  *   <li>SerpApi's one-hour cache is used by default (cached answers are free); {@code no_cache} is opt-in.</li>
  *   <li>{@link #close()} completes running searches with {@code CANCELLED} and never closes the transport or the
  *       credential provider.</li>
@@ -88,6 +94,8 @@ public final class SerpApiSearchProvider implements SearchProvider {
     private final Clock clock;
     private final SerpApiRequestFactory requestFactory;
     private final SerpApiResponseMapper responseMapper;
+    /** Null when {@code resolveGoogleGotoUrls} is off. */
+    private final ResultUrlEnricher urlEnricher;
     private final AtomicBoolean closed = new AtomicBoolean();
     private final Set<CompletableFuture<SearchResponse>> running =
             Collections.newSetFromMap(new ConcurrentHashMap<CompletableFuture<SearchResponse>, Boolean>());
@@ -105,6 +113,9 @@ public final class SerpApiSearchProvider implements SearchProvider {
         this.clock = builder.clock;
         this.requestFactory = new SerpApiRequestFactory(id, options, clock);
         this.responseMapper = new SerpApiResponseMapper(id);
+        this.urlEnricher = options.isResolveGoogleGotoUrls()
+                ? new ResultUrlEnricher(id, new GoogleGotoUrlResolver(transport), options.getUrlResolveTimeout(), clock)
+                : null;
     }
 
     public static Builder builder() {
@@ -224,7 +235,13 @@ public final class SerpApiSearchProvider implements SearchProvider {
                 if (!response.isSuccessful()) {
                     result.completeExceptionally(SerpApiErrors.fromResponse(id, response));
                 } else {
-                    result.complete(responseMapper.map(request, prepared, response, startedAt, finishedAt));
+                    SearchResponse mapped = responseMapper.map(request, prepared, response, startedAt, finishedAt);
+                    if (urlEnricher == null || !SearchEngineId.GOOGLE.equals(engine)) {
+                        result.complete(mapped);
+                    } else {
+                        // After the network-free mapper; never fails the search, falls back to the mapped answer.
+                        urlEnricher.completeWith(result, mapped, context);
+                    }
                 }
             } catch (SearchProviderException e) {
                 result.completeExceptionally(e);

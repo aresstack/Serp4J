@@ -9,18 +9,29 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
 
 ### Added
 
+- SerpApi: Google-`/goto`-URLs werden nach dem JSON-Mapping wie bei DataForSEO aufgelöst – mit demselben
+  `GoogleGotoUrlResolver` und demselben providerneutralen `ResultUrlEnricher` (keine zweite Implementierung).
+  `SerpApiResponseMapper` bleibt netzwerkfrei. Option `SerpApiSearchOptions.resolveGoogleGotoUrls` (Standard `true`)
+  und `urlResolveTimeout` (≤ 3 s), Factory-Properties `resolve-google-goto-urls` und `url-resolve-timeout`. Nur
+  Google; Bing bleibt unverändert. Regressionstests auf der echten Fixture `google-web-de.json` (7 von 10 `/goto`).
+- `serp4j-http-api`: `ResultUrlEnricher` – providerneutraler Postprozessor nach dem Mapping (höchstens 4 parallel,
+  Timeout je Request und Such-Deadline, Cancellation, eine Warnung `url_resolution_failed` je Suche,
+  `completeWith(target, mapped, context)` als komplette Provider-Anbindung). Neue Extension `serp4j:url_resolution`
+  auf jedem versuchten Treffer: `resolved` oder der Fehlergrund (`not_a_redirect`, `invalid_location`, `timeout`,
+  `network`, `unsupported_url`, `cancelled`). Treffer mit Fehlerstatus tragen weiter die unaufgelöste `/goto`-URL und
+  dürfen nicht als verifizierte Quelle gelten (AskAI #41).
 - DataForSEO: Google-Weiterleitungs-URLs (`https://www.google.com/goto?url=…`, auch ohne `www.`) werden nach dem
-  Mapping automatisch aufgelöst. `DataForSeoResponseMapper` bleibt netzwerkfrei; `DataForSeoResultUrlEnricher`
+  Mapping automatisch aufgelöst. `DataForSeoResponseMapper` bleibt netzwerkfrei; `ResultUrlEnricher`
   löst jede verschiedene URL einer Antwort einmal per `GET` ohne Redirect-Folgen auf (höchstens 4 parallel,
   ≤ 3 s je Request und nie über die Such-Deadline hinaus) und übernimmt bei `301/302/303/307/308` mit absolutem
   `http(s)`-`Location` die Ziel-URL in `url` und deren Host in `domain`; die ursprüngliche URL steht in der Extension
-  `dataforseo:original_url`. Fehlschläge (403/429/5xx, Timeout, fehlendes/relatives `Location` …) lassen das Ergebnis
+  `serp4j:original_url`. Fehlschläge (403/429/5xx, Timeout, fehlendes/relatives `Location` …) lassen das Ergebnis
   unverändert und erzeugen genau eine Warnung `url_resolution_failed` mit Zählung je Grund. Die Zielseite wird nie
   abgerufen, an Google gehen keine Zugangsdaten, Cookies oder Referrer. Nur Google-Suchen; Bing bleibt unverändert.
   Option `resolveGoogleGotoUrls` (Standard `true`) im Builder und in der Factory, `urlResolveTimeout` im Builder.
-  Folgeaufgaben: `/goto`-URLs innerhalb von SERP-Features (verschachtelte Treffer) werden noch nicht aufgelöst, nur
-  `SearchData.getResults()`; `GoogleGotoUrlResolver` soll später auch im SerpApi-Provider angebunden werden (dort
-  liefert der echte Google-Lauf ebenfalls 7 von 10 organischen Treffern als `/goto`).
+  Folgeaufgabe: `/goto`-URLs innerhalb von SERP-Features (verschachtelte Treffer) werden noch nicht aufgelöst, nur
+  `SearchData.getResults()`.
+- `serp4j-http-api` hängt jetzt von `serp4j-core` ab (für `ResultUrlEnricher`).
 - `serp4j-http-api`: Paket `com.aresstack.serp4j.http.resolve` mit `UrlResolver`, `UrlResolutionException` und
   `GoogleGotoUrlResolver` – providerunabhängig wiederverwendbar.
 - `HttpRequest.Builder.followRedirects(boolean)` / `HttpRequest.isFollowRedirects()`: Redirects pro Request

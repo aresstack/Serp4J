@@ -15,6 +15,7 @@ import com.aresstack.serp4j.core.port.factory.ProviderEnvironment;
 import com.aresstack.serp4j.http.HttpMethod;
 import com.aresstack.serp4j.http.HttpRequest;
 import com.aresstack.serp4j.http.HttpResponse;
+import com.aresstack.serp4j.http.resolve.ResultUrlEnricher;
 import com.aresstack.serp4j.http.HttpTransport;
 import com.aresstack.serp4j.http.HttpTransportException;
 import com.aresstack.serp4j.testkit.fixture.Fixtures;
@@ -147,7 +148,7 @@ class DataForSeoGotoUrlResolutionTest {
                 resolved++;
                 assertThat(a.getUrl()).isEqualTo(target(b.getUrl()));
                 assertThat(a.getDomain()).hasValue("target.example");
-                assertThat(a.getExtensions().get(DataForSeoResultUrlEnricher.ORIGINAL_URL)).hasValue(b.getUrl());
+                assertThat(a.getExtensions().get(ResultUrlEnricher.ORIGINAL_URL)).hasValue(b.getUrl());
                 // every other field is kept
                 SearchResultItem restored = a.toBuilder().url(b.getUrl()).extensions(b.getExtensions()).build();
                 assertThat(b.getDomain().isPresent() ? restored.toBuilder().domain(b.getDomain().get()).build()
@@ -232,11 +233,11 @@ class DataForSeoGotoUrlResolutionTest {
         assertThat(response.getData().getResults()).extracting(SearchResultItem::getUrl)
                 .containsExactly(a, b, c, d, e, f);
         assertThat(response.getData().getResults())
-                .allMatch(i -> !i.getExtensions().contains(DataForSeoResultUrlEnricher.ORIGINAL_URL))
+                .allMatch(i -> !i.getExtensions().contains(ResultUrlEnricher.ORIGINAL_URL))
                 .allMatch(i -> i.getDomain().equals(java.util.Optional.of("www.google.com")));
         List<SearchWarning> warnings = new ArrayList<SearchWarning>();
         for (SearchWarning w : response.getMetadata().get().getWarnings()) {
-            if (w.getCode().equals(DataForSeoResultUrlEnricher.WARNING_CODE)) {
+            if (w.getCode().equals(ResultUrlEnricher.WARNING_CODE)) {
                 warnings.add(w);
             }
         }
@@ -327,7 +328,7 @@ class DataForSeoGotoUrlResolutionTest {
         SearchResponse response = f.get(5, TimeUnit.SECONDS);
         assertThat(transport.gotoRequests).hasSize(4);
         assertThat(response.getMetadata().get().getWarnings()).extracting(SearchWarning::getCode)
-                .contains(DataForSeoResultUrlEnricher.WARNING_CODE);
+                .contains(ResultUrlEnricher.WARNING_CODE);
         assertThat(response.getData().getResults().get(0).getUrl()).isEqualTo("https://target.example/x");
     }
 
