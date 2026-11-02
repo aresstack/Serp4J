@@ -174,7 +174,7 @@ class GoogleBrowserSearchProviderTest {
 
     @Test
     void closeCancelsRunningSearchAndClosesItsSession() throws Exception {
-        FakeBrowserRuntime runtime = runtimeServing(FakePage.builder().delay(Duration.ofSeconds(10))
+        FakeBrowserRuntime runtime = runtimeServing(FakePage.builder().delay(Duration.ofSeconds(2))
                 .html("<html></html>").build());
         GoogleBrowserSearchProvider provider = GoogleBrowserSearchProvider.builder(runtime).build();
         CompletableFuture<SearchResponse> running = provider.search(request(), SearchContext.defaults());
@@ -183,8 +183,11 @@ class GoogleBrowserSearchProviderTest {
             Thread.sleep(10);
         }
 
+        long closing = System.nanoTime();
         provider.close();
 
+        // close() must not wait for the running navigation (the session is closed off this thread)
+        assertThat(Duration.ofNanos(System.nanoTime() - closing)).isLessThan(Duration.ofSeconds(1));
         assertThat(failure(running).getCategory()).isEqualTo(SearchErrorCategory.CANCELLED);
         until = System.currentTimeMillis() + 5000;
         while (runtime.getOpenSessionCount() > 0 && System.currentTimeMillis() < until) {
