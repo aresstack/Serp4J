@@ -1,0 +1,61 @@
+{
+  "id": "dataforseo-serp-organic",
+  "version": 1,
+  "namespace": "dataforseo",
+  "description": "DataForSEO SERP API v3, organic live/regular and live/advanced (Google and Bing). Written against the DataForSEO API reference (2026-11-01); verified against synthetic fixtures until a recorded answer is available.",
+  "metadata": {
+    "totalResultsEstimate": "$.tasks[0].result[0].se_results_count",
+    "providerRequestId": "$.tasks[0].id",
+    "cost": "$.tasks[0].cost",
+    "currency": { "default": "USD" }
+  },
+  "sections": [
+    {
+      "id": "serp", "kind": "elements", "path": "$.tasks[0].result[0].items[*]",
+      "discriminator": "type",
+      "discriminatorMap": {
+        "organic": "item:organic",
+        "paid": "item:paid",
+        "featured_snippet": "feature:featured_snippet",
+        "knowledge_graph": "feature:knowledge_panel",
+        "people_also_ask": "feature:people_also_ask",
+        "related_searches": "feature:related_searches",
+        "answer_box": "feature:answer_box",
+        "ai_overview": "feature:ai_overview",
+        "top_stories": "feature:top_stories",
+        "local_pack": "feature:local_pack",
+        "images": "feature:images",
+        "video": "feature:video_carousel",
+        "discussions_and_forums": "feature:discussions"
+      },
+      "position": "fields",
+      "fields": {
+        "rankInGroup": "rank_group",
+        "rankAbsolute": "rank_absolute",
+        "page": "page"
+      },
+      "fieldsByType": {
+        "organic": {
+          "title": "title", "url": "url", "snippet": "description", "domain": "domain",
+          "displayUrl": "breadcrumb", "siteName": "website_name",
+          "additionalSnippets": "extended_snippet",
+          "publishedDate": { "from": "timestamp", "convert": "dataforseoTimestamp" }
+        },
+        "paid": {
+          "title": "title", "url": "url", "snippet": "description", "domain": "domain",
+          "displayUrl": "breadcrumb", "siteName": "website_name"
+        },
+        "featured_snippet": { "text": "description", "sourceUrl": "url", "sourceTitle": "title", "sourceDomain": "domain" },
+        "knowledge_panel": { "title": "title", "subtitle": "sub_title", "description": "description" },
+        "related_searches": { "queries": "items[*]" },
+        "answer_box": { "text": ["text[0]", "text"], "sourceUrl": "url", "sourceTitle": "title" },
+        "ai_overview": { "title": "title" },
+        "top_stories": { "title": "title" },
+        "local_pack": { "title": "title" },
+        "images": { "title": "title" },
+        "video_carousel": { "title": "title" },
+        "discussions": { "title": "title" }
+      }
+    }
+  ]
+}
