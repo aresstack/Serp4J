@@ -1,0 +1,11 @@
+# SYNTHETIC fixture (serp4j-provider-argos tests) - format of the Argos web_search tool, not a real answer
+PROVIDER: html.duckduckgo.com
+PROVIDER: www.bing.com
+1: Synthetic result one — https://example.invalid/argos/1
+   First synthetic snippet.
+2: Synthetic — title with dash — https://example.invalid/argos/2
+   Second synthetic snippet.
+3: Synthetic result without snippet — https://example.invalid/argos/3
+   
+ATTEMPT: html.duckduckgo.com ORGANIC_RESULTS
+ATTEMPT: www.bing.com EXTRACTION_FAILED

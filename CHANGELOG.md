@@ -9,6 +9,16 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
 
 ### Added
 
+- `serp4j-provider-argos` (Java 8, eigenes Gradle-Subprojekt, keine Abhängigkeit auf AskAI): die Browser-Websuche von
+  AskAI/Argos als SERP-Provider (Typ `argos`, `ProviderKind.BROWSER`) nach Ports & Adapters. Port `ArgosWebSearch`;
+  Adapter `McpArgosWebSearch` ruft das Tool `web_search` des AskAI-Browser-Sidecars (`browser-mcp-server-java21`) per
+  MCP Streamable HTTP über den `HttpTransport`-Port auf (JSON- und SSE-Antworten, Session-Neuaufbau nach Sidecar-Neustart,
+  Token im Pfad wird in Meldungen geschwärzt); `ArgosSearchOutputParser` liest das Textformat des Tools;
+  `ArgosSearchProvider` bildet Treffer, Engine (aus dem Host des liefernden Versuchs), Engine-Versuche und manuelle
+  Challenges (`BLOCKED`, nie umgangen) auf das Domain-Modell ab; Plugin-Registrierung über `ServiceLoader`
+  (`ArgosSearchProviderFactory`, Properties `endpoint` oder `port` + Credential `token`). Den Sidecar startet weiter der
+  Host. Cancellation, `close()` und Deadline (auch beim Warten auf die gemeinsame MCP-Initialisierung) brechen den
+  laufenden HTTP-Aufruf ab (ADR-017); `SearchProviderContractTest` läuft. Testdaten sind ausschließlich synthetisch und als solche gekennzeichnet (E-1).
 - `serp4j-provider-brave` (Paket B, Java 8): `BraveSearchProvider` für `GET /res/v1/web/search`, Ziel `brave/web`,
   gegen die Brave-API-Referenz vom 2026-11-01. Request: `q` (≤ 600 Zeichen/75 Wörter), `count` ≤ 20, `offset` als
   Seitenindex 0–9 (Request-Offset muss ein Vielfaches des Limits sein), `country`/`search_lang`/`ui_lang` mit

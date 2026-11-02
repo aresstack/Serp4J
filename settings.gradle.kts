@@ -40,6 +40,7 @@ val plannedModules = listOf(
     "serp4j-provider-brave",
     "serp4j-provider-brightdata",
     "serp4j-provider-dataforseo",
+    "serp4j-provider-argos",
     // Browser
     "serp4j-browser-api",
     "serp4j-browser-playwright",
