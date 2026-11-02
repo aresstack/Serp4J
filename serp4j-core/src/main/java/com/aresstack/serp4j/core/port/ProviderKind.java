@@ -4,6 +4,8 @@ package com.aresstack.serp4j.core.port;
 public enum ProviderKind {
     /** Calls a hosted search API over HTTP (Brave, Bright Data, DataForSEO). */
     CLOUD_API,
+    /** Queries a search engine's web UI directly over HTTP, without a browser (Google HTTP, ADR-018). */
+    ENGINE_HTTP,
     /** Drives a browser against a search engine's web UI. */
     BROWSER,
     /** Runs in-process without network, e.g. an index or a fixture replay. */

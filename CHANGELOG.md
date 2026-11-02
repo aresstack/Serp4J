@@ -9,6 +9,14 @@ Alle nennenswerten Änderungen an Serp4J stehen in dieser Datei. Das Format folg
 
 ### Added
 
+- Google Quick Web Search (#6, experimentell, nicht publiziert): `serp4j-engine-google-common` (URL ohne `udm=50`,
+  Hinderniserkennung, jsoup-Parser für organische Treffer, Video, Sitelinks, Datum und „Wird auch oft gesucht“),
+  `serp4j-engine-google-http` (`GoogleHttpSearchProvider`, cookiefreier GET, Redirects werden nicht verfolgt) und
+  `serp4j-engine-google-browser` (`GoogleBrowserSearchProvider` über den Browser-Port). Spike S0: der HTTP-Weg wird
+  derzeit von Google mit Consent bzw. JavaScript-Pflicht beantwortet und als `BLOCKED` (`google_obstacle`) gemeldet;
+  der Browserweg liefert Treffer. `/goto`-URLs werden mit dem bestehenden `ResultUrlEnricher` aufgelöst. Neuer
+  `ProviderKind.ENGINE_HTTP`. Fixtures echt und anonymisiert.
+
 - Google-`/goto`-Auflösung in verschachtelten URLs: `ResultUrlEnricher` löst neben der Treffer-URL auch Sitelinks
   (`SearchResultItem.siteLinks`), Quellen von Answer Box, Featured Snippet, Generated Answer (AI Overview) und
   People also ask sowie Website, Beschreibungsquelle, Profile und Fakten-Links des Knowledge Panels auf – im selben
