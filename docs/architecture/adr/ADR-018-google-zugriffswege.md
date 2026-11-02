@@ -1,6 +1,6 @@
 # ADR-018 – Zwei technische Zugriffswege auf Google: HTTP und Browser
 
-**Status:** Angenommen (Angelo, 2026-10-31, Review-Punkt A) · **Quellen:** Serp4J #6 (Quick Web Search), #7 (AI Web
+**Status:** Ersetzt durch [ADR-020](ADR-020-browser-uebergabe-playwright.md) (2026-11-02): Google-Adapter liegen in AskAI (`serp4j-playwright-google`), Serp4J enthält keine Google-Module · ursprünglich angenommen (Angelo, 2026-10-31, Review-Punkt A) · **Quellen:** Serp4J #6 (Quick Web Search), #7 (AI Web
 Search), Angelos Review; WP3 §7; WP4 §3.2 (`serp4j-engine-google-http` als spätere Option)
 
 ## Kontext

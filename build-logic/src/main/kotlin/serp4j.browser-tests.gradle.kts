@@ -1,5 +1,5 @@
 /*
- * Browser-TCK gegen einen echten Browser (implementation-plan.md Paket F): eigenes Source-Set `browserTest` und
+ * Tests gegen einen echten Browser (ADR-020, serp4j-playwright): eigenes Source-Set `browserTest` und
  * Task `browserTest`, der nur mit -Pserp4j.browserTests=true läuft und nie Teil von `check` ist. Mit der Property
  * schlägt ein fehlender Browser fehl, statt übersprungen zu werden (serp4j.browserTests.required).
  * Browserpfad optional über die Umgebungsvariable SERP4J_BROWSER_EXECUTABLE. Serp4J lädt nie Browser herunter.

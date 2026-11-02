@@ -4,6 +4,10 @@
 > **Grundlage:** WP1 [Domain-Modell](wp1-domain-model.md) · WP2 [Architektur & Ports](wp2-architecture-ports.md) ·
 > WP3 [Browser](wp3-browser.md) · WP4 [Build & Distribution](wp4-build-distribution.md) · WP5 [Migration](wp5-migration.md)
 > **Entscheidungen im Detail:** [ADRs](adr/README.md) · **Umsetzung:** [Implementierungsplan](implementation-plan.md)
+> **Nachtrag 2026-11-02 ([ADR-020](adr/ADR-020-browser-uebergabe-playwright.md)):** Der Browser-Port (`serp4j-browser-api`),
+> der Playwright-Adapter mit Treibermodulen und die Google-Module sind entfallen. Serp4J stellt nur noch
+> `serp4j-playwright` bereit (Java 21): Der Host startet und übergibt den Playwright-Browser je Suche, die
+> Suchmaschinen-Adapter (Google) liegen beim Host. Abschnitte zu `BrowserRuntime`, Paket F und G1/G2 sind historisch.
 
 Dieses Dokument ersetzt die fünf Arbeitspaket-Berichte als **verbindliche** Quelle. Wo ein WP-Bericht hiervon
 abweicht, gilt dieses Dokument. Die WP-Berichte bleiben als Begründung und Detailreferenz (Feldzuordnungen,

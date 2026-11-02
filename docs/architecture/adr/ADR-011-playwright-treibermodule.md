@@ -1,6 +1,6 @@
 # ADR-011 – Playwright-Adapter in Java 8, Treiber als Laufzeitmodule
 
-**Status:** Angenommen (Angelo, 2026-10-31) · **Quellen:** WP3 B-3, Q2; WP4 §5, Frage 9
+**Status:** Ersetzt durch [ADR-020](ADR-020-browser-uebergabe-playwright.md) (2026-11-02): Treiber und Browser kommen vom Host, Serp4J hat keine Treibermodule · ursprünglich angenommen (Angelo, 2026-10-31) · **Quellen:** WP3 B-3, Q2; WP4 §5, Frage 9
 
 ## Kontext
 Playwright Java braucht einen JS-Treiber: offiziell Node (`driver` + `driver-bundle`, Java 8+) oder `playwright4j`

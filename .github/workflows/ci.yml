@@ -65,7 +65,7 @@ jobs:
           if-no-files-found: ignore
 
   browser-tck:
-    name: Browser-TCK (Chromium, Node- und Graal-Treiber)
+    name: Browser-Tests (Chromium, serp4j-playwright)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -90,19 +90,18 @@ jobs:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
       # Serp4J lädt nie selbst Browser (PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1); die CI installiert Chromium
-      # ausdrücklich über die Playwright-CLI des Node-Treibers. Beide Treiber nutzen dasselbe Binary.
+      # ausdrücklich über die Playwright-CLI (ADR-020: in Produktion startet der Host den Browser).
       - name: Chromium installieren
         run: |
-          ./gradlew :serp4j-browser-playwright-driver-node:installPlaywrightBrowsers \
+          ./gradlew :serp4j-playwright:installPlaywrightBrowsers \
             "-Pserp4j.playwrightInstall=install --with-deps chromium" --stacktrace
           chrome="$(find "$HOME/.cache/ms-playwright" -path '*chromium-*' -type f \( -name chrome -o -name headless_shell \) | sort | head -n 1)"
           test -x "$chrome"
           echo "SERP4J_BROWSER_EXECUTABLE=$chrome" >> "$GITHUB_ENV"
 
-      - name: TCK mit beiden Treibern
+      - name: Browser-Tests
         run: >
-          ./gradlew :serp4j-browser-playwright-driver-node:browserTest
-          :serp4j-browser-playwright-driver-graal:browserTest
+          ./gradlew :serp4j-playwright:browserTest
           -Pserp4j.browserTests=true --stacktrace
 
       - name: Testberichte sichern
@@ -111,8 +110,8 @@ jobs:
         with:
           name: browser-tck-reports
           path: |
-            serp4j-browser-*/build/reports/tests/
-            serp4j-browser-*/build/test-results/
+            serp4j-playwright/build/reports/tests/
+            serp4j-playwright/build/test-results/
           retention-days: 7
           if-no-files-found: ignore
 

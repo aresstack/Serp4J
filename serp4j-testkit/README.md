@@ -90,4 +90,4 @@ class DataForSeoContractTest extends SearchProviderContractTest<FakeHttpTranspor
 
 ## Noch nicht enthalten
 
-- `FakeBrowserRuntime`/`BrowserRuntimeContractTest`: gehören in `serp4j-browser-testkit` (Paket F).
+- Browser-Fakes: Browser kommen vom Host (ADR-020); Browser-Tests liegen in `serp4j-playwright` (`browserTest`).

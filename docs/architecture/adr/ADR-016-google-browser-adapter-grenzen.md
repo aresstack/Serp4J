@@ -1,6 +1,6 @@
 # ADR-016 – Grenzen direkter Google-Zugriffe (Browser und HTTP)
 
-**Status:** Angenommen (Angelo, 2026-10-31; E-3 = Option B, E-4 = nicht veröffentlichen) · **Quellen:** WP3 B-9, R1, Q7, §9, §13; Angelos Review
+**Status:** Angenommen (Angelo, 2026-10-31; E-3 = Option B, E-4 = nicht veröffentlichen) · seit [ADR-020](ADR-020-browser-uebergabe-playwright.md) gelten die technischen Grenzen für jeden `PlaywrightSearchProvider` eines Hosts; die Google-Module selbst liegen in AskAI · **Quellen:** WP3 B-9, R1, Q7, §9, §13; Angelos Review
 
 ## Kontext
 Automatisierte Abfragen der Google-Oberfläche widersprechen Googles Nutzungsbedingungen. Das gilt **nicht nur für
