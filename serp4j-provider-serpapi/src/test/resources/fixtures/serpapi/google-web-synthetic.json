@@ -1,0 +1,97 @@
+{
+  "search_metadata": {
+    "id": "synthetic0000000000000001",
+    "status": "Success",
+    "json_endpoint": "https://serpapi.com/searches/synthetic/synthetic0000000000000001.json",
+    "created_at": "2026-11-02 04:00:00 UTC",
+    "processed_at": "2026-11-02 04:00:00 UTC",
+    "google_url": "https://www.google.com/search?q=serp4j+java+search&oq=serp4j+java+search&num=10&sourceid=chrome&ie=UTF-8",
+    "raw_html_file": "https://serpapi.com/searches/synthetic/synthetic0000000000000001.html",
+    "total_time_taken": 1.42
+  },
+  "search_parameters": {
+    "engine": "google",
+    "q": "serp4j java search",
+    "google_domain": "google.com",
+    "num": "10",
+    "device": "desktop"
+  },
+  "search_information": {
+    "query_displayed": "serp4j java search",
+    "total_results": 12300,
+    "time_taken_displayed": 0.31,
+    "organic_results_state": "Some results for exact spelling but showing fixed spelling",
+    "showing_results_for": "serp4j java search library"
+  },
+  "ads": [
+    {
+      "position": 1,
+      "block_position": "top",
+      "title": "Synthetic Search API - Example Ads",
+      "link": "https://ads.example.com/landing",
+      "displayed_link": "ads.example.com",
+      "description": "Synthetic ad text."
+    }
+  ],
+  "knowledge_graph": {
+    "title": "Example Entity",
+    "type": "Software library",
+    "description": "A synthetic knowledge graph description.",
+    "website": "https://www.example.com/"
+  },
+  "answer_box": {
+    "type": "organic_result",
+    "title": "What is an example search library?",
+    "link": "https://www.example.com/docs/answer",
+    "snippet": "A synthetic answer box snippet."
+  },
+  "related_questions": [
+    { "question": "Is there a synthetic Java search library?", "snippet": "Synthetic answer.", "link": "https://www.example.org/faq" },
+    { "question": "How do SERP APIs work?", "snippet": "Synthetic answer two.", "link": "https://www.example.org/faq2" }
+  ],
+  "organic_results": [
+    {
+      "position": 1,
+      "title": "Example Search Library for Java",
+      "link": "https://www.example.com/docs/search",
+      "redirect_link": "https://www.google.com/url?sa=t&url=https://www.example.com/docs/search",
+      "displayed_link": "https://www.example.com › docs › search",
+      "favicon": "https://serpapi.com/searches/synthetic/favicon1.png",
+      "snippet": "Synthetic snippet of the first organic result.",
+      "snippet_highlighted_words": ["Java"],
+      "date": "Oct 1, 2026",
+      "source": "Example"
+    },
+    {
+      "position": 2,
+      "title": "Second synthetic result",
+      "link": "https://example.org/page",
+      "displayed_link": "example.org › page",
+      "snippet": "Another synthetic snippet."
+    },
+    {
+      "position": 3,
+      "title": "Third synthetic result",
+      "link": "https://docs.example.net/guide",
+      "displayed_link": "docs.example.net › guide",
+      "snippet": "Third synthetic snippet.",
+      "thumbnail": "https://serpapi.com/searches/synthetic/thumb3.jpeg"
+    }
+  ],
+  "top_stories": [
+    { "title": "Synthetic news item", "link": "https://news.example.com/a", "source": "Example News", "date": "2 hours ago" }
+  ],
+  "related_searches": [
+    { "query": "serp4j maven", "link": "https://www.google.com/search?q=serp4j+maven" },
+    { "query": "java serp api", "link": "https://www.google.com/search?q=java+serp+api" }
+  ],
+  "pagination": {
+    "current": 1,
+    "next": "https://www.google.com/search?q=serp4j+java+search&start=10"
+  },
+  "serpapi_pagination": {
+    "current": 1,
+    "next_link": "https://serpapi.com/search.json?engine=google&q=serp4j+java+search&start=10",
+    "next": "https://serpapi.com/search.json?engine=google&q=serp4j+java+search&start=10"
+  }
+}

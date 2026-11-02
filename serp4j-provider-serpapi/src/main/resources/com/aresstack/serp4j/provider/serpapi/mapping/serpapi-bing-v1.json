@@ -1,0 +1,74 @@
+{
+  "id": "serpapi-bing",
+  "version": 1,
+  "namespace": "serpapi",
+  "description": "SerpApi GET /search.json?engine=bing (written against the SerpApi Bing Search API documentation of 2026-11-02; no recorded answer yet). position = position within its block.",
+  "metadata": {
+    "originalQuery": "$.search_parameters.q",
+    "effectiveQuery": "$.search_information.showing_results_for",
+    "totalResultsEstimate": { "from": "$.search_information.total_results", "convert": "long" },
+    "providerRequestId": "$.search_metadata.id",
+    "pageNumber": { "from": "$.serpapi_pagination.current", "convert": "int" },
+    "serpapi:status": "$.search_metadata.status",
+    "serpapi:createdAt": "$.search_metadata.created_at",
+    "serpapi:totalTimeTaken": { "from": "$.search_metadata.total_time_taken", "convert": "decimal" },
+    "serpapi:engineUrl": "$.search_metadata.bing_url",
+    "serpapi:locationUsed": "$.search_parameters.location_used"
+  },
+  "sections": [
+    {
+      "id": "organic", "kind": "items", "path": "$.organic_results[*]", "type": "organic",
+      "fields": {
+        "url": "link",
+        "title": "title",
+        "snippet": "snippet",
+        "displayUrl": "displayed_link",
+        "thumbnail": "thumbnail",
+        "domain": { "from": "link", "convert": "host" },
+        "rankInGroup": { "from": "position", "convert": "int" },
+        "serpapi:date": "date",
+        "serpapi:favicon": "favicon"
+      }
+    },
+    {
+      "id": "ads", "kind": "items", "path": "$.ads[*]", "type": "paid",
+      "fields": {
+        "url": "link",
+        "title": "title",
+        "snippet": "description",
+        "displayUrl": "displayed_link",
+        "domain": { "from": "link", "convert": "host" },
+        "rankInGroup": { "from": "position", "convert": "int" },
+        "serpapi:blockPosition": "block_position"
+      }
+    },
+    {
+      "id": "knowledge_graph", "kind": "features", "path": "$.knowledge_graph", "type": "knowledge_panel",
+      "position": "none",
+      "fields": {
+        "title": "title",
+        "subtitle": "type",
+        "description": "description",
+        "websiteUrl": "website"
+      }
+    },
+    {
+      "id": "answer_box", "kind": "features", "path": "$.answer_box", "type": "answer_box", "position": "none",
+      "fields": {
+        "text": ["answer", "snippet"],
+        "sourceUrl": "link",
+        "sourceTitle": "title"
+      }
+    },
+    {
+      "id": "related_questions", "kind": "features", "path": "$.related_questions[*]", "type": "people_also_ask",
+      "position": "index",
+      "fields": { "title": "question" }
+    },
+    {
+      "id": "related_searches", "kind": "features", "path": "$.related_searches", "type": "related_searches",
+      "position": "none",
+      "fields": { "queries": "$[*].query" }
+    }
+  ]
+}

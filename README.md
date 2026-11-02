@@ -1,7 +1,7 @@
 # Serp4J
 
 Provider-unabhängige Java-Bibliothek für Web-Suchergebnisse (SERP): ein gemeinsames Domänenmodell, Ports für
-Suchanbieter und – in späteren Arbeitspaketen – Adapter für Cloud-APIs (Brave, Bright Data, DataForSEO) sowie für
+Suchanbieter und – in späteren Arbeitspaketen – Adapter für Cloud-APIs (Brave, Bright Data, DataForSEO, SerpApi) sowie für
 die Suche im Browser.
 
 **Status:** `0.1.0-SNAPSHOT`, in Entwicklung. Umgesetzt sind Paket A (Build-Gerüst, Core-Domain, Ports,
@@ -56,7 +56,7 @@ Chromium (Serp4J lädt selbst keine Browser herunter):
 ### Echte Provider-Antworten aufzeichnen (E-1)
 
 Live-Tests laufen nur mit `-Pserp4j.live=true` und den Zugangsdaten als Umgebungsvariablen; Zugangsdaten gehen nur
-als HTTP-Header raus. Mit `-Pserp4j.recordFixtures=true` landet die Rohantwort unter
+als HTTP-Header raus (Ausnahme SerpApi: dort verlangt die API den Key als maskierten URL-Parameter `api_key`). Mit `-Pserp4j.recordFixtures=true` landet die Rohantwort unter
 `<modul>/build/recorded-fixtures/` samt Sidecar `anonymized=false`. Vor dem Übernehmen nach
 `src/test/resources/fixtures/` von Hand prüfen und anonymisieren, dann im Sidecar `anonymized=true` setzen.
 
@@ -64,6 +64,8 @@ als HTTP-Header raus. Mit `-Pserp4j.recordFixtures=true` landet die Rohantwort u
 SERP4J_BRAVE_API_KEY=… ./gradlew :serp4j-provider-brave:liveTest -Pserp4j.live=true -Pserp4j.recordFixtures=true
 SERP4J_DATAFORSEO_LOGIN=… SERP4J_DATAFORSEO_PASSWORD=… \
   ./gradlew :serp4j-provider-dataforseo:liveTest -Pserp4j.live=true -Pserp4j.recordFixtures=true
+# SerpApi verlangt den Key als URL-Parameter api_key; er wird in URLs/Logs maskiert. Eine Suche je Test (Free: 250/Monat).
+SERP4J_SERPAPI_API_KEY=… ./gradlew :serp4j-provider-serpapi:liveTest -Pserp4j.live=true -Pserp4j.recordFixtures=true
 ```
 
 Liegen die DataForSEO-Zugangsdaten als ein einzelner Base64-Wert `login:password` vor (so wie im
