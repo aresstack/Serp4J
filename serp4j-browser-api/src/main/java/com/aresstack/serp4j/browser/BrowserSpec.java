@@ -169,9 +169,27 @@ public final class BrowserSpec {
     public String toString() {
         return "BrowserSpec{product=" + product + ", source=" + source
                 + (executable != null ? ", executable=" + executable : "")
-                + (endpoint != null ? ", endpoint=" + endpoint : "")
+                + (endpoint != null ? ", endpoint=" + redactedEndpoint() : "")
                 + ", headless=" + headless + ", environmentKeys=" + environment.keySet()
                 + ", optionKeys=" + options.keySet() + '}';
+    }
+
+    /** Endpoint without user info and query, so tokens never reach logs. */
+    private String redactedEndpoint() {
+        String e = endpoint;
+        int q = e.indexOf('?');
+        if (q >= 0) {
+            e = e.substring(0, q) + "?<redacted>";
+        }
+        int scheme = e.indexOf("://");
+        int at = e.indexOf('@');
+        if (scheme >= 0 && at > scheme) {
+            int slash = e.indexOf('/', scheme + 3);
+            if (slash < 0 || at < slash) {
+                e = e.substring(0, scheme + 3) + "<redacted>@" + e.substring(at + 1);
+            }
+        }
+        return e;
     }
 
     /** Builder for {@link BrowserSpec}. */

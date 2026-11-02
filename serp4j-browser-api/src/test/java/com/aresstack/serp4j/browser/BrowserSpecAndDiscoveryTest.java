@@ -39,6 +39,11 @@ class BrowserSpecAndDiscoveryTest {
         assertEquals(Paths.get("/opt/camoufox/camoufox"), camoufox.getExecutable().get());
         assertFalse(camoufox.toString().contains("x}"), "values are not printed");
 
+        String printed = BrowserSpec.connect(BrowserProduct.CHROMIUM, "wss://user:pw@host/pw?token=secret").build()
+                .toString();
+        assertFalse(printed.contains("secret") || printed.contains("pw@"), printed);
+        assertTrue(printed.contains("wss://<redacted>@host/pw?<redacted>"), printed);
+
         assertThrows(IllegalArgumentException.class, () -> BrowserSpec.connect(BrowserProduct.CHROMIUM, "file:///x"));
         assertThrows(IllegalStateException.class, () -> BrowserSpec.connect(BrowserProduct.CHROMIUM,
                 "ws://127.0.0.1:3000/").launchArgument("--foo").build());
