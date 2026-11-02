@@ -41,6 +41,7 @@ class DataForSeoRecordedFixtureTest {
         try (FakeHttpTransport http = FakeHttpTransport.create();
              DataForSeoSearchProvider provider =
                      DataForSeoSearchProvider.builder(http, DataForSeoSearchProviderContractTest.credentials())
+                             .resolveGoogleGotoUrls(false) // pure mapping regression, no extra request
                              .build()) {
             http.onAnyRequest(FakeHttpStep.fixture(Fixtures.load("dataforseo", FIXTURE)));
 
@@ -66,6 +67,7 @@ class DataForSeoRecordedFixtureTest {
                     .contains("00000000-0000-0000-0000-000000000000");
             assertThat(metadata.getPage().get().getTotalResultsEstimate().getAsLong()).isEqualTo(74L);
             assertThat(metadata.isComplete()).isTrue();
+            assertThat(http.getRequestCount()).isEqualTo(1);
             assertThat(metadata.getRawPayload().get().getBodyLength())
                     .isEqualTo(Fixtures.load("dataforseo", FIXTURE).getBytes().length);
         }

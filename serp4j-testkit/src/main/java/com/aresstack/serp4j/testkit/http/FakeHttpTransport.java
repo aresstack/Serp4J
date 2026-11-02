@@ -40,6 +40,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  * request with {@code TIMEOUT}. {@link #close()} completes running requests with {@code CANCELLED}; later calls to
  * {@link #execute} throw {@link IllegalStateException}, as the port demands.</p>
  *
+ * <p>The fake never follows redirects: a stubbed {@code 3xx} is delivered as it is, so it honours
+ * {@link HttpRequest#isFollowRedirects()} {@code false} by construction; tests can inspect the flag on
+ * {@link #getRequests()}.</p>
+ *
  * <p>As {@link SharedInfrastructure} it lets the ownership contract (ADR-017) check that a provider never closes the
  * transport it borrowed. Thread-safe.</p>
  */

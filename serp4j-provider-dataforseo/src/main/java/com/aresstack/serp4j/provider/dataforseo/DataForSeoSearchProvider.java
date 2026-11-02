@@ -28,6 +28,7 @@ import com.aresstack.serp4j.http.HttpResponse;
 import com.aresstack.serp4j.http.HttpTransport;
 import com.aresstack.serp4j.http.HttpTransportException;
 import com.aresstack.serp4j.http.RequestAuthentication;
+import com.aresstack.serp4j.http.resolve.GoogleGotoUrlResolver;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -70,6 +71,8 @@ public final class DataForSeoSearchProvider implements SearchProvider {
     private final Clock clock;
     private final DataForSeoRequestMapper requestMapper;
     private final DataForSeoResponseMapper responseMapper;
+    /** Null when {@code resolveGoogleGotoUrls} is off. */
+    private final DataForSeoResultUrlEnricher urlEnricher;
     private final AtomicBoolean closed = new AtomicBoolean();
     private final Set<CompletableFuture<SearchResponse>> running =
             Collections.newSetFromMap(new ConcurrentHashMap<CompletableFuture<SearchResponse>, Boolean>());
@@ -87,6 +90,10 @@ public final class DataForSeoSearchProvider implements SearchProvider {
                 .build();
         this.requestMapper = new DataForSeoRequestMapper(b.id, b.function, b.defaultLocationCode, b.defaultLanguageCode);
         this.responseMapper = new DataForSeoResponseMapper(b.id);
+        this.urlEnricher = b.resolveGoogleGotoUrls
+                ? new DataForSeoResultUrlEnricher(b.id, new GoogleGotoUrlResolver(b.transport), b.urlResolveTimeout,
+                b.clock)
+                : null;
     }
 
     /** Builder with the caller-owned transport and credentials. */
@@ -202,7 +209,19 @@ public final class DataForSeoSearchProvider implements SearchProvider {
                     future.completeExceptionally(responseMapper.errorFor(http));
                     return;
                 }
-                future.complete(responseMapper.map(http, request, engine, startedAt, clock.instant(), warnings));
+                SearchResponse mapped = responseMapper.map(http, request, engine, startedAt, clock.instant(), warnings);
+                if (urlEnricher == null || !SearchEngineId.GOOGLE.equals(engine)) {
+                    future.complete(mapped);
+                    return;
+                }
+                // Optional enrichment outside the mapper: never fails the search, falls back to the mapped answer.
+                CompletableFuture<SearchResponse> enriched = urlEnricher.enrich(mapped, context::getRemainingTime);
+                future.whenComplete((r, e) -> {
+                    if (!enriched.isDone()) {
+                        enriched.cancel(true);
+                    }
+                });
+                enriched.whenComplete((r, e) -> future.complete(e == null ? r : mapped));
             } catch (SearchProviderException e) {
                 future.completeExceptionally(e);
             } catch (RuntimeException e) {
@@ -309,6 +328,8 @@ public final class DataForSeoSearchProvider implements SearchProvider {
         private CredentialKey loginKey;
         private CredentialKey passwordKey;
         private Clock clock = Clock.systemUTC();
+        private boolean resolveGoogleGotoUrls = true;
+        private Duration urlResolveTimeout = GoogleGotoUrlResolver.DEFAULT_TIMEOUT;
 
         private Builder(HttpTransport transport, CredentialProvider credentials) {
             this.transport = Objects.requireNonNull(transport, "transport");
@@ -363,6 +384,29 @@ public final class DataForSeoSearchProvider implements SearchProvider {
 
         public Builder clock(Clock clock) {
             this.clock = Objects.requireNonNull(clock, "clock");
+            return this;
+        }
+
+        /**
+         * Whether Google {@code /goto?url=…} result URLs are resolved to their targets; default {@code true}.
+         * Each distinct redirect URL of a Google answer costs one extra {@code GET} to Google (no redirects
+         * followed, target never fetched, no credentials sent), at most four at a time, each bounded by
+         * {@link #urlResolveTimeout(Duration)} and the search deadline – so a search can take up to that timeout
+         * longer. {@code false} keeps the previous behaviour without any additional request. Bing is never touched.
+         */
+        public Builder resolveGoogleGotoUrls(boolean resolve) {
+            this.resolveGoogleGotoUrls = resolve;
+            return this;
+        }
+
+        /** Timeout of one redirect resolution; at most and by default three seconds. */
+        public Builder urlResolveTimeout(Duration timeout) {
+            Objects.requireNonNull(timeout, "timeout");
+            if (timeout.isNegative() || timeout.isZero() || timeout.compareTo(GoogleGotoUrlResolver.DEFAULT_TIMEOUT) > 0) {
+                throw new IllegalArgumentException("urlResolveTimeout must be positive and at most "
+                        + GoogleGotoUrlResolver.DEFAULT_TIMEOUT);
+            }
+            this.urlResolveTimeout = timeout;
             return this;
         }
 

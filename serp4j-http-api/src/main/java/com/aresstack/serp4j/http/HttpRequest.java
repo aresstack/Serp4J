@@ -38,6 +38,7 @@ public final class HttpRequest {
     private final byte[] body;
     private final Duration timeout;
     private final Set<String> sensitiveQueryParameters;
+    private final boolean followRedirects;
 
     private HttpRequest(Builder builder) {
         this.method = builder.method;
@@ -46,6 +47,7 @@ public final class HttpRequest {
         this.body = builder.body;
         this.timeout = builder.timeout;
         this.sensitiveQueryParameters = Collections.unmodifiableSet(new TreeSet<String>(builder.sensitiveQueryParameters));
+        this.followRedirects = builder.followRedirects;
     }
 
     public static Builder builder(HttpMethod method, String url) {
@@ -135,8 +137,18 @@ public final class HttpRequest {
         return Optional.ofNullable(timeout);
     }
 
+    /**
+     * Whether the transport may follow redirects for this request; default {@code true}. With {@code false} the
+     * transport delivers the first response – a {@code 3xx} with its {@code Location} header included – as it
+     * is, whatever its own redirect configuration says. A transport that never follows redirects ignores it.
+     */
+    public boolean isFollowRedirects() {
+        return followRedirects;
+    }
+
     public Builder toBuilder() {
         Builder builder = new Builder(method, url);
+        builder.followRedirects = followRedirects;
         builder.headers.addAll(headers);
         builder.body = body;
         builder.timeout = timeout;
@@ -171,19 +183,22 @@ public final class HttpRequest {
                 && headers.equals(that.headers)
                 && Arrays.equals(body, that.body)
                 && Objects.equals(timeout, that.timeout)
-                && sensitiveQueryParameters.equals(that.sensitiveQueryParameters);
+                && sensitiveQueryParameters.equals(that.sensitiveQueryParameters)
+                && followRedirects == that.followRedirects;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(method, url, headers, Arrays.hashCode(body), timeout, sensitiveQueryParameters);
+        return Objects.hash(method, url, headers, Arrays.hashCode(body), timeout, sensitiveQueryParameters,
+                followRedirects);
     }
 
     /** Safe for logs: redacted URL, masked headers, no body. */
     @Override
     public String toString() {
         return "HttpRequest{" + method + " " + getRedactedUrl() + ", headers=" + headers
-                + ", body=" + (body == null ? "none" : body.length + " bytes") + ", timeout=" + timeout + '}';
+                + ", body=" + (body == null ? "none" : body.length + " bytes") + ", timeout=" + timeout
+                + (followRedirects ? "" : ", followRedirects=false") + '}';
     }
 
     /** Builder for {@link HttpRequest}. */
@@ -194,6 +209,7 @@ public final class HttpRequest {
         private byte[] body;
         private Duration timeout;
         private final Set<String> sensitiveQueryParameters = new TreeSet<String>();
+        private boolean followRedirects = true;
 
         private Builder(HttpMethod method, String url) {
             if (method == null) {
@@ -303,6 +319,15 @@ public final class HttpRequest {
                 throw new IllegalArgumentException("timeout must be positive but was " + timeout);
             }
             this.timeout = timeout;
+            return this;
+        }
+
+        /**
+         * {@code false} forbids the transport to follow redirects for this request only; the first response is
+         * delivered as it is. Default {@code true}, i.e. the transport's own redirect configuration applies.
+         */
+        public Builder followRedirects(boolean followRedirects) {
+            this.followRedirects = followRedirects;
             return this;
         }
 

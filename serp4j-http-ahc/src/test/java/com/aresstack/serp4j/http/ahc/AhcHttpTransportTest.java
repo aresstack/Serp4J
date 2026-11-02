@@ -235,6 +235,30 @@ class AhcHttpTransportTest {
     }
 
     @Test
+    void requestWithFollowRedirectsOffGetsTheFirstRedirectResponse() throws Exception {
+        server.on("/start", exchange -> LocalHttpServer.redirect(exchange, 302, "https://example.org/landing"));
+
+        HttpResponse response = transport.execute(HttpRequest.get(server.url("/start")).followRedirects(false)
+                .build()).get(10, TimeUnit.SECONDS);
+
+        assertThat(response.getStatus()).isEqualTo(302);
+        assertThat(response.getHeaders().getFirst("Location")).contains("https://example.org/landing");
+        assertThat(server.requests()).hasSize(1);
+    }
+
+    @Test
+    void otherRequestsStillFollowRedirectsByDefault() throws Exception {
+        server.on("/start", exchange -> LocalHttpServer.redirect(exchange, 302, "/target"));
+        server.on("/target", exchange -> LocalHttpServer.respond(exchange, 200, "text/plain", "arrived"));
+
+        HttpResponse response = transport.execute(HttpRequest.get(server.url("/start")).build())
+                .get(10, TimeUnit.SECONDS);
+
+        assertThat(response.getBodyAsText()).isEqualTo("arrived");
+        assertThat(server.requests()).hasSize(2);
+    }
+
+    @Test
     void crossOriginRedirectDropsEverySensitiveHeader() throws Exception {
         try (LocalHttpServer other = new LocalHttpServer()) {
             other.on("/landing", exchange -> LocalHttpServer.respond(exchange, 200, "text/plain", "elsewhere"));
