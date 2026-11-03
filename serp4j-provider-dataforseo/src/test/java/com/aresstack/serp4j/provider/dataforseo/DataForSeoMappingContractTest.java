@@ -13,7 +13,8 @@ import java.util.List;
 
 /**
  * Mapping definition against the fixtures. {@code google-organic-live-advanced-de.json} is the first recorded
- * DataForSEO answer (2026-11-02, E-1); it only contains organic items, so the synthetic fixtures (marked as such,
+ * DataForSEO answer (2026-11-02, E-1) with organic items only; {@code google-organic-live-advanced-en-features.json}
+ * (2026-11-03) adds recorded video, people_also_ask, related_searches and an empty ai_overview. The synthetic fixtures (marked as such,
  * Angelo's decision of 2026-11-01) still cover the feature sections until recorded answers with those features exist.
  */
 class DataForSeoMappingContractTest extends MappingDefinitionContractTest {
@@ -27,7 +28,8 @@ class DataForSeoMappingContractTest extends MappingDefinitionContractTest {
     protected List<Fixture> fixtures() {
         return Arrays.asList(Fixtures.load("dataforseo", "google-organic-live-advanced.json"),
                 Fixtures.load("dataforseo", "google-organic-live-advanced-features.json"),
-                Fixtures.load("dataforseo", "google-organic-live-advanced-de.json"));
+                Fixtures.load("dataforseo", "google-organic-live-advanced-de.json"),
+                Fixtures.load("dataforseo", "google-organic-live-advanced-en-features.json"));
     }
 
     @Override
