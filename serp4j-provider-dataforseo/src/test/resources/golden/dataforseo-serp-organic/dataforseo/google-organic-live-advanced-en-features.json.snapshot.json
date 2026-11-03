@@ -1,0 +1,545 @@
+{
+  "definition": "dataforseo-serp-organic",
+  "version": 1,
+  "results": [
+    {
+      "id": "serp#2",
+      "type": "organic",
+      "url": "https://dev.java/learn/language-basics/",
+      "title": "Java Language Basics",
+      "snippet": "This part of the tutorial covers the basics of the language, including: variables, operators, expressions, statements, blocks and control flow statements. Read more",
+      "displayUrl": "https://dev.java › learn › language-basics",
+      "domain": "dev.java",
+      "siteName": "Dev.java",
+      "siteLinks": [
+        {
+          "url": "https://google.com/goto?url=ANONYMIZED-REDIRECT-TOKEN-01",
+          "title": "Read more"
+        }
+      ],
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 2,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[2]/div[1]/div[2]/div[1]/div[1]/div[3]/div[1]/div[1]",
+            "is_image": false,
+            "is_video": false,
+            "is_featured_snippet": false,
+            "is_malicious": false,
+            "is_web_story": false,
+            "amp_version": false,
+            "highlighted": [
+              "variables, operators, expressions, statements, blocks and control flow statements"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#4",
+      "type": "organic",
+      "url": "https://google.com/goto?url=ANONYMIZED-REDIRECT-TOKEN-02",
+      "title": "The Java Language Environment",
+      "snippet": "The Java programming language is designed for creating highly reliable software. It provides extensive compile-time checking, followed by a second level of run- ... Read more",
+      "displayUrl": "https://www.oracle.com › Java › Technical Details",
+      "domain": "google.com",
+      "siteName": "Oracle",
+      "siteLinks": [
+        {
+          "url": "https://google.com/goto?url=ANONYMIZED-REDIRECT-TOKEN-03",
+          "title": "Read more"
+        }
+      ],
+      "position": {
+        "rankInGroup": 2,
+        "rankAbsolute": 4,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[2]/div[1]/div[2]/div[1]/div[1]/div[7]/div[1]/div[1]",
+            "is_image": false,
+            "is_video": false,
+            "is_featured_snippet": false,
+            "is_malicious": false,
+            "is_web_story": false,
+            "amp_version": false,
+            "highlighted": [
+              "designed for creating highly reliable software"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#5",
+      "type": "organic",
+      "url": "https://google.com/goto?url=ANONYMIZED-REDIRECT-TOKEN-04",
+      "title": "Dev.java: The Destination for Java Developers",
+      "snippet": "The Java programming language is evolving fast. In this talk, we'll summarize many of the recent changes that have appeared as well as look ahead to directions ... Read more",
+      "displayUrl": "https://dev.java",
+      "domain": "google.com",
+      "siteName": "Dev.java",
+      "siteLinks": [
+        {
+          "url": "https://dev.java/#:~:text=The%20Java%20programming%20language%20is,will%20appear%20in%20future%20editions.",
+          "title": "Read more"
+        }
+      ],
+      "position": {
+        "rankInGroup": 3,
+        "rankAbsolute": 5,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[2]/div[1]/div[2]/div[1]/div[1]/div[9]/div[1]/div[1]",
+            "is_image": false,
+            "is_video": false,
+            "is_featured_snippet": false,
+            "is_malicious": false,
+            "is_web_story": false,
+            "amp_version": false,
+            "highlighted": [
+              "The Java programming language is evolving fast"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#7",
+      "type": "organic",
+      "url": "https://www.oracle.com/topics/technologies/newtojava/programming-center.html",
+      "title": "New to Java Programming Center",
+      "snippet": "Java is a high-level language and software-only platform. It runs on more than 50 million personal computers and on billions of devices worldwide.",
+      "displayUrl": "https://www.oracle.com › Technical Resources › Topics",
+      "domain": "www.oracle.com",
+      "siteName": "Oracle",
+      "position": {
+        "rankInGroup": 4,
+        "rankAbsolute": 7,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[2]/div[1]/div[2]/div[1]/div[1]/div[13]/div[1]/div[1]",
+            "is_image": false,
+            "is_video": false,
+            "is_featured_snippet": false,
+            "is_malicious": false,
+            "is_web_story": false,
+            "amp_version": false,
+            "highlighted": [
+              "Java"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#8",
+      "type": "organic",
+      "url": "https://google.com/goto?url=ANONYMIZED-REDIRECT-TOKEN-05",
+      "title": "The Java Language — Studica Robotics 1.0.0 documentation",
+      "snippet": "Java is a fully-featured programming language that is used to develop applications in many environments such as web applications, mobile phones, robotics, ...",
+      "displayUrl": "https://docs.wsr.studica.com › docs › unit1 › lesson2 › th...",
+      "domain": "google.com",
+      "siteName": "Studica Robotics documentation",
+      "position": {
+        "rankInGroup": 5,
+        "rankAbsolute": 8,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[2]/div[1]/div[2]/div[1]/div[1]/div[15]/div[1]/div[1]",
+            "is_image": false,
+            "is_video": false,
+            "is_featured_snippet": false,
+            "is_malicious": false,
+            "is_web_story": false,
+            "amp_version": false,
+            "highlighted": [
+              "Java"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#9",
+      "type": "organic",
+      "url": "https://google.com/goto?url=ANONYMIZED-REDIRECT-TOKEN-06",
+      "title": "Java - Programming Languages",
+      "displayUrl": "211.3K+ views  ·  8 years ago",
+      "domain": "google.com",
+      "siteName": "YouTube · TutorialsPoint",
+      "publishedDate": {
+        "instant": "2018-01-18T00:00:00Z"
+      },
+      "position": {
+        "rankInGroup": 6,
+        "rankAbsolute": 9,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[2]/div[1]/div[2]/div[1]/div[1]/div[16]/div[1]/div[1]/div[1]",
+            "is_image": false,
+            "is_video": true,
+            "is_featured_snippet": false,
+            "is_malicious": false,
+            "is_web_story": false,
+            "checks": [
+              "is_video"
+            ],
+            "amp_version": false
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#10",
+      "type": "organic",
+      "url": "https://google.com/goto?url=ANONYMIZED-REDIRECT-TOKEN-07",
+      "title": "Java – An Overview of a Language Shaping Modern ...",
+      "snippet": "Java is a widely used programming language – Oracle claims that “about 97% of enterprise applications use Java for development of large-scale software”.",
+      "displayUrl": "https://llinformatics.com › Blog",
+      "domain": "google.com",
+      "siteName": "LLInformatics",
+      "position": {
+        "rankInGroup": 7,
+        "rankAbsolute": 10,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[2]/div[1]/div[2]/div[1]/div[1]/div[18]/div[1]/div[1]",
+            "is_image": false,
+            "is_video": false,
+            "is_featured_snippet": false,
+            "is_malicious": false,
+            "is_web_story": false,
+            "amp_version": false,
+            "highlighted": [
+              "Java is a widely used programming language"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#11",
+      "type": "organic",
+      "url": "https://google.com/goto?url=ANONYMIZED-REDIRECT-TOKEN-08",
+      "title": "The Complete History of Java Programming Language",
+      "snippet": "May 14, 2026 — Java is one of the most popular and widely used programming languages in the world. It was developed by James Gosling and his team at Sun ... Read more",
+      "displayUrl": "https://www.geeksforgeeks.org › java › the-complete-hi...",
+      "domain": "google.com",
+      "siteName": "GeeksforGeeks",
+      "publishedDate": {
+        "instant": "2026-05-14T00:00:00Z"
+      },
+      "siteLinks": [
+        {
+          "url": "https://www.geeksforgeeks.org/java/the-complete-history-of-java-programming-language/#:~:text=Java%20is%20one%20of%20the,creating%20a%20platform-independent%20programming%20language.",
+          "title": "Read more"
+        }
+      ],
+      "position": {
+        "rankInGroup": 8,
+        "rankAbsolute": 11,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[2]/div[1]/div[2]/div[1]/div[1]/div[20]/div[1]/div[1]",
+            "is_image": false,
+            "is_video": false,
+            "is_featured_snippet": false,
+            "is_malicious": false,
+            "is_web_story": false,
+            "pre_snippet": "05/14/2026 00:00:00",
+            "amp_version": false,
+            "highlighted": [
+              "Java"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "features": [
+    {
+      "id": "serp#1",
+      "type": "ai_overview",
+      "class": "GenericSerpFeature",
+      "content": {
+        "type": "ai_overview",
+        "rank_group": 1,
+        "rank_absolute": 1,
+        "page": 1,
+        "position": "left",
+        "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]",
+        "asynchronous_ai_overview": true,
+        "markdown": null,
+        "items": null,
+        "references": null,
+        "rectangle": null
+      },
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 1,
+        "page": 1,
+        "area": "main"
+      }
+    },
+    {
+      "id": "serp#3",
+      "type": "video_carousel",
+      "class": "GenericSerpFeature",
+      "content": {
+        "type": "video",
+        "rank_group": 1,
+        "rank_absolute": 3,
+        "page": 1,
+        "position": "left",
+        "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[2]/div[1]/div[2]/div[1]/div[1]/div[5]/div[1]",
+        "items": [
+          {
+            "type": "video_element",
+            "source": "YouTube · Bro Code",
+            "title": "Start coding with JAVA in 10 minutes!",
+            "timestamp": "2024-12-30 00:00:00 +00:00",
+            "url": "https://www.youtube.com/watch?v=23HFxAPyJ9U"
+          },
+          {
+            "type": "video_element",
+            "source": "YouTube · Microsoft Developer",
+            "title": "What is Java? | Java for Beginners",
+            "timestamp": "2022-04-08 00:00:00 +00:00",
+            "url": "https://www.youtube.com/watch?v=EPWgYvve0OE"
+          },
+          {
+            "type": "video_element",
+            "source": "YouTube · Java Guides",
+            "title": "What is Java Programming in 1 Minute? | Java Guides",
+            "timestamp": "2024-01-25 00:00:00 +00:00",
+            "url": "https://www.youtube.com/watch?v=AmvpFl7oK-s"
+          }
+        ],
+        "rectangle": null
+      },
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 3,
+        "page": 1,
+        "area": "main"
+      }
+    },
+    {
+      "id": "serp#6",
+      "type": "people_also_ask",
+      "class": "QuestionAnswerFeature",
+      "questions": [
+        {
+          "question": "What code is Java written in?"
+        },
+        {
+          "question": "What are methods in Java?"
+        },
+        {
+          "question": "Which is the no. 1 programming language?"
+        },
+        {
+          "question": "What are the latest news on Java?"
+        }
+      ],
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 6,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "position": "left",
+            "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[2]/div[1]/div[2]/div[1]/div[1]/div[11]/div[1]/div[1]/div[1]",
+            "items": [
+              {
+                "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[2]/div[1]/div[2]/div[1]/div[1]/div[11]/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]",
+                "expanded_element": [
+                  {
+                    "type": "people_also_ask_ai_overview_expanded_element",
+                    "asynchronous_ai_overview": true
+                  }
+                ]
+              },
+              {
+                "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[2]/div[1]/div[2]/div[1]/div[1]/div[11]/div[1]/div[1]/div[1]/div[1]/div[2]/div[2]",
+                "expanded_element": [
+                  {
+                    "type": "people_also_ask_ai_overview_expanded_element",
+                    "asynchronous_ai_overview": true
+                  }
+                ]
+              },
+              {
+                "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[2]/div[1]/div[2]/div[1]/div[1]/div[11]/div[1]/div[1]/div[1]/div[1]/div[2]/div[3]",
+                "expanded_element": [
+                  {
+                    "type": "people_also_ask_ai_overview_expanded_element",
+                    "asynchronous_ai_overview": true
+                  }
+                ]
+              },
+              {
+                "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[2]/div[1]/div[2]/div[1]/div[1]/div[11]/div[1]/div[1]/div[1]/div[1]/div[2]/div[4]",
+                "expanded_element": [
+                  {
+                    "type": "people_also_ask_ai_overview_expanded_element",
+                    "asynchronous_ai_overview": true
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "serp#12",
+      "type": "related_searches",
+      "class": "RelatedQueriesFeature",
+      "queries": [
+        {
+          "text": "Java programming language book"
+        },
+        {
+          "text": "Java programming language tutorial"
+        },
+        {
+          "text": "Java programming language examples"
+        },
+        {
+          "text": "Java programming language for beginners"
+        },
+        {
+          "text": "Java programming language notes"
+        },
+        {
+          "text": "Java programming basics pdf"
+        },
+        {
+          "text": "Java basics for beginners"
+        },
+        {
+          "text": "Java language uses"
+        }
+      ],
+      "position": {
+        "rankInGroup": 1,
+        "rankAbsolute": 12,
+        "page": 1,
+        "area": "main"
+      },
+      "extensions": {
+        "unmapped": {
+          "dataforseo": {
+            "position": "left",
+            "xpath": "/html[1]/body[1]/div[3]/div[1]/div[13]/div[2]/div[2]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]/div[2]"
+          }
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "totalResultsEstimate": 143,
+    "providerRequestId": "00000000-0000-0000-0000-000000000000",
+    "cost": 0.0,
+    "currency": "USD",
+    "extensions": {
+      "unmapped": {
+        "dataforseo": {
+          "version": "0.1.20261022",
+          "status_code": 20000,
+          "status_message": "Ok.",
+          "time": "5.2809 sec.",
+          "cost": 0.0,
+          "tasks_count": 1,
+          "tasks_error": 0,
+          "tasks": [
+            {
+              "status_code": 20000,
+              "status_message": "Ok.",
+              "time": "5.1070 sec.",
+              "result_count": 1,
+              "path": [
+                "v3",
+                "serp",
+                "google",
+                "organic",
+                "live",
+                "advanced"
+              ],
+              "data": {
+                "api": "serp",
+                "function": "live",
+                "se": "google",
+                "se_type": "organic",
+                "keyword": "java programming language",
+                "location_code": 2840,
+                "language_code": "en",
+                "device": "desktop",
+                "depth": 10,
+                "os": "windows"
+              },
+              "result": [
+                {
+                  "keyword": "java programming language",
+                  "type": "organic",
+                  "se_domain": "google.com",
+                  "location_code": 2840,
+                  "language_code": "en",
+                  "check_url": "https://www.google.com/search?q=java%20programming%20language&hl=en&gl=US&ie=UTF-8&uule=ANONYMIZED",
+                  "datetime": "2026-11-03 03:28:36 +00:00",
+                  "item_types": [
+                    "ai_overview",
+                    "organic",
+                    "video",
+                    "people_also_ask",
+                    "related_searches"
+                  ],
+                  "pages_count": 1,
+                  "items_count": 12
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "warnings": []
+}
